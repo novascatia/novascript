@@ -1,23 +1,20 @@
 // netlify/functions/create-qris-transaction.js
 const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
-const fetch = require('node-fetch'); // Perlu node-fetch (pastikan di package.json)
+const fetch = require('node-fetch');
 
 // Service Role Key untuk menyimpan transaksi dengan aman
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Midtrans Environment Variables (Harus diatur di Netlify)
-// GANTI nama environment variable sesuai yang Anda atur!
-const MIDTRANS_SERVER_KEY_B64 = process.env.MIDTRANS_SERVER_KEY_B64; // Basic [Base64(Server_Key:)]
-const MIDTRANS_API_BASE_URL = process.env.MIDTRANS_API_BASE_URL; // e.g., https://app.sandbox.midtrans.com/snap/v1
+// Midtrans Environment Variables
+const MIDTRANS_SERVER_KEY_B64 = process.env.MIDTRANS_SERVER_KEY_B64; 
+const MIDTRANS_API_BASE_URL = process.env.MIDTRANS_API_BASE_URL;
 
-// --- PENGGANTI MOCKUP ---
 function generatePaymentGatewayId() {
     return `INV-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 }
-// -------------------------
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST' || !event.body) {
@@ -29,8 +26,15 @@ exports.handler = async (event) => {
         if (!tierId || !userId || typeof amount !== 'number') {
             return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields (tierId, userId, amount).' }) };
         }
+        
+        // Dapatkan detail user dari Supabase Auth
+        const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+        
+        const userEmail = user ? user.email : 'customer-mock@novascripts.com';
+        const userName = user ? user.email.split('@')[0] : 'Nova Customer';
 
-        // 1. SIAPKAN TRANSAKSI DAN PANGGIL MIDTRANS SNAP
+
+        // 1. PANGGIL MIDTRANS SNAP
         const paymentGatewayId = generatePaymentGatewayId();
 
         const midtransOrderPayload = {
@@ -45,21 +49,22 @@ exports.handler = async (event) => {
                 name: tierName,
             }],
             customer_details: {
-                // DI DUNIA NYATA, ISI DENGAN EMAIL USER DARI SUPABASE
-                email: 'customer@example.com', 
-                first_name: 'Nova',
+                email: userEmail, // MENGGUNAKAN EMAIL USER
+                first_name: userName, // MENGGUNAKAN NAMA USER
             },
             credit_card: {
                 secure: true
             },
         };
+
+        // Debugging Midtrans Call (HARAP PERIKSA LOG INI DI NETLIFY)
+        console.log('Midtrans Payload:', midtransOrderPayload);
         
         const midtransResponse = await fetch(`${MIDTRANS_API_BASE_URL}/transactions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                // Authorization HARUS menggunakan Basic Auth Base64(ServerKey:)
                 'Authorization': MIDTRANS_SERVER_KEY_B64, 
             },
             body: JSON.stringify(midtransOrderPayload)
@@ -68,8 +73,11 @@ exports.handler = async (event) => {
         const midtransResult = await midtransResponse.json();
         
         if (midtransResponse.status !== 201) {
-            console.error('Midtrans API Error:', midtransResult);
-            return { statusCode: 500, body: JSON.stringify({ error: `Midtrans Error: ${midtransResult.status_code || 'API'} - ${midtransResult.status_message || 'Failed to create Snap token.'}` }) };
+            // MENGEMBALIKAN ERROR MIDTRANS YANG LEBIH JELAS
+            const midtransError = `Midtrans Error: ${midtransResponse.status} - ${midtransResult.status_message || midtransResult.error_messages.join(', ')}`;
+            console.error(midtransError, midtransResult); 
+            
+            return { statusCode: 500, body: JSON.stringify({ error: midtransError }) };
         }
         
         const snapToken = midtransResult.token;
@@ -89,21 +97,21 @@ exports.handler = async (event) => {
 
         if (insertError) {
             console.error('Supabase Insert Error:', insertError);
-            return { statusCode: 500, body: JSON.stringify({ error: 'Failed to record transaction in database.' }) };
+            return { statusCode: 500, body: JSON.stringify({ error: 'Failed to record transaction in database: ' + insertError.message }) };
         }
 
-        // 3. KIRIM RESPON KE FRONTEND (Snap Token)
+        // 3. KIRIM RESPON KE FRONTEND
         return {
             statusCode: 200,
             body: JSON.stringify({
                 transactionId: transaction.id, 
-                snapToken: snapToken, // Snap Token Midtrans
+                snapToken: snapToken, 
                 message: 'Transaction created successfully. Ready for payment via Snap.'
             }),
         };
 
     } catch (error) {
         console.error('General Transaction Error:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+        return { statusCode: 500, body: JSON.stringify({ error: `General Error: ${error.message}` }) };
     }
 };
