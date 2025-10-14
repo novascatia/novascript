@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { font-family: ui-sans-serif, system-ui; }
+      /* Gaya untuk Dark Mode */
+      body.dark { background-color: #1a202c; color: #e2e8f0; }
+      body.dark .bg-white { background-color: #2d3748; color: #e2e8f0; }
+      body.dark .text-gray-700, body.dark .text-gray-900 { color: #e2e8f0; }
+      body.dark .bg-gray-50 { background-color: #4a5568; }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+            <button id="logoutBtn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-200">
+                Log Out
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
+        <h2 class="text-2xl font-bold">Create New Script/Post</h2>
+        <form id="postForm" class="space-y-4 mt-6">
+            <div>
+                <label for="postTitle" class="block text-sm font-medium text-gray-700">Script Title</label>
+                <input type="text" id="postTitle" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="postDescription" class="block text-sm font-medium text-gray-700">Script Description (for dashboard view)</label>
+                <input type="text" id="postDescription" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="postContent" class="block text-sm font-medium text-gray-700">Script Content (Raw Text to be copied)</label>
+                <textarea id="postContent" rows="10" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+            </div>
+             <div class="flex items-center">
+                <input type="checkbox" id="hidePost" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <label for="hidePost" class="ml-2 block text-sm text-gray-900">Hide from Customer Dashboard</label>
+            </div>
+            <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200">
+                Submit Script/Post
+            </button>
+        </form>
+        <p id="postMessage" class="mt-4 text-center text-sm"></p>
+    </div>
+    
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
+        <h2 class="text-2xl font-bold">Generate Script Key for User</h2>
+        <form id="keyForm" class="space-y-4 mt-6">
+            <div>
+                <label for="userEmail" class="block text-sm font-medium text-gray-700">User Email (Must be a registered Supabase user)</label>
+                <input type="email" id="userEmail" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., user@gmail.com" required>
+            </div>
+            <div>
+                <label for="customKey" class="block text-sm font-medium text-gray-700">Custom Key (Optional)</label>
+                <input type="text" id="customKey" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="Leave blank to generate a random key">
+            </div>
+            <div>
+                <label for="keyDuration" class="block text-sm font-medium text-gray-700">Duration (in seconds)</label>
+                <input type="number" id="keyDuration" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., 86400 for 1 day. Use 0 for unlimited." required>
+            </div>
+            <div>
+                <label for="keyNote" class="block text-sm font-medium text-gray-700">Note (Optional)</label>
+                <input type="text" id="keyNote" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., For user 'Rama'">
+            </div>
+            <button type="submit" class="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600">
+                Generate Key
+            </button>
+        </form>
+        <p id="keyMessage" class="mt-4 text-center text-sm"></p>
+    </div>
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
+        <h2 class="text-2xl font-bold mb-6">Manage All Script Keys</h2>
+        <p class="text-sm text-red-500 mb-4">Note: This view is simplified and does not automatically show the associated user email. Only use this for general management.</p>
+        <div id="adminKeysList" class="space-y-4">
+            <p>Loading keys...</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <script>
+        let supabase;
+
+        // --- Elements ---
+        const logoutBtn = document.getElementById('logoutBtn');
+        const postForm = document.getElementById('postForm');
+        const postMessage = document.getElementById('postMessage');
+        const keyForm = document.getElementById('keyForm');
+        const keyMessage = document.getElementById('keyMessage');
+        const adminKeysList = document.getElementById('adminKeysList');
+
+        async function initAndAuth() {
+            const response = await fetch('/.netlify/functions/get-config');
+            if (!response.ok) { alert('Error: Could not get Supabase keys.'); return; }
+            const keys = await response.json();
+            supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
+
+            if (!document.cookie.includes("loggedIn=true")) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            fetchAdminKeys();
+        }
+
+        // --- POST/SCRIPT MANAGEMENT ---
+        postForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            postMessage.textContent = 'Submitting post...';
+            // Menghilangkan is_pinned dan slug karena tidak relevan di portal script
+            const response = await fetch('/.netlify/functions/create-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: document.getElementById('postTitle').value,
+                    description: document.getElementById('postDescription').value,
+                    content: document.getElementById('postContent').value,
+                    slug: null, 
+                    is_pinned: false,
+                    is_hidden: document.getElementById('hidePost').checked,
+                    author: 'Admin'
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                postMessage.textContent = 'Script submitted successfully!';
+                postMessage.className = 'mt-4 text-center text-sm text-green-500';
+                postForm.reset();
+            } else {
+                postMessage.textContent = `Error: ${result.error || 'Failed to create post.'}`;
+                postMessage.className = 'mt-t-4 text-center text-sm text-red-500';
+            }
+        });
+
+
+        // --- KEY GENERATION AND MANAGEMENT ---
+        async function fetchAdminKeys() {
+            // Mengambil semua kunci (tanpa filter user ID)
+            const { data: keys, error } = await supabase.from('script_keys').select('*').order('created_at', { ascending: false });
+            if (error) { adminKeysList.innerHTML = `<p class="text-red-500">Error fetching keys: ${error.message}</p>`; return; }
+            adminKeysList.innerHTML = keys.length === 0
+                ? `<p class="text-gray-500">No keys generated yet.</p>`
+                : keys.map(key => {
+                    let durationText = key.duration === 0 ? 'Unlimited' : `${key.duration} seconds`;
+                    let expiresText = 'Never expires';
+                    if (key.duration > 0) {
+                        expiresText = `Expires on ${new Date(new Date(key.created_at).getTime() + key.duration * 1000).toLocaleString()}`;
+                    }
+
+                    let toggleButton = '';
+                    if (key.duration === 0) {
+                        toggleButton = `<button onclick="toggleKeyStatus('${key.id}', ${key.is_active})" class="bg-gray-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-gray-600">${key.is_active ? 'Deactivate' : 'Activate'}</button>`;
+                    }
+                    
+                    // Tampilkan user_id jika ada
+                    const userIdDisplay = key.user_id ? `<p class="text-xs text-gray-500">User ID: ${key.user_id}</p>` : '';
+
+
+                    return `
+                    <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                        <div>
+                            <code class="font-semibold text-blue-600">${key.key_value}</code>
+                            ${userIdDisplay}
+                            <p class="text-sm text-gray-500">Note: ${key.note || 'N/A'}</p>
+                            <p class="text-sm text-gray-500">Duration: ${durationText} | Status: <span class="${key.is_active ? 'text-green-600' : 'text-red-600'}">${key.is_active ? 'Active' : 'Inactive'}</span></p>
+                            <p class="text-sm text-gray-500">${expiresText}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            ${toggleButton}
+                            <button onclick="deleteKey('${key.id}')" class="bg-red-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-red-600">Delete</button>
+                        </div>
+                    </div>`;
+                }).join('');
+        }
+        
+        // PERUBAHAN KRUSIAL: Mengirim userEmail
+        keyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            keyMessage.textContent = 'Generating key...';
+            const response = await fetch('/.netlify/functions/admin-generate-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userEmail: document.getElementById('userEmail').value, // <-- Tambahan
+                    customKey: document.getElementById('customKey').value,
+                    duration: parseInt(document.getElementById('keyDuration').value, 10),
+                    note: document.getElementById('keyNote').value
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                keyMessage.textContent = `Key generated: ${result.key} for User ID: ${result.user_id}`;
+                keyMessage.className = 'mt-4 text-center text-sm text-green-500';
+                keyForm.reset();
+                fetchAdminKeys();
+            } else {
+                keyMessage.textContent = `Error: ${result.error}`;
+                keyMessage.className = 'mt-t-4 text-center text-sm text-red-500';
+            }
+        });
+        
+        async function deleteKey(id) {
+            if (!confirm('Are you sure you want to permanently delete this key?')) return;
+            const { error } = await supabase.from('script_keys').delete().eq('id', id);
+            if (error) alert(`Error deleting key: ${error.message}`);
+            else fetchAdminKeys();
+        }
+
+        async function toggleKeyStatus(id, isActive) {
+            const { error } = await supabase.from('script_keys').update({ is_active: !isActive }).eq('id', id);
+            if (error) alert(`Error updating key: ${error.message}`);
+            else fetchAdminKeys();
+        }
+
+        // --- GENERAL ---
+        logoutBtn.addEventListener('click', () => {
+            document.cookie = "loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = '/login.html';
+        });
+
+        initAndAuth();
+    </script>
+</body>
+</html>

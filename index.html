@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova.Scripts - Your Growtopia Script Access</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Modern Font Stack & Background */
+        body { 
+            font-family: 'Inter', sans-serif; /* Menggunakan Inter (simulasi font modern) */
+            background-color: #0f172a; /* Warna latar belakang sangat gelap (Dark Blue/Navy) */
+        }
+        /* Primary Color: Indigo/Deep Blue */
+        .text-primary-dark { color: #4f46e5; } /* Indigo 600 */
+        .bg-card { background-color: #1e293b; } /* Deep Slate Gray untuk card */
+        .bg-accent { background-color: #3b82f6; } /* Blue 500 untuk button */
+        .hover-bg-accent:hover { background-color: #2563eb; } /* Blue 600 on hover */
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 text-white">
+
+    <div class="max-w-md w-full mx-auto p-12 bg-card rounded-2xl shadow-2xl text-center border border-indigo-500/20">
+        
+        <div class="mb-10">
+            <h1 class="text-5xl font-extrabold text-primary-dark mb-2 tracking-tight">Nova.Scripts</h1>
+            <p class="text-sm text-gray-400 font-light">Secure & Premium Automation Access</p>
+        </div>
+
+        <p class="text-base text-gray-300 mb-10 leading-relaxed">
+            Welcome to our secure portal. Access your premium Growtopia automation scripts by signing in with your verified Google account below.
+        </p>
+        
+        <div id="loadingMessage" class="text-sm text-gray-500 mb-6">Initializing connection...</div>
+        
+        <button id="googleLoginBtn" 
+                class="bg-accent hover-bg-accent text-white font-semibold py-3 px-6 rounded-xl 
+                       transition duration-300 ease-in-out flex items-center justify-center mx-auto shadow-lg w-full transform hover:scale-[1.01]"
+                style="display: none;">
+            <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M44.5 20H43V20.5H24V28H35.842C34.292 31.577 30.641 34 24 34C17.359 34 11.728 28.538 11.728 22C11.728 15.462 17.359 10 24 10C27.97 10 31.434 11.706 33.722 14.393L39.691 8.424C36.19 4.103 30.64 1.5 24 1.5C10.518 1.5 1.5 12.018 1.5 25.5C1.5 38.982 10.518 49.5 24 49.5C36.177 49.5 44.5 39.529 44.5 25.5C44.5 24.372 44.382 23.256 44.225 22.152H44.5V20Z" fill="#FFC107"/>
+                <path d="M11.728 22.001C11.728 18.513 13.076 15.358 15.364 12.87L9.394 6.9C5.454 11.221 3.25 16.513 3.25 22.001C3.25 27.489 5.454 32.781 9.394 37.102L15.364 31.132C13.076 28.644 11.728 25.489 11.728 22.001Z" fill="#4CAF50"/>
+                <path d="M24 34C30.641 34 34.292 31.577 35.842 28H44.225C44.382 29.152 44.5 30.292 44.5 31.5C44.5 40.52 38.775 49.5 24 49.5C10.518 49.5 1.5 38.982 1.5 25.5C1.5 24.182 1.638 22.883 1.884 21.614L7.853 27.584C8.941 29.839 9.873 31.577 10.871 33.327L15.364 37.102C18.667 40.529 22.895 42.5 24 42.5C28.261 42.5 31.905 40.383 34.521 37.525L39.691 42.695C36.19 46.544 30.64 48.5 24 48.5C17.359 48.5 11.728 45.345 9.394 40.924L3.25 35.093C5.64 31.848 9.394 29.644 11.728 27.584C13.076 25.489 15.364 22.001 15.364 22.001L19.857 26.5C19.857 26.5 20.945 28.644 24 28.644C27.055 28.644 28.143 26.5 28.143 26.5L32.636 22.001C32.636 22.001 32.636 22.001 32.636 22.001V22.001H24V22.001L24 10.75V10Z" fill="#4285F4"/>
+            </svg>
+            Continue with Google
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <script>
+        let supabase;
+
+        async function initSupabase() {
+            try {
+                // Mengambil konfigurasi Supabase dari fungsi Netlify (Perintah 1)
+                const response = await fetch('/.netlify/functions/get-config');
+                if (!response.ok) throw new Error('Could not get Supabase keys.');
+                const keys = await response.json();
+                supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('googleLoginBtn').style.display = 'flex';
+                
+                // Cek apakah pengguna sudah login
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    // Redirect ke dashboard jika sudah login
+                    window.location.href = '/dashboard.html';
+                }
+
+            } catch (error) {
+                document.getElementById('loadingMessage').textContent = `Error: ${error.message}. Check environment variables.`;
+            }
+        }
+
+        document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+            if (!supabase) return;
+
+            // Memulai Supabase Social Login via Google
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    // URL redirect kembali ke fungsi Netlify callback
+                    redirectTo: `${window.location.origin}/.netlify/functions/auth-callback`
+                }
+            });
+
+            if (error) {
+                alert(`Login Error: ${error.message}`);
+            }
+        });
+
+        initSupabase();
+    </script>
+</body>
+</html>

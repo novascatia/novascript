@@ -1,0 +1,81 @@
+[functions]
+  directory = "netlify/functions"
+
+# ==================================
+# Redirects untuk Customer Portal BARU
+# ==================================
+
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/.netlify/functions/auth-callback"
+  to = "/.netlify/functions/auth-callback"
+  status = 200
+  
+[[redirects]]
+  from = "/.netlify/functions/fetch-user-keys"
+  to = "/.netlify/functions/fetch-user-keys"
+  status = 200
+  
+[[redirects]]
+  from = "/.netlify/functions/fetch-scripts"
+  to = "/.netlify/functions/fetch-scripts"
+  status = 200
+
+[[redirects]]
+  from = "/.netlify/functions/get-config"
+  to = "/.netlify/functions/get-config"
+  status = 200
+
+# ==================================
+# Redirects Admin dan Key System
+# ==================================
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+  force = true
+  conditions = {Role = ["authenticated"]}
+
+[[redirects]]
+  from = "/admin"
+  to = "/login.html"
+  status = 302
+  force = true
+  
+[[redirects]]
+  from = "/post/raw/:id"
+  to = "/.netlify/functions/get-raw-post"
+  status = 200
+  force = true
+  
+[[redirects]]
+  from = "/.netlify/functions/verify-key"
+  to = "/.netlify/functions/verify-key"
+  status = 200
+
+[[redirects]]
+  from = "/.netlify/functions/admin-generate-key"
+  to = "/.netlify/functions/admin-generate-key"
+  status = 200
+
+[[redirects]]
+  from = "/.netlify/functions/create-post"
+  to = "/.netlify/functions/create-post"
+  status = 200
+  
+[[redirects]]
+  from = "/.netlify/functions/delete-post"
+  to = "/.netlify/functions/delete-post"
+  status = 200
+  force = true
