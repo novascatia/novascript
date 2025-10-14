@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Access - Nova Scripts</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', ui-sans-serif, system-ui; background-color: #f9fafb; }
+        .tier-card {
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            transition: all 0.2s;
+            border-radius: 0.75rem;
+        }
+        .tier-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+        .tier-card.selected {
+            border-color: #1e3a8a; /* Biru tua elegan */
+            background-color: #eff6ff; /* Blue-50 */
+            box-shadow: 0 0 0 3px #bfdbfe; /* Blue-300 ring */
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(30, 58, 138, 0.9); /* Biru tua transparan */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="p-8 min-h-screen">
+
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="text-white text-lg flex flex-col items-center space-y-3">
+            <svg class="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Processing Transaction...</span>
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto bg-white p-8 md:p-10 rounded-xl shadow-2xl">
+        <a href="/dashboard.html" class="text-blue-800 hover:underline mb-8 inline-block font-medium">← Back to Dashboard</a>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Select Access Duration</h1>
+        <p class="text-gray-500 mb-8">Choose the tier that best suits your needs.</p>
+
+        <div id="pricingTiers" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <p class="col-span-3 text-center text-gray-500">Loading pricing options...</p>
+        </div>
+
+        <div id="checkoutSection" class="border-t border-gray-200 pt-6 hidden">
+            <h2 class="text-xl font-bold text-gray-700 mb-4">Transaction Summary</h2>
+            <div id="selectedTierInfo" class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                </div>
+            
+            <button id="payButton" class="w-full accent-btn text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200">
+                Pay Now with QRIS
+            </button>
+            <p id="errorMessage" class="text-red-500 text-sm mt-3 text-center hidden"></p>
+        </div>
+
+        <div id="paymentModal" class="mt-10 p-6 border-t border-gray-200 pt-6 hidden">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Scan to Pay (QRIS)</h2>
+            <div class="max-w-xs mx-auto text-center">
+                <p class="text-sm text-gray-600 mb-3">Scan QR code using your favorite e-wallet or banking app.</p>
+                <div class="bg-white p-4 border border-gray-300 rounded-lg shadow-md">
+                    <img id="qrisImage" src="https://via.placeholder.com/300?text=QRIS+CODE" alt="QRIS Code" class="w-full h-auto rounded-md mb-4">
+                </div>
+                
+                <p class="text-sm text-gray-700 font-medium mb-1">Total Payment</p>
+                <p class="text-3xl font-extrabold text-blue-800 mb-4" id="qrisAmount">Rp 0</p>
+                
+                <p id="timeRemaining" class="text-sm font-medium text-red-500 mb-4"></p>
+                
+                <button id="cancelPaymentBtn" class="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 text-sm transition-colors">
+                    Cancel Transaction
+                </button>
+            </div>
+            <p id="paymentStatusMessage" class="mt-4 text-center font-bold text-green-600 hidden"></p>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <script>
+        // --- LOGIC (SAMA DENGAN SEBELUMNYA, HANYA DISESUAIKAN DENGAN UI BARU) ---
+        let supabase;
+        let selectedTierId = null;
+        let selectedTier = null;
+        let transactionInterval = null;
+        let timerInterval = null;
+        let transactionId = null;
+
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+        }
+
+        function showElement(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hideElement(id) { document.getElementById(id).classList.add('hidden'); }
+
+        async function init() {
+            const response = await fetch('/.netlify/functions/get-config');
+            if (!response.ok) { console.error('Error: Could not get Supabase keys.'); return; }
+            const keys = await response.json();
+            supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            fetchPricingTiers();
+        }
+
+        async function fetchPricingTiers() {
+            showElement('loadingOverlay');
+            
+            // NOTE: Fetching pricing tiers di frontend aman karena datanya bersifat publik
+            const { data: tiers, error } = await supabase
+                .from('pricing_tiers')
+                .select('*')
+                .eq('is_active', true)
+                .order('price', { ascending: true });
+            
+            hideElement('loadingOverlay');
+
+            if (error) {
+                document.getElementById('pricingTiers').innerHTML = `<p class="col-span-3 text-red-500 text-center">Failed to load pricing: ${error.message}</p>`;
+                return;
+            }
+
+            const tiersHtml = tiers.map(tier => {
+                const durationText = tier.duration_seconds === 0 ? 'Unlimited' : `${tier.duration_seconds / 86400} Days`;
+                return `
+                    <div id="tier-${tier.id}" class="tier-card p-6 text-center" 
+                         data-id="${tier.id}" data-price="${tier.price}" data-name="${tier.name}">
+                        <h3 class="text-xl font-bold text-gray-800">${tier.name}</h3>
+                        <p class="text-3xl font-extrabold text-blue-800 my-3">${formatRupiah(tier.price)}</p>
+                        <p class="text-sm text-gray-500">${durationText} Access</p>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('pricingTiers').innerHTML = tiersHtml;
+            
+            document.querySelectorAll('.tier-card').forEach(card => {
+                card.addEventListener('click', () => selectTier(card, tiers));
+            });
+        }
+
+        function selectTier(card, tiers) {
+            document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            
+            selectedTierId = card.dataset.id;
+            selectedTier = tiers.find(t => t.id === selectedTierId);
+
+            document.getElementById('selectedTierInfo').innerHTML = `
+                <p class="font-semibold text-gray-800">${selectedTier.name} selected.</p>
+                <p class="text-lg font-bold text-blue-800">Total: ${formatRupiah(selectedTier.price)}</p>
+            `;
+
+            showElement('checkoutSection');
+            hideElement('errorMessage');
+            hideElement('paymentModal'); 
+        }
+        
+        document.getElementById('payButton').addEventListener('click', createTransaction);
+
+        async function createTransaction() {
+            if (!selectedTierId) {
+                document.getElementById('errorMessage').textContent = 'Please select an access tier.';
+                showElement('errorMessage');
+                return;
+            }
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            showElement('loadingOverlay');
+            hideElement('errorMessage');
+            
+            const response = await fetch('/.netlify/functions/create-qris-transaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tierId: selectedTierId,
+                    userId: user.id,
+                    amount: selectedTier.price,
+                    tierName: selectedTier.name
+                })
+            });
+
+            const result = await response.json();
+            hideElement('loadingOverlay');
+
+            if (response.ok && result.qrisImage && result.transactionId) {
+                transactionId = result.transactionId;
+                displayPaymentModal(result);
+                startPaymentPolling(transactionId);
+            } else {
+                document.getElementById('errorMessage').textContent = result.error || 'Failed to create payment transaction.';
+                showElement('errorMessage');
+            }
+        }
+
+        function displayPaymentModal(transactionData) {
+            hideElement('checkoutSection');
+            hideElement('pricingTiers');
+
+            document.getElementById('qrisImage').src = transactionData.qrisImage;
+            document.getElementById('qrisAmount').textContent = formatRupiah(transactionData.amount);
+            showElement('paymentModal');
+
+            // Start timer (e.g., 15 minutes / 900 seconds expiry)
+            let secondsLeft = 900; 
+            const timerElement = document.getElementById('timeRemaining');
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerElement.textContent = 'Transaction Expired. Please try again.';
+                    clearInterval(transactionInterval);
+                    // Add logic to mark as EXPIRED in backend
+                } else {
+                    const minutes = Math.floor(secondsLeft / 60);
+                    const seconds = secondsLeft % 60;
+                    timerElement.textContent = `Expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function startPaymentPolling(id) {
+            clearInterval(transactionInterval);
+            transactionInterval = setInterval(async () => {
+                const response = await fetch(`/.netlify/functions/check-payment-status?id=${id}`);
+                const result = await response.json();
+
+                if (result.status === 'PAID') {
+                    clearInterval(transactionInterval);
+                    clearInterval(timerInterval);
+                    document.getElementById('paymentStatusMessage').textContent = 'Payment Successful! Redirecting to Dashboard...';
+                    showElement('paymentStatusMessage');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 3000);
+                } else if (result.status === 'FAILED' || result.status === 'EXPIRED') {
+                    clearInterval(transactionInterval);
+                    clearInterval(timerInterval);
+                    alert(`Transaction ${result.status.toLowerCase()}. Please try again.`);
+                    window.location.reload();
+                }
+            }, 5000);
+        }
+        
+        document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to cancel this transaction?')) {
+                clearInterval(transactionInterval);
+                clearInterval(timerInterval);
+                window.location.reload();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

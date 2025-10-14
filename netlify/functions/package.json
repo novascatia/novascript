@@ -1,0 +1,15 @@
+{
+  "name": "nova-scripts-backend",
+  "version": "1.0.0",
+  "description": "Netlify Functions for Nova Scripts Key and QRIS System.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4",
+    "node-fetch": "^3.3.2"
+    
+    // CATATAN: Jika menggunakan Midtrans/Xendit, Anda mungkin perlu menambahkan
+    // "midtrans-client": "^1.x.x" atau "xendit-node": "^1.x.x" di sini
+  }
+}
