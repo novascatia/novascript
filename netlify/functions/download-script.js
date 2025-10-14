@@ -1,5 +1,4 @@
 // netlify/functions/download-script.js
-// Memverifikasi key dan menghasilkan URL signed sementara untuk pengunduhan file.
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -66,7 +65,7 @@ exports.handler = async (event) => {
         }
 
         // 3. GENERATE URL SIGNED SEMENTARA (Pre-signed URL)
-        // Asumsi bucket Supabase Storage Anda bernama 'scripts'
+        // Pastikan nama bucket 'scripts' benar
         const { data: urlData, error: storageError } = await supabase.storage
             .from('scripts')
             .createSignedUrl(script.download_path, 60); // URL berlaku selama 60 detik
