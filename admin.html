@@ -3,288 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>User Dashboard - NovaScript</title>
     <link rel="icon" type="image/png" href="/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      body { font-family: ui-sans-serif, system-ui; }
-      body.dark {
-          background-color: #1a202c;
-          color: #e2e8f0;
-      }
-      body.dark .bg-white {
-          background-color: #2d3748;
-          color: #e2e8f0;
-      }
-      body.dark .text-gray-600 { color: #cbd5e0; }
-      body.dark .text-gray-700, body.dark .text-gray-900 { color: #e2e8f0; }
-      body.dark .bg-gray-50 { background-color: #4a5568; }
-      body.dark .border-gray-300 { border-color: #4a5568; }
-      body.dark code { background-color: #1a202c; }
-    </style>
 </head>
 <body class="bg-gray-100 p-8">
+    <header class="flex justify-between items-center mb-8 w-full max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold">NovaScript Dashboard</h1>
+        <button id="logoutBtn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-200">
+            Log Out
+        </button>
+    </header>
 
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">Admin Dashboard</h1>
-            <button id="logoutBtn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-200">
-                Log Out
-            </button>
+    <div class="space-y-8 w-full max-w-4xl mx-auto">
+        
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-4">Admin Script (<span id="scriptTitle">Loading...</span>)</h2>
+            <div class="bg-gray-100 p-4 rounded-md relative">
+                <pre id="scriptContent" class="text-gray-800 whitespace-pre-wrap text-sm">Loading script...</pre>
+                <button id="copyScriptBtn" class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold py-1 px-2 rounded hover:bg-blue-600">
+                    Copy
+                </button>
+            </div>
+            <p id="scriptMessage" class="text-sm mt-2 text-green-600 hidden">Copied!</p>
         </div>
-    </div>
 
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
-        <h2 class="text-2xl font-bold">Create New Post</h2>
-        <form id="postForm" class="space-y-4 mt-6">
-            <div>
-                <label for="postTitle" class="block text-sm font-medium text-gray-700">Post Title</label>
-                <input type="text" id="postTitle" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-4">Your Keys</h2>
+            <div id="keysList" class="space-y-4">
+                <p>Loading keys...</p>
             </div>
-            <div>
-                <label for="postDescription" class="block text-sm font-medium text-gray-700">Post Description</label>
-                <input type="text" id="postDescription" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
-            <div>
-                <label for="postContent" class="block text-sm font-medium text-gray-700">Post Content</label>
-                <textarea id="postContent" rows="10" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
-            </div>
-            <div>
-                <label for="postSlug" class="block text-sm font-medium text-gray-700">Custom Post Link (optional)</label>
-                <input type="text" id="postSlug" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex justify-between">
-                <div class="flex items-center">
-                    <input type="checkbox" id="pinPost" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <label for="pinPost" class="ml-2 block text-sm text-gray-900">Pin this post</label>
-                </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="hidePost" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <label for="hidePost" class="ml-2 block text-sm text-gray-900">Hide from main page</label>
-                </div>
-            </div>
-            <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200">
-                Submit Post
-            </button>
-        </form>
-        <p id="postMessage" class="mt-4 text-center text-sm"></p>
-    </div>
-
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
-        <h2 class="text-2xl font-bold mb-6">Manage Posts</h2>
-        <div id="adminPostsList" class="space-y-4"></div>
+        </div>
+        
     </div>
     
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
-        <h2 class="text-2xl font-bold">Generate Script Key</h2>
-        <form id="keyForm" class="space-y-4 mt-6">
-            <div>
-                <label for="keyUserId" class="block text-sm font-medium text-gray-700">Supabase User ID (Opsional, direkomendasikan)</label>
-                <input type="text" id="keyUserId" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., UUID dari Supabase Auth">
-            </div>
-            <div>
-                <label for="customKey" class="block text-sm font-medium text-gray-700">Custom Key (Optional)</label>
-                <input type="text" id="customKey" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="Leave blank to generate a random key">
-            </div>
-            <div>
-                <label for="keyDuration" class="block text-sm font-medium text-gray-700">Duration (in seconds)</label>
-                <input type="number" id="keyDuration" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., 86400 for 1 day. Use 0 for unlimited." required>
-            </div>
-            <div>
-                <label for="keyNote" class="block text-sm font-medium text-gray-700">Note (Optional)</label>
-                <input type="text" id="keyNote" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., For user 'Rama'">
-            </div>
-            <button type="submit" class="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600">
-                Generate Key
-            </button>
-        </form>
-        <p id="keyMessage" class="mt-4 text-center text-sm"></p>
-    </div>
-
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
-        <h2 class="text-2xl font-bold mb-6">Manage Script Keys</h2>
-        <div id="adminKeysList" class="space-y-4">
-            <p>Loading keys...</p>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <script>
+        const keysList = document.getElementById('keysList');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const scriptContentPre = document.getElementById('scriptContent');
+        const scriptTitleSpan = document.getElementById('scriptTitle');
+        const copyScriptBtn = document.getElementById('copyScriptBtn');
+        const scriptMessage = document.getElementById('scriptMessage');
         let supabase;
 
-        // --- Elements ---
-        const logoutBtn = document.getElementById('logoutBtn');
-        const postForm = document.getElementById('postForm');
-        const adminPostsList = document.getElementById('adminPostsList');
-        const postMessage = document.getElementById('postMessage');
-        const keyForm = document.getElementById('keyForm');
-        const keyMessage = document.getElementById('keyMessage');
-        const adminKeysList = document.getElementById('adminKeysList');
-
         async function initAndAuth() {
-            const response = await fetch('/.netlify/functions/get-config');
-            if (!response.ok) { alert('Error: Could not get Supabase keys.'); return; }
-            const keys = await response.json();
+            const configResponse = await fetch('/.netlify/functions/get-config');
+            if (!configResponse.ok) { 
+                alert('Error: Could not get Supabase keys.');
+                window.location.href = '/login';
+                return;
+            }
+            const keys = await configResponse.json();
             supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
 
-            if (!document.cookie.includes("loggedIn=true")) {
-                window.location.href = '/admin/login'; // DIPERBARUI: Menggunakan clean URL /admin/login
+            // Check Supabase Auth session
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                window.location.href = '/login';
                 return;
             }
             
-            fetchAdminPosts();
-            fetchAdminKeys();
+            fetchUserData();
         }
 
-        // --- POST MANAGEMENT ---
-        async function fetchAdminPosts() {
-            const { data: posts, error } = await supabase.from('posts').select('id, title, created_at, is_hidden').order('created_at', { ascending: false });
-            if (error) { adminPostsList.innerHTML = `<p class="text-red-500">Error fetching posts.</p>`; return; }
-            adminPostsList.innerHTML = posts.length === 0 
-                ? `<p class="text-gray-500">No posts to manage yet.</p>`
-                : posts.map(post => `
-                    <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <h3 class="font-semibold">${post.title}</h3>
-                            <p class="text-sm text-gray-500">ID: ${post.id} | Status: <span class="${post.is_hidden ? 'text-yellow-600' : 'text-green-600'}">${post.is_hidden ? 'Hidden' : 'Visible'}</span></p>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="toggleHiddenStatus('${post.id}', ${post.is_hidden})" class="bg-gray-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-gray-600">${post.is_hidden ? 'Show' : 'Hide'}</button>
-                            <button onclick="deletePost('${post.id}')" class="bg-red-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-red-600">Delete</button>
-                        </div>
-                    </div>`).join('');
-        }
-        
-        async function deletePost(id) {
-            if (!confirm('Are you sure you want to delete this post?')) return;
-            // This now requires a backend function for security with service_role key
-            const response = await fetch('/.netlify/functions/delete-post', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
-            });
-            if (!response.ok) alert(`Error deleting post.`);
-            else fetchAdminPosts();
+        function formatDuration(seconds) {
+            if (seconds === 0) return 'Unlimited';
+            if (seconds < 60) return `${seconds} detik`;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            return `${hours}j ${remainingMinutes}m ${remainingSeconds}s`;
         }
 
-        async function toggleHiddenStatus(id, isHidden) {
-            // This now requires a backend function for security with service_role key
-            const response = await fetch('/.netlify/functions/update-post-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, is_hidden: !isHidden })
-            });
-            if (!response.ok) alert(`Error updating post status.`);
-            else fetchAdminPosts();
-        }
-
-        postForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            postMessage.textContent = 'Submitting post...';
-            const response = await fetch('/.netlify/functions/create-post', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: document.getElementById('postTitle').value,
-                    description: document.getElementById('postDescription').value,
-                    content: document.getElementById('postContent').value,
-                    slug: document.getElementById('postSlug').value,
-                    is_pinned: document.getElementById('pinPost').checked,
-                    is_hidden: document.getElementById('hidePost').checked,
-                    author: 'novascatia'
-                })
-            });
-            const result = await response.json();
-            if (response.ok) {
-                postMessage.textContent = 'Post submitted successfully!';
-                postMessage.className = 'mt-4 text-center text-sm text-green-500';
-                postForm.reset();
-                fetchAdminPosts();
-            } else {
-                postMessage.textContent = `Error: ${result.error || 'Failed to create post.'}`;
-                postMessage.className = 'mt-4 text-center text-sm text-red-500';
+        async function fetchUserData() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = '/login';
+                return;
             }
-        });
 
-        // --- KEY MANAGEMENT ---
-        async function fetchAdminKeys() {
-            const { data: keys, error } = await supabase.from('script_keys').select('*').order('created_at', { ascending: false });
-            if (error) { adminKeysList.innerHTML = `<p class="text-red-500">Error fetching keys: ${error.message}</p>`; return; }
-            adminKeysList.innerHTML = keys.length === 0
-                ? `<p class="text-gray-500">No keys generated yet.</p>`
-                : keys.map(key => {
-                    let durationText = key.duration === 0 ? 'Unlimited' : `${key.duration} seconds`;
-                    let expiresText = 'Never expires';
-                    if (key.duration > 0) {
-                        expiresText = `Expires on ${new Date(new Date(key.created_at).getTime() + key.duration * 1000).toLocaleString()}`;
-                    }
-                    
-                    let userIdDisplay = key.user_id ? `<p class="text-sm text-gray-500">User ID: ${key.user_id}</p>` : ''; // NEW: Tampilkan User ID
+            // DIPERBAIKI: Kirim JWT Supabase sebagai header Authorization
+            const response = await fetch('/.netlify/functions/fetch-user-data', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}` 
+                }
+            });
 
-                    let toggleButton = '';
+            if (response.status === 401) {
+                // Jika fungsi mengembalikan 401, token tidak valid
+                await supabase.auth.signOut();
+                window.location.href = '/login';
+                return;
+            }
+
+            if (!response.ok) {
+                keysList.innerHTML = `<p class="text-red-500">Error loading data. (Pastikan Netlify Function dan Env Vars sudah dikonfigurasi)</p>`;
+                return;
+            }
+
+            const data = await response.json();
+            const { keys, script } = data;
+            
+            // --- Script Display ---
+            if (script) {
+                scriptTitleSpan.textContent = script.title;
+                scriptContentPre.textContent = script.content;
+            } else {
+                scriptTitleSpan.textContent = 'Belum Diunggah';
+                scriptContentPre.textContent = 'Admin belum mengunggah script. Admin dapat mengunggah script dengan ID: latest-script.';
+            }
+
+            // --- Keys Display ---
+            if (keys.length === 0) {
+                keysList.innerHTML = `<p class="text-gray-500">Anda belum memiliki kunci.</p>`;
+                return;
+            }
+
+            const now = new Date().getTime();
+            
+            const renderedKeys = keys.map(key => {
+                const isActive = key.is_active;
+                let statusText = 'Inactive';
+                let statusColor = 'text-red-600';
+                let durationText = formatDuration(key.duration);
+                let expiryText = 'Tidak Pernah Kadaluarsa';
+                let timeRemaining = 'N/A';
+                
+                if (isActive) {
                     if (key.duration === 0) {
-                        toggleButton = `<button onclick="toggleKeyStatus('${key.id}', ${key.is_active})" class="bg-gray-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-gray-600">${key.is_active ? 'Deactivate' : 'Activate'}</button>`;
+                        statusText = 'Aktif (Unlimited)';
+                        statusColor = 'text-green-600';
+                    } else {
+                        const createdAtTime = new Date(key.created_at).getTime();
+                        const expiresAt = createdAtTime + key.duration * 1000;
+                        const secondsLeft = Math.floor((expiresAt - now) / 1000);
+                        
+                        if (secondsLeft > 0) {
+                            statusText = 'Aktif (Berjangka)';
+                            statusColor = 'text-green-600';
+                            timeRemaining = formatDuration(secondsLeft);
+                            expiryText = `Kadaluarsa pada ${new Date(expiresAt).toLocaleString()}`;
+                        } else {
+                            statusText = 'Kadaluarsa';
+                            statusColor = 'text-yellow-600';
+                        }
                     }
-
-                    return `
+                }
+                
+                return `
                     <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
                         <div>
                             <code class="font-semibold text-blue-600">${key.key_value}</code>
-                            ${userIdDisplay}
                             <p class="text-sm text-gray-500">Note: ${key.note || 'N/A'}</p>
-                            <p class="text-sm text-gray-500">Duration: ${durationText} | Status: <span class="${key.is_active ? 'text-green-600' : 'text-red-600'}">${key.is_active ? 'Active' : 'Inactive'}</span></p>
-                            <p class="text-sm text-gray-500">${expiresText}</p>
-                        </div>
-                        <div class="flex space-x-2">
-                            ${toggleButton}
-                            <button onclick="deleteKey('${key.id}')" class="bg-red-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-red-600">Delete</button>
+                            <p class="text-sm text-gray-500">Durasi: ${durationText} | Status: <span class="${statusColor}">${statusText}</span></p>
+                            ${key.duration > 0 && statusColor === 'text-green-600' ? `<p class="text-sm text-gray-500">Sisa Waktu: ${timeRemaining}</p>` : `<p class="text-sm text-gray-500">${expiryText}</p>`}
                         </div>
                     </div>`;
-                }).join('');
+            }).join('');
+            
+            keysList.innerHTML = renderedKeys;
         }
-        
-        keyForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            keyMessage.textContent = 'Generating key...';
-            const response = await fetch('/.netlify/functions/admin-generate-key', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: document.getElementById('keyUserId').value, // DIPERBARUI: Mengirimkan User ID
-                    customKey: document.getElementById('customKey').value,
-                    duration: parseInt(document.getElementById('keyDuration').value, 10),
-                    note: document.getElementById('keyNote').value
-                })
-            });
-            const result = await response.json();
-            if (response.ok) {
-                keyMessage.textContent = `Key generated: ${result.key}`;
-                keyMessage.className = 'mt-4 text-center text-sm text-green-500';
-                keyForm.reset();
-                fetchAdminKeys();
-            } else {
-                keyMessage.textContent = `Error: ${result.error}`;
-                keyMessage.className = 'mt-t-4 text-center text-sm text-red-500';
-            }
+
+        logoutBtn.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = '/login';
         });
         
-        async function deleteKey(id) {
-            if (!confirm('Are you sure you want to permanently delete this key?')) return;
-            const { error } = await supabase.from('script_keys').delete().eq('id', id);
-            if (error) alert(`Error deleting key: ${error.message}`);
-            else fetchAdminKeys();
-        }
-
-        async function toggleKeyStatus(id, isActive) {
-            const { error } = await supabase.from('script_keys').update({ is_active: !isActive }).eq('id', id);
-            if (error) alert(`Error updating key: ${error.message}`);
-            else fetchAdminKeys();
-        }
-
-        // --- GENERAL ---
-        logoutBtn.addEventListener('click', () => {
-            document.cookie = "loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            window.location.href = '/admin/login'; // DIPERBARUI: Menggunakan clean URL /admin/login
+        copyScriptBtn.addEventListener('click', () => {
+            const textToCopy = scriptContentPre.textContent;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                scriptMessage.classList.remove('hidden');
+                setTimeout(() => { scriptMessage.classList.add('hidden'); }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
         });
 
         initAndAuth();
