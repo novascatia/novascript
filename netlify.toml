@@ -74,6 +74,12 @@
   to = "/.netlify/functions/download-script"
   status = 200
 
+# NEW: Delete Key Endpoint
+[[redirects]]
+  from = "/.netlify/functions/delete-key"
+  to = "/.netlify/functions/delete-key"
+  status = 200
+
 # ==================================
 # QRIS PAYMENT SYSTEM
 # ==================================

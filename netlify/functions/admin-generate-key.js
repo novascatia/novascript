@@ -13,7 +13,8 @@ exports.handler = async (event) => {
     }
 
     try {
-        const { duration, user_email, custom_key } = JSON.parse(event.body); // Updated to accept user_email and custom_key
+        // Updated to accept user_email and custom_key
+        const { duration, user_email, custom_key } = JSON.parse(event.body); 
 
         if (typeof duration !== 'number') {
             return {
