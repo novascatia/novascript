@@ -13,7 +13,8 @@ exports.handler = async (event) => {
     }
 
     try {
-        const { duration, user_id } = JSON.parse(event.body);
+        // PERUBAHAN: Menerima custom_key
+        const { duration, user_id, custom_key } = JSON.parse(event.body); 
 
         if (typeof duration !== 'number') {
             return {
@@ -22,7 +23,10 @@ exports.handler = async (event) => {
             };
         }
 
-        const keyToInsert = `ADM-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+        // PERUBAHAN: Tentukan nilai kunci
+        const keyToInsert = custom_key
+            ? custom_key.toUpperCase() // Gunakan custom key jika ada
+            : `ADM-${crypto.randomBytes(8).toString('hex').toUpperCase()}`; // Default
         
         const { error } = await supabase
             .from('script_keys')
@@ -38,7 +42,7 @@ exports.handler = async (event) => {
             if (error.code === '23505') {
                  return {
                     statusCode: 409,
-                    body: JSON.stringify({ error: `Key generation failed due to conflict.` }),
+                    body: JSON.stringify({ error: `Key generation failed: Key value '${keyToInsert}' already exists (Conflict).` }),
                 };
             }
             throw error;

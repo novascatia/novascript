@@ -59,6 +59,10 @@
                 <input type="text" id="keyUserId" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="Supabase User ID (UUID) or leave blank for admin key">
             </div>
             <div>
+                <label for="customKeyValue" class="block text-sm font-medium text-gray-700">Custom Key Value (Optional)</label>
+                <input type="text" id="customKeyValue" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., VIP-ACCESS-KEY">
+            </div>
+            <div>
                 <label for="keyDuration" class="block text-sm font-medium text-gray-700">Duration (in seconds)</label>
                 <input type="number" id="keyDuration" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., 86400 for 1 day. Use 0 for unlimited." required>
             </div>
@@ -82,7 +86,9 @@
 
         // --- Mockup/Placeholder for Supabase Storage functions ---
         async function uploadScriptFile(file) {
+            // Ini harus diimplementasikan dengan Supabase Storage JS SDK
             console.log("Simulasi: Mengunggah file ke Supabase Storage...");
+            // Asumsi berhasil dan mengembalikan path:
             return `scripts/latest/${file.name.replace(/\s/g, '_')}`;
         }
         // --- Akhir Mockup ---
@@ -94,6 +100,7 @@
             
             supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
 
+            // Admin check berdasarkan cookie/token sederhana
             if (!document.cookie.includes("adminLoggedIn=true")) {
                 window.location.href = '/login-admin.html'; 
                 return;
@@ -112,15 +119,17 @@
             
             scriptMessage.textContent = 'Uploading file and creating script metadata...';
             
+            // Step 1: Upload file (simulasi)
             const downloadPath = await uploadScriptFile(scriptFile);
             
+            // Step 2: Create metadata via Netlify Function
             const response = await fetch('/.netlify/functions/create-script-metadata', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: document.getElementById('scriptTitle').value,
                     description: document.getElementById('scriptDescription').value,
-                    download_path: downloadPath 
+                    download_path: downloadPath // Path dari Supabase Storage
                 })
             });
             
@@ -136,7 +145,7 @@
             }
         });
         
-        // NEW: Implementasi fungsi deleteScript
+        // FUNGSI BARU: Delete Script (Memerlukan delete-script-metadata.js)
         async function deleteScript(scriptId) {
             if (!confirm(`Are you sure you want to delete script ID: ${scriptId}? File di Supabase Storage tidak dihapus.`)) {
                 return;
@@ -151,7 +160,7 @@
             const result = await response.json();
             if (response.ok) {
                 alert(result.message);
-                fetchAdminScripts(); // Refresh list
+                fetchAdminScripts(); 
             } else {
                 alert(`Failed to delete script: ${result.error || 'Unknown error'}`);
             }
@@ -159,7 +168,6 @@
 
         async function fetchAdminScripts() {
             const adminScriptsList = document.getElementById('adminScriptsList');
-            // FIX: Ensure 'id' is selected for delete function
             const { data: scripts, error } = await supabase.from('scripts').select('id, title, version, download_path').order('created_at', { ascending: false });
             
             if (error) { adminScriptsList.innerHTML = `<p class="text-red-500">Error fetching scripts.</p>`; return; }
@@ -178,7 +186,7 @@
                     </div>`).join('');
         }
         
-        // Key Generation Logic (Manual Admin Key) - REVERTED LOGIC
+        // Key Generation Logic (Manual Admin Key) - UPDATED LOGIC
         document.getElementById('keyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const keyMessage = document.getElementById('keyMessage');
@@ -189,7 +197,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     duration: parseInt(document.getElementById('keyDuration').value, 10),
-                    // REVERTED: Kembali mengirim user_id
+                    // BARU: Mengirim custom_key
+                    custom_key: document.getElementById('customKeyValue').value || null, 
                     user_id: document.getElementById('keyUserId').value || null 
                 })
             });
@@ -205,13 +214,14 @@
             }
         });
 
-        // NEW: Implementasi fungsi deleteKey
+        // FUNGSI BARU: Delete Key (Memerlukan delete-key.js)
         async function deleteKey(keyId) {
             if (!confirm(`Are you sure you want to delete Key ID: ${keyId}?`)) {
                 return;
             }
             
-            const response = await fetch('/.netlify/functions/delete-key', {
+            // Catatan: Memerlukan Netlify Function delete-key.js dan redirect yang sesuai
+            const response = await fetch('/.netlify/functions/delete-key', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ keyId })
@@ -220,7 +230,7 @@
             const result = await response.json();
             if (response.ok) {
                 alert(result.message);
-                fetchAdminKeys(); // Refresh list
+                fetchAdminKeys(); 
             } else {
                 alert(`Failed to delete key: ${result.error || 'Unknown error'}`);
             }
@@ -230,7 +240,7 @@
         // Key Management Logic
         async function fetchAdminKeys() {
             const adminKeysList = document.getElementById('adminKeysList');
-            // FIX: Tambahkan 'id' di select statement agar tombol delete berfungsi
+            // FIX: Memastikan ID kunci diambil untuk tombol delete
             const { data: keys, error } = await supabase.from('script_keys').select('id, key_value, duration, created_at, is_active, user_id').order('created_at', { ascending: false });
             
             if (error) { adminKeysList.innerHTML = `<p class="text-red-500">Error fetching keys: ${error.message}</p>`; return; }

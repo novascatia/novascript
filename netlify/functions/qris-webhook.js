@@ -19,8 +19,8 @@ async function createNewKey(userId, tierId) {
         
     if (tierError || !tier) { throw new Error("Tier not found or Tier DB error."); }
 
-    // 2. Generate Key
-    const keyToInsert = `USER-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+    // 2. Generate Key - PERUBAHAN PREFIX
+    const keyToInsert = `NOVA-${crypto.randomBytes(6).toString('hex').toUpperCase()}`; // Prefix diubah ke NOVA-
     
     const { data: newKey, error: keyError } = await supabase
         .from('script_keys')
