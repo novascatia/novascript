@@ -3,116 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Login / Register</title>
+    <title>Login | Register - Nova Scripts</title>
     <link rel="icon" type="image/png" href="/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', ui-sans-serif, system-ui; background-color: #f9fafb; }
-        .accent-btn { background-color: #1e3a8a; }
+        .form-container { max-width: 400px; }
+        .input-field { border-color: #d1d5db; transition: border-color 0.2s; }
+        .input-field:focus { border-color: #1e3a8a; box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.5); }
+        .accent-btn { background-color: #1e3a8a; transition: background-color 0.2s; }
         .accent-btn:hover { background-color: #172554; }
+        .message-box { padding: 0.75rem; border-radius: 0.5rem; margin-top: 1rem; }
+        .error-message { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        .success-message { background-color: #d1fae5; color: #059669; border: 1px solid #6ee7b7; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-white p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-md border border-gray-100">
-        <h2 class="text-3xl font-bold mb-6 text-center text-gray-800" id="formTitle">Customer Login</h2>
-        <a href="/" class="text-blue-600 hover:underline text-sm mb-4 block">← Back to Home</a>
-        
-        <form id="authForm" class="space-y-4">
+    <div class="form-container w-full bg-white p-8 rounded-xl shadow-2xl">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">Nova Scripts Access</h1>
+
+        <form id="authForm" class="space-y-5">
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                <input type="email" id="email" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="email" id="email" class="input-field mt-1 block w-full p-3 border rounded-lg focus:outline-none" required>
             </div>
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="password" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="password" id="password" class="input-field mt-1 block w-full p-3 border rounded-lg focus:outline-none" required>
             </div>
-            <button type="submit" id="submitBtn" class="w-full accent-btn text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md">
-                Log In
+            
+            <button type="submit" id="authButton" class="w-full accent-btn text-white font-semibold py-3 rounded-lg shadow-md transition-colors duration-200">
+                Sign In
             </button>
         </form>
 
-        <div id="message" class="mt-4 text-center text-sm"></div>
-        
-        <p class="mt-6 text-center text-sm">
-            Don't have an account? 
-            <button id="toggleAuth" class="text-blue-800 font-medium hover:underline">Register Here</button>
-        </p>
+        <div id="message" class="message-box text-sm text-center hidden"></div>
+
+        <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+            <p id="toggleText" class="text-sm text-gray-600">
+                Don't have an account? 
+                <button id="toggleAuthMode" class="text-blue-800 font-medium hover:underline focus:outline-none">Sign Up</button>
+            </p>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <script>
-        const formTitle = document.getElementById('formTitle');
         const authForm = document.getElementById('authForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const toggleAuth = document.getElementById('toggleAuth');
+        const authButton = document.getElementById('authButton');
         const messageDiv = document.getElementById('message');
-        let isLogin = true;
+        const toggleAuthModeBtn = document.getElementById('toggleAuthMode');
         let supabase;
+        let isSignUpMode = false;
 
         async function initSupabase() {
-            messageDiv.textContent = 'Initializing...';
-            const response = await fetch('/.netlify/functions/get-config');
-            if (!response.ok) {
-                messageDiv.textContent = 'Error: Could not get Supabase keys.';
-                return;
+            try {
+                const response = await fetch('/.netlify/functions/get-config');
+                if (!response.ok) throw new Error('Failed to get Supabase config.');
+                
+                const keys = await response.json();
+                if (!keys.supabaseUrl || !keys.supabaseKey) throw new Error('Supabase keys are missing.');
+                
+                supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
+                
+                // Cek status user saat ini
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    window.location.href = '/dashboard.html';
+                }
+            } catch (error) {
+                displayMessage('Error initializing: Check Netlify ENV vars and deploy log.', 'error');
+                console.error('Initialization Error:', error);
             }
-            const keys = await response.json();
-            // Inisialisasi Supabase
-            supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
-            
-            // Cek jika user sudah login
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                window.location.href = '/dashboard.html';
-            }
-            messageDiv.textContent = '';
         }
 
-        toggleAuth.addEventListener('click', () => {
-            isLogin = !isLogin;
-            formTitle.textContent = isLogin ? 'Customer Login' : 'Customer Register';
-            submitBtn.textContent = isLogin ? 'Log In' : 'Sign Up';
-            toggleAuth.textContent = isLogin ? 'Register Here' : 'Log In Here';
-            messageDiv.textContent = ''; // Clear message on toggle
-        });
+        function displayMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message-box text-sm text-center ${type}-message`;
+            messageDiv.classList.remove('hidden');
+        }
+
+        function toggleMode() {
+            isSignUpMode = !isSignUpMode;
+            if (isSignUpMode) {
+                authButton.textContent = 'Sign Up';
+                toggleAuthModeBtn.textContent = 'Sign In';
+                document.getElementById('toggleText').innerHTML = 'Already have an account? <button id="toggleAuthMode" class="text-blue-800 font-medium hover:underline focus:outline-none">Sign In</button>';
+            } else {
+                authButton.textContent = 'Sign In';
+                toggleAuthModeBtn.textContent = 'Sign Up';
+                document.getElementById('toggleText').innerHTML = "Don't have an account? <button id='toggleAuthMode' class='text-blue-800 font-medium hover:underline focus:outline-none'>Sign Up</button>";
+            }
+            // Re-attach event listener since innerHTML replaced the button
+            document.getElementById('toggleAuthMode').addEventListener('click', toggleMode);
+            messageDiv.classList.add('hidden'); // Clear previous messages
+        }
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            
+            authButton.disabled = true;
+            authButton.textContent = isSignUpMode ? 'Registering...' : 'Logging In...';
+            messageDiv.classList.add('hidden');
 
-            if (!supabase) { await initSupabase(); }
+            try {
+                let response;
+                if (isSignUpMode) {
+                    // --- SIGN UP ---
+                    response = await supabase.auth.signUp({ email, password });
+                    
+                    if (response.error) {
+                         // Tangkap error 422 di sini
+                        throw response.error; 
+                    }
+                    
+                    // Supabase by default requires email verification
+                    if (response.data.user) {
+                        displayMessage('Registration successful! Please check your email for a confirmation link.', 'success');
+                    } else if (response.data.session) {
+                        // Jika konfirmasi email dimatikan
+                        displayMessage('Registration successful! Redirecting to dashboard...', 'success');
+                        setTimeout(() => window.location.href = '/dashboard.html', 1500);
+                    }
+                    
+                } else {
+                    // --- SIGN IN ---
+                    response = await supabase.auth.signInWithPassword({ email, password });
+                    
+                    if (response.error) {
+                        throw response.error;
+                    }
 
-            messageDiv.textContent = 'Processing...';
+                    displayMessage('Login successful! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = '/dashboard.html', 1000);
+                }
 
-            let response;
-            if (isLogin) {
-                // Login
-                response = await supabase.auth.signInWithPassword({ email, password });
-            } else {
-                // Register
-                response = await supabase.auth.signUp({ email, password });
-            }
-
-            if (response.error) {
-                messageDiv.className = 'mt-4 text-center text-sm text-red-500';
-                messageDiv.textContent = `Error: ${response.error.message}`;
-            } else if (isLogin) {
-                messageDiv.className = 'mt-4 text-center text-sm text-green-500';
-                messageDiv.textContent = 'Login successful! Redirecting...';
-                window.location.href = '/dashboard.html';
-            } else {
-                messageDiv.className = 'mt-4 text-center text-sm text-yellow-600';
-                // Supabase biasanya mengirim email konfirmasi setelah Sign Up
-                messageDiv.textContent = 'Registration successful! Please check your email to confirm your account before logging in.';
-                // Ubah ke mode login setelah register
-                isLogin = true;
-                toggleAuth.click(); 
+            } catch (error) {
+                console.error('Auth Error:', error);
+                // Menampilkan pesan error yang lebih jelas
+                let errorMessage = 'An unknown error occurred.';
+                if (error.message && error.message.includes('Password should be')) {
+                    errorMessage = 'Password is too weak. Must be at least 6 characters.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.json && error.json.msg) {
+                     // Ini mungkin menangkap error 422 dari Network Tab jika ada
+                    errorMessage = error.json.msg;
+                }
+                
+                displayMessage(`Error: ${errorMessage}`, 'error');
+            } finally {
+                authButton.disabled = false;
+                authButton.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
             }
         });
 
         initSupabase();
+        toggleAuthModeBtn.addEventListener('click', toggleMode);
     </script>
 </body>
 </html>
