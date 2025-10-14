@@ -13,8 +13,7 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Updated to accept user_email and custom_key
-        const { duration, user_email, custom_key } = JSON.parse(event.body); 
+        const { duration, user_id } = JSON.parse(event.body);
 
         if (typeof duration !== 'number') {
             return {
@@ -22,53 +21,24 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ error: 'Duration must be a number.' }),
             };
         }
+
+        const keyToInsert = `ADM-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
         
-        let userId = null;
-        let note = 'Admin manual key';
-
-        // 1. Resolve User ID from Email (if provided)
-        if (user_email) {
-             // ASUMSI: Service Role Key dapat mengkueri tabel 'users' (auth.users)
-             const { data: userAuthData, error: userError } = await supabase
-                .from('users') 
-                .select('id')
-                .eq('email', user_email)
-                .maybeSingle(); 
-
-            if (userError) {
-                console.error("User lookup error:", userError);
-                return { statusCode: 500, body: JSON.stringify({ error: 'Database error during user lookup.' }) };
-            }
-            
-            if (userAuthData) {
-                userId = userAuthData.id;
-                note = `Admin generated for User: ${user_email}`;
-            } else {
-                return { statusCode: 404, body: JSON.stringify({ error: `User with email '${user_email}' not found.` }) };
-            }
-        }
-
-        // 2. Determine Key Value
-        const keyToInsert = custom_key 
-            ? custom_key.toUpperCase() // Use custom key if provided and convert to uppercase for consistency
-            : `ADM-${crypto.randomBytes(8).toString('hex').toUpperCase()}`; // Fallback to random key
-        
-        // 3. Insert Key
         const { error } = await supabase
             .from('script_keys')
             .insert({ 
                 key_value: keyToInsert, 
                 duration: duration,
-                note: note,
+                note: user_id ? `Admin generated for User: ${user_id}` : 'Admin manual key',
                 is_active: true,
-                user_id: userId 
+                user_id: user_id || null // Boleh NULL jika tidak ada user ID
             });
 
         if (error) {
-            if (error.code === '23505') { 
+            if (error.code === '23505') {
                  return {
                     statusCode: 409,
-                    body: JSON.stringify({ error: `Key generation failed: Key value '${keyToInsert}' already exists (Constraint Conflict).` }),
+                    body: JSON.stringify({ error: `Key generation failed due to conflict.` }),
                 };
             }
             throw error;
