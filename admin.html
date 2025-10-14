@@ -86,9 +86,7 @@
 
         // --- Mockup/Placeholder for Supabase Storage functions ---
         async function uploadScriptFile(file) {
-            // Ini harus diimplementasikan dengan Supabase Storage JS SDK
             console.log("Simulasi: Mengunggah file ke Supabase Storage...");
-            // Asumsi berhasil dan mengembalikan path:
             return `scripts/latest/${file.name.replace(/\s/g, '_')}`;
         }
         // --- Akhir Mockup ---
@@ -100,7 +98,6 @@
             
             supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
 
-            // Admin check berdasarkan cookie/token sederhana
             if (!document.cookie.includes("adminLoggedIn=true")) {
                 window.location.href = '/login-admin.html'; 
                 return;
@@ -119,17 +116,15 @@
             
             scriptMessage.textContent = 'Uploading file and creating script metadata...';
             
-            // Step 1: Upload file (simulasi)
             const downloadPath = await uploadScriptFile(scriptFile);
             
-            // Step 2: Create metadata via Netlify Function
             const response = await fetch('/.netlify/functions/create-script-metadata', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: document.getElementById('scriptTitle').value,
                     description: document.getElementById('scriptDescription').value,
-                    download_path: downloadPath // Path dari Supabase Storage
+                    download_path: downloadPath 
                 })
             });
             
@@ -145,7 +140,6 @@
             }
         });
         
-        // FUNGSI BARU: Delete Script (Memerlukan delete-script-metadata.js)
         async function deleteScript(scriptId) {
             if (!confirm(`Are you sure you want to delete script ID: ${scriptId}? File di Supabase Storage tidak dihapus.`)) {
                 return;
@@ -186,7 +180,7 @@
                     </div>`).join('');
         }
         
-        // Key Generation Logic (Manual Admin Key) - UPDATED LOGIC
+        // Key Generation Logic (Manual Admin Key) - CUSTOM KEY LOGIC
         document.getElementById('keyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const keyMessage = document.getElementById('keyMessage');
@@ -197,7 +191,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     duration: parseInt(document.getElementById('keyDuration').value, 10),
-                    // BARU: Mengirim custom_key
                     custom_key: document.getElementById('customKeyValue').value || null, 
                     user_id: document.getElementById('keyUserId').value || null 
                 })
@@ -214,7 +207,6 @@
             }
         });
 
-        // FUNGSI BARU: Delete Key (Memerlukan delete-key.js)
         async function deleteKey(keyId) {
             if (!confirm(`Are you sure you want to delete Key ID: ${keyId}?`)) {
                 return;
@@ -240,7 +232,6 @@
         // Key Management Logic
         async function fetchAdminKeys() {
             const adminKeysList = document.getElementById('adminKeysList');
-            // FIX: Memastikan ID kunci diambil untuk tombol delete
             const { data: keys, error } = await supabase.from('script_keys').select('id, key_value, duration, created_at, is_active, user_id').order('created_at', { ascending: false });
             
             if (error) { adminKeysList.innerHTML = `<p class="text-red-500">Error fetching keys: ${error.message}</p>`; return; }

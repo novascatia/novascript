@@ -36,6 +36,9 @@
             z-index: 1000;
         }
     </style>
+    <script type="text/javascript"
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key="[MIDTRANS_CLIENT_KEY_ANDA]"></script>
 </head>
 <body class="p-8 min-h-screen">
 
@@ -64,41 +67,18 @@
                 </div>
             
             <button id="payButton" class="w-full accent-btn text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200">
-                Pay Now with QRIS
+                Pay Now with Midtrans Snap
             </button>
             <p id="errorMessage" class="text-red-500 text-sm mt-3 text-center hidden"></p>
         </div>
 
-        <div id="paymentModal" class="mt-10 p-6 border-t border-gray-200 pt-6 hidden">
-            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Scan to Pay (QRIS)</h2>
-            <div class="max-w-xs mx-auto text-center">
-                <p class="text-sm text-gray-600 mb-3">Scan QR code using your favorite e-wallet or banking app.</p>
-                <div class="bg-white p-4 border border-gray-300 rounded-lg shadow-md">
-                    <img id="qrisImage" src="https://via.placeholder.com/300?text=QRIS+CODE" alt="QRIS Code" class="w-full h-auto rounded-md mb-4">
-                </div>
-                
-                <p class="text-sm text-gray-700 font-medium mb-1">Total Payment</p>
-                <p class="text-3xl font-extrabold text-blue-800 mb-4" id="qrisAmount">Rp 0</p>
-                
-                <p id="timeRemaining" class="text-sm font-medium text-red-500 mb-4"></p>
-                
-                <button id="cancelPaymentBtn" class="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 text-sm transition-colors">
-                    Cancel Transaction
-                </button>
-            </div>
-            <p id="paymentStatusMessage" class="mt-4 text-center font-bold text-green-600 hidden"></p>
-        </div>
-    </main>
+        </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <script>
-        // --- LOGIC (SAMA DENGAN SEBELUMNYA, HANYA DISESUAIKAN DENGAN UI BARU) ---
         let supabase;
         let selectedTierId = null;
         let selectedTier = null;
-        let transactionInterval = null;
-        let timerInterval = null;
-        let transactionId = null;
 
         function formatRupiah(amount) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -125,7 +105,6 @@
         async function fetchPricingTiers() {
             showElement('loadingOverlay');
             
-            // NOTE: Fetching pricing tiers di frontend aman karena datanya bersifat publik
             const { data: tiers, error } = await supabase
                 .from('pricing_tiers')
                 .select('*')
@@ -154,7 +133,7 @@
             document.getElementById('pricingTiers').innerHTML = tiersHtml;
             
             document.querySelectorAll('.tier-card').forEach(card => {
-                card.addEventListener('click', () => selectTier(card, tiers));
+                card.addEventListener('click', (e) => selectTier(card, tiers));
             });
         }
 
@@ -172,7 +151,6 @@
 
             showElement('checkoutSection');
             hideElement('errorMessage');
-            hideElement('paymentModal'); 
         }
         
         document.getElementById('payButton').addEventListener('click', createTransaction);
@@ -193,6 +171,7 @@
             showElement('loadingOverlay');
             hideElement('errorMessage');
             
+            // PANGGIL NETLIFY FUNCTION YANG MENGHASILKAN SNAP TOKEN
             const response = await fetch('/.netlify/functions/create-qris-transaction', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -207,74 +186,30 @@
             const result = await response.json();
             hideElement('loadingOverlay');
 
-            if (response.ok && result.qrisImage && result.transactionId) {
-                transactionId = result.transactionId;
-                displayPaymentModal(result);
-                startPaymentPolling(transactionId);
+            // BARU: Cek Snap Token dan panggil Midtrans Snap
+            if (response.ok && result.snapToken) {
+                window.snap.pay(result.snapToken, {
+                    onSuccess: function(resultSnap){
+                        alert("Payment successful! Please check your keys on the Dashboard.");
+                        // Midtrans Webhook akan menangani key generation
+                        window.location.href = '/dashboard.html';
+                    },
+                    onPending: function(resultSnap){
+                        alert("Payment pending. Please complete the payment using the selected method.");
+                        window.location.href = '/dashboard.html';
+                    },
+                    onError: function(resultSnap){
+                        alert("Payment failed! Please try again.");
+                    },
+                    onClose: function(){
+                        alert('You closed the payment pop-up. Transaction is still pending until expired.');
+                    }
+                });
             } else {
                 document.getElementById('errorMessage').textContent = result.error || 'Failed to create payment transaction.';
                 showElement('errorMessage');
             }
         }
-
-        function displayPaymentModal(transactionData) {
-            hideElement('checkoutSection');
-            hideElement('pricingTiers');
-
-            document.getElementById('qrisImage').src = transactionData.qrisImage;
-            document.getElementById('qrisAmount').textContent = formatRupiah(transactionData.amount);
-            showElement('paymentModal');
-
-            // Start timer (e.g., 15 minutes / 900 seconds expiry)
-            let secondsLeft = 900; 
-            const timerElement = document.getElementById('timeRemaining');
-
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                secondsLeft--;
-                if (secondsLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerElement.textContent = 'Transaction Expired. Please try again.';
-                    clearInterval(transactionInterval);
-                    // Add logic to mark as EXPIRED in backend
-                } else {
-                    const minutes = Math.floor(secondsLeft / 60);
-                    const seconds = secondsLeft % 60;
-                    timerElement.textContent = `Expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-                }
-            }, 1000);
-        }
-
-        function startPaymentPolling(id) {
-            clearInterval(transactionInterval);
-            transactionInterval = setInterval(async () => {
-                const response = await fetch(`/.netlify/functions/check-payment-status?id=${id}`);
-                const result = await response.json();
-
-                if (result.status === 'PAID') {
-                    clearInterval(transactionInterval);
-                    clearInterval(timerInterval);
-                    document.getElementById('paymentStatusMessage').textContent = 'Payment Successful! Redirecting to Dashboard...';
-                    showElement('paymentStatusMessage');
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 3000);
-                } else if (result.status === 'FAILED' || result.status === 'EXPIRED') {
-                    clearInterval(transactionInterval);
-                    clearInterval(timerInterval);
-                    alert(`Transaction ${result.status.toLowerCase()}. Please try again.`);
-                    window.location.reload();
-                }
-            }, 5000);
-        }
-        
-        document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
-            if (confirm('Are you sure you want to cancel this transaction?')) {
-                clearInterval(transactionInterval);
-                clearInterval(timerInterval);
-                window.location.reload();
-            }
-        });
 
         init();
     </script>

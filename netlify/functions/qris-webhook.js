@@ -8,7 +8,10 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// --- MOCKUP: Fungsi untuk membuat Key baru ---
+// Midtrans Server Key (Diperlukan untuk verifikasi signature)
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY; 
+
+// --- FUNGSI: Untuk membuat Key baru (PREFIX NOVA-) ---
 async function createNewKey(userId, tierId) {
     // 1. Ambil detail durasi dari Tier Harga
     const { data: tier, error: tierError } = await supabase
@@ -19,8 +22,8 @@ async function createNewKey(userId, tierId) {
         
     if (tierError || !tier) { throw new Error("Tier not found or Tier DB error."); }
 
-    // 2. Generate Key - PERUBAHAN PREFIX
-    const keyToInsert = `NOVA-${crypto.randomBytes(6).toString('hex').toUpperCase()}`; // Prefix diubah ke NOVA-
+    // 2. Generate Key - PERUBAHAN PREFIX (NOVA-)
+    const keyToInsert = `NOVA-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
     
     const { data: newKey, error: keyError } = await supabase
         .from('script_keys')
@@ -47,26 +50,30 @@ exports.handler = async (event) => {
     try {
         const payload = JSON.parse(event.body);
 
-        // 1. VERIFIKASI SIGNATURE (KRITIS UNTUK KEAMANAN)
-        // --- MOCKUP START ---
-        // Di implementasi nyata, Anda akan memverifikasi header X-Midtrans-Signature atau X-Callback-Token Xendit
-        // Midtrans_Server_Key = process.env.MIDTRANS_SERVER_KEY;
-        const isSignatureValid = true; // SIMULASI: Anggap valid
+        // 1. VERIFIKASI SIGNATURE (GANTI MOCKUP)
+        const midtransSignature = event.headers['x-midtrans-signature']; 
+        const { order_id, status_code, gross_amount } = payload;
         
-        if (!isSignatureValid) {
+        // Logika verifikasi Midtrans
+        const signatureString = order_id + status_code + gross_amount + MIDTRANS_SERVER_KEY;
+        const expectedSignature = crypto.createHash('sha512').update(signatureString).digest('hex');
+
+        if (midtransSignature !== expectedSignature) {
+            console.error('Invalid Midtrans Signature:', midtransSignature);
             return { statusCode: 401, body: 'Invalid Signature' };
         }
-
-        // 2. IDENTIFIKASI TRANSAKSI SUKSES (Asumsi payload berisi ID transaksi dari Payment Gateway)
-        const paymentGatewayId = payload.paymentGatewayId || payload.order_id; // Sesuaikan dengan payload PG
-        const isPaymentSuccess = payload.status === 'success' || payload.transaction_status === 'settlement'; // Sesuaikan dengan payload PG
+        
+        // 2. IDENTIFIKASI STATUS MIDTRANS
+        const paymentGatewayId = payload.order_id;
+        const transactionStatus = payload.transaction_status;
+        const fraudStatus = payload.fraud_status;
         
         // 3. UPDATE DATABASE & GENERATE KEY
-        if (isPaymentSuccess) {
+        if (transactionStatus === 'settlement' && fraudStatus === 'accept') {
             // Ambil data transaksi Supabase yang terkait
             const { data: transaction, error: fetchError } = await supabase
                 .from('transactions')
-                .select('id, user_id, tier_id')
+                .select('id, user_id, tier_id, status')
                 .eq('payment_gateway_id', paymentGatewayId)
                 .single();
 
@@ -74,6 +81,11 @@ exports.handler = async (event) => {
                  return { statusCode: 404, body: 'Transaction not found in database.' };
             }
             
+            // CEK DOUBLE WEBHOOKS (Idempotency)
+            if (transaction.status === 'PAID') {
+                return { statusCode: 200, body: 'Success: Already processed.' };
+            }
+
             // Generate Key Baru
             const keyId = await createNewKey(transaction.user_id, transaction.tier_id);
             
@@ -87,10 +99,10 @@ exports.handler = async (event) => {
 
             return { statusCode: 200, body: 'Success: Payment recorded and key generated.' };
             
-        } else if (payload.transaction_status === 'expire' || payload.status === 'failure') {
+        } else if (transactionStatus === 'expire' || transactionStatus === 'cancel' || transactionStatus === 'deny') {
              // Tandai Transaksi sebagai FAILED/EXPIRED
-             await supabase.from('transactions').update({ status: 'EXPIRED' }).eq('payment_gateway_id', paymentGatewayId);
-             return { statusCode: 200, body: 'Success: Transaction marked as EXPIRED/FAILED.' };
+             await supabase.from('transactions').update({ status: transactionStatus.toUpperCase() }).eq('payment_gateway_id', paymentGatewayId);
+             return { statusCode: 200, body: `Success: Transaction marked as ${transactionStatus.toUpperCase()}.` };
         }
 
 
@@ -98,7 +110,6 @@ exports.handler = async (event) => {
 
     } catch (error) {
         console.error('Webhook processing error:', error);
-        // Penting: Kembalikan 500 agar Midtrans/Xendit mencoba lagi (retry)
         return { statusCode: 500, body: `Server Error: ${error.message}` };
     }
 };
