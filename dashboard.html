@@ -3,235 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova.Scripts - Dashboard</title>
+    <title>User Dashboard - NovaScript</title>
     <link rel="icon" type="image/png" href="/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Shared Elegant Styling */
-        body { 
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Dark background */
-            color: #f8fafc; /* Light text */
-        }
-        .text-primary-dark { color: #4f46e5; } /* Indigo 600 */
-        .bg-card { background-color: #1e293b; } /* Deep Slate Gray for cards */
-        .bg-accent { background-color: #3b82f6; }
-        .hover-bg-accent:hover { background-color: #2563eb; }
-        .border-primary { border-color: #4f46e5; }
-
-        /* Key Card Styling */
-        .key-card { 
-            border-left: 4px solid #4f46e5; /* Accent border */
-            transition: transform 0.2s;
-        }
-        .key-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Script Card Styling */
-        .script-card {
-            border: 1px solid #334155;
-            transition: box-shadow 0.2s;
-        }
-        .script-card:hover {
-             box-shadow: 0 5px 15px -5px rgba(0, 0, 0, 0.3);
-        }
-    </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="bg-gray-100 p-8">
+    <header class="flex justify-between items-center mb-8 w-full max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold">NovaScript Dashboard</h1>
+        <button id="logoutBtn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-200">
+            Log Out
+        </button>
+    </header>
 
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-10 pb-4 border-b border-gray-700">
-            <h1 class="text-3xl font-extrabold text-primary-dark">Nova.Scripts</h1>
-            <div class="flex items-center space-x-4 text-gray-300">
-                <span id="welcomeText" class="text-base font-medium">Welcome, User</span>
-                <button id="logoutBtn" class="bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-full hover:bg-red-700 transition-colors shadow-md">
-                    Log Out
+    <div class="space-y-8 w-full max-w-4xl mx-auto">
+        
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-4">Admin Script (<span id="scriptTitle">Loading...</span>)</h2>
+            <div class="bg-gray-100 p-4 rounded-md relative">
+                <pre id="scriptContent" class="text-gray-800 whitespace-pre-wrap text-sm">Loading script...</pre>
+                <button id="copyScriptBtn" class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold py-1 px-2 rounded hover:bg-blue-600">
+                    Copy
                 </button>
             </div>
-        </header>
-
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-3xl font-bold text-gray-100">Your Access Keys</h2>
-            <button class="bg-accent hover-bg-accent text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition-colors">
-                Purchase New Access
-            </button>
-        </div>
-        <div id="keysList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            <div class="text-gray-400 col-span-full">Loading keys...</div>
+            <p id="scriptMessage" class="text-sm mt-2 text-green-600 hidden">Copied!</p>
         </div>
 
-        <h2 class="text-3xl font-bold text-gray-100 mb-6">Available Scripts</h2>
-        <div id="scriptsList" class="space-y-4">
-            <div class="text-gray-400">Loading scripts...</div>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-4">Your Keys</h2>
+            <div id="keysList" class="space-y-4">
+                <p>Loading keys...</p>
+            </div>
         </div>
+        
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <script>
+        const keysList = document.getElementById('keysList');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const scriptContentPre = document.getElementById('scriptContent');
+        const scriptTitleSpan = document.getElementById('scriptTitle');
+        const copyScriptBtn = document.getElementById('copyScriptBtn');
+        const scriptMessage = document.getElementById('scriptMessage');
         let supabase;
-        let userId;
-
-        function formatTime(seconds) {
-            if (seconds === 0) return 'Unlimited';
-            const days = Math.floor(seconds / (3600 * 24));
-            const hours = Math.floor((seconds % (3600 * 24)) / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            if (days > 0) return `${days} days`;
-            if (hours > 0) return `${hours} hours`;
-            return `${minutes} minutes`;
-        }
 
         async function initAndAuth() {
-            try {
-                // 1. Inisialisasi Supabase menggunakan get-config
-                const response = await fetch('/.netlify/functions/get-config');
-                if (!response.ok) throw new Error('Could not get Supabase keys.');
-                const keys = await response.json();
-                supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
-
-                // 2. Cek Sesi Pengguna
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    window.location.href = '/'; // Redirect jika belum login
-                    return;
-                }
-                userId = user.id;
-                document.getElementById('welcomeText').textContent = `Welcome, ${user.email.split('@')[0]}`;
-                
-                // 3. Ambil Data
-                fetchUserKeys();
-                fetchAvailableScripts();
-
-            } catch (error) {
-                console.error("Initialization error:", error);
-                alert('An error occurred during initialization. Please try again.');
-                window.location.href = '/';
+            const configResponse = await fetch('/.netlify/functions/get-config');
+            if (!configResponse.ok) { 
+                alert('Error: Could not get Supabase keys.');
+                window.location.href = '/login';
+                return;
             }
-        }
-        
-        async function fetchUserKeys() {
-            const keysListDiv = document.getElementById('keysList');
-            keysListDiv.innerHTML = '<div class="text-gray-400 col-span-full">Fetching keys...</div>';
-            
-            // Panggil fungsi Netlify yang difilter per user (akan dibuat di Langkah 7)
-            const response = await fetch('/.netlify/functions/fetch-user-keys', {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: userId })
-            });
+            const keys = await configResponse.json();
+            supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
 
-            if (!response.ok) {
-                keysListDiv.innerHTML = '<p class="text-red-500 col-span-full">Error loading keys. Please contact support.</p>';
+            // Check Supabase Auth session
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                window.location.href = '/login';
                 return;
             }
             
-            const keys = await response.json();
-            
-            if (keys.length === 0) {
-                keysListDiv.innerHTML = '<p class="text-gray-400 col-span-full">You do not have any active access keys yet.</p>';
-                return;
-            }
-
-            keysListDiv.innerHTML = keys.map(key => {
-                let statusColor = key.is_active ? 'text-green-500' : 'text-red-500';
-                let expiresText = 'Never expires';
-                let durationText = formatTime(key.duration);
-                
-                if (key.duration > 0) {
-                    const expiresAt = new Date(new Date(key.created_at).getTime() + key.duration * 1000);
-                    expiresText = `Expires on ${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`;
-                }
-
-                return `
-                    <div class="key-card bg-card p-6 shadow-xl">
-                        <p class="text-sm text-gray-400 mb-2">Key Value</p>
-                        <code id="key-${key.id}" class="text-primary-dark font-mono text-xl font-bold cursor-pointer hover:text-indigo-400" 
-                              onclick="copyToClipboard('key-${key.id}')">${key.key_value}</code>
-                        
-                        <div class="mt-4 space-y-1 text-gray-300 text-sm">
-                            <p>Duration: <span class="font-semibold">${durationText}</span></p>
-                            <p>Status: <span class="font-bold ${statusColor}">${key.is_active ? 'Active' : 'Inactive'}</span></p>
-                        </div>
-                        
-                        <p class="text-xs text-gray-400 mt-2">${expiresText}</p>
-                        ${key.note ? `<p class="text-xs text-gray-400 mt-1">Note: ${key.note}</p>` : ''}
-                    </div>
-                `;
-            }).join('');
+            fetchUserData();
         }
 
-        async function fetchAvailableScripts() {
-            const scriptsListDiv = document.getElementById('scriptsList');
-            scriptsListDiv.innerHTML = '<div class="text-gray-400">Fetching scripts...</div>';
-
-            // Panggil fungsi Netlify untuk mengambil daftar skrip (akan dibuat di Langkah 8)
-            const response = await fetch('/.netlify/functions/fetch-scripts');
-            if (!response.ok) {
-                scriptsListDiv.innerHTML = '<p class="text-red-500">Error loading available scripts.</p>';
-                return;
-            }
-            
-            const scripts = await response.json();
-            
-            if (scripts.length === 0) {
-                scriptsListDiv.innerHTML = '<p class="text-gray-400">No scripts are currently available for use.</p>';
-                return;
-            }
-
-            scriptsListDiv.innerHTML = scripts.map(script => `
-                <div class="script-card bg-card p-6 shadow-md flex justify-between items-center">
-                    <div>
-                        <h3 class="text-xl font-semibold text-gray-100 mb-1">${script.title}</h3>
-                        <p class="text-gray-400">${script.description}</p>
-                    </div>
-                    <button class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-                            onclick="copyScriptContent('${script.id}', this)">
-                        Copy Script
-                    </button>
-                </div>
-            `).join('');
+        function formatDuration(seconds) {
+            if (seconds === 0) return 'Unlimited';
+            if (seconds < 60) return `${seconds} detik`;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            return `${hours}j ${remainingMinutes}m ${remainingSeconds}s`;
         }
-        
-        async function copyScriptContent(scriptId, buttonElement) {
-            const originalText = buttonElement.textContent;
-            buttonElement.textContent = 'Copying...';
-            buttonElement.disabled = true;
 
-            // Mengambil konten skrip mentah dari fungsi yang sudah ada
-            const response = await fetch(\`/.netlify/functions/get-raw-post/\${scriptId}\`);
+        async function fetchUserData() {
+            // Memanggil Netlify Function yang menangani otentikasi Supabase dan RLS.
+            const response = await fetch('/.netlify/functions/fetch-user-data');
+
+            if (response.status === 401) {
+                // Sesi habis, sign out dan kembali ke login
+                await supabase.auth.signOut();
+                window.location.href = '/login';
+                return;
+            }
+
             if (!response.ok) {
-                alert('Error: Could not retrieve script content.');
+                keysList.innerHTML = `<p class="text-red-500">Error loading data. (Pastikan RLS sudah dikonfigurasi)</p>`;
+                return;
+            }
+
+            const data = await response.json();
+            const { keys, script } = data;
+            
+            // --- Script Display ---
+            if (script) {
+                scriptTitleSpan.textContent = script.title;
+                scriptContentPre.textContent = script.content;
             } else {
-                const scriptContent = await response.text();
-                await navigator.clipboard.writeText(scriptContent);
-                buttonElement.textContent = 'Copied!';
+                scriptTitleSpan.textContent = 'Belum Diunggah';
+                scriptContentPre.textContent = 'Admin belum mengunggah script. Admin dapat mengunggah script dengan ID: latest-script.';
             }
+
+            // --- Keys Display ---
+            if (keys.length === 0) {
+                keysList.innerHTML = `<p class="text-gray-500">Anda belum memiliki kunci.</p>`;
+                return;
+            }
+
+            const now = new Date().getTime();
             
-            setTimeout(() => {
-                buttonElement.textContent = originalText;
-                buttonElement.disabled = false;
-            }, 2000);
+            const renderedKeys = keys.map(key => {
+                const isActive = key.is_active;
+                let statusText = 'Inactive';
+                let statusColor = 'text-red-600';
+                let durationText = formatDuration(key.duration);
+                let expiryText = 'Tidak Pernah Kadaluarsa';
+                let timeRemaining = 'N/A';
+                
+                if (isActive) {
+                    if (key.duration === 0) {
+                        statusText = 'Aktif (Unlimited)';
+                        statusColor = 'text-green-600';
+                    } else {
+                        const createdAtTime = new Date(key.created_at).getTime();
+                        const expiresAt = createdAtTime + key.duration * 1000;
+                        const secondsLeft = Math.floor((expiresAt - now) / 1000);
+                        
+                        if (secondsLeft > 0) {
+                            statusText = 'Aktif (Berjangka)';
+                            statusColor = 'text-green-600';
+                            timeRemaining = formatDuration(secondsLeft);
+                            expiryText = `Kadaluarsa pada ${new Date(expiresAt).toLocaleString()}`;
+                        } else {
+                            statusText = 'Kadaluarsa';
+                            statusColor = 'text-yellow-600';
+                        }
+                    }
+                }
+                
+                return `
+                    <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                        <div>
+                            <code class="font-semibold text-blue-600">${key.key_value}</code>
+                            <p class="text-sm text-gray-500">Note: ${key.note || 'N/A'}</p>
+                            <p class="text-sm text-gray-500">Durasi: ${durationText} | Status: <span class="${statusColor}">${statusText}</span></p>
+                            ${key.duration > 0 && statusColor === 'text-green-600' ? `<p class="text-sm text-gray-500">Sisa Waktu: ${timeRemaining}</p>` : `<p class="text-sm text-gray-500">${expiryText}</p>`}
+                        </div>
+                    </div>`;
+            }).join('');
+            
+            keysList.innerHTML = renderedKeys;
         }
 
-        function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            const textToCopy = element.textContent;
-            navigator.clipboard.writeText(textToCopy);
-            
-            const originalClass = element.className;
-            // Ubah warna menjadi hijau sesaat setelah disalin
-            element.className = originalClass.replace('text-primary-dark', 'text-green-500').replace('hover:text-indigo-400', '');
-            
-            setTimeout(() => {
-                element.className = originalClass; // Kembalikan warna
-            }, 1000);
-        }
-
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        logoutBtn.addEventListener('click', async () => {
             await supabase.auth.signOut();
-            window.location.href = '/';
+            window.location.href = '/login';
+        });
+        
+        copyScriptBtn.addEventListener('click', () => {
+            const textToCopy = scriptContentPre.textContent;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                scriptMessage.classList.remove('hidden');
+                setTimeout(() => { scriptMessage.classList.add('hidden'); }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
         });
 
         initAndAuth();

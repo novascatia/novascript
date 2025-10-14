@@ -8,11 +8,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body { font-family: ui-sans-serif, system-ui; }
-      /* Gaya untuk Dark Mode */
-      body.dark { background-color: #1a202c; color: #e2e8f0; }
-      body.dark .bg-white { background-color: #2d3748; color: #e2e8f0; }
+      body.dark {
+          background-color: #1a202c;
+          color: #e2e8f0;
+      }
+      body.dark .bg-white {
+          background-color: #2d3748;
+          color: #e2e8f0;
+      }
+      body.dark .text-gray-600 { color: #cbd5e0; }
       body.dark .text-gray-700, body.dark .text-gray-900 { color: #e2e8f0; }
       body.dark .bg-gray-50 { background-color: #4a5568; }
+      body.dark .border-gray-300 { border-color: #4a5568; }
+      body.dark code { background-color: #1a202c; }
     </style>
 </head>
 <body class="bg-gray-100 p-8">
@@ -27,37 +35,52 @@
     </div>
 
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
-        <h2 class="text-2xl font-bold">Create New Script/Post</h2>
+        <h2 class="text-2xl font-bold">Create New Post</h2>
         <form id="postForm" class="space-y-4 mt-6">
             <div>
-                <label for="postTitle" class="block text-sm font-medium text-gray-700">Script Title</label>
+                <label for="postTitle" class="block text-sm font-medium text-gray-700">Post Title</label>
                 <input type="text" id="postTitle" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             </div>
             <div>
-                <label for="postDescription" class="block text-sm font-medium text-gray-700">Script Description (for dashboard view)</label>
+                <label for="postDescription" class="block text-sm font-medium text-gray-700">Post Description</label>
                 <input type="text" id="postDescription" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             </div>
             <div>
-                <label for="postContent" class="block text-sm font-medium text-gray-700">Script Content (Raw Text to be copied)</label>
+                <label for="postContent" class="block text-sm font-medium text-gray-700">Post Content</label>
                 <textarea id="postContent" rows="10" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
             </div>
-             <div class="flex items-center">
-                <input type="checkbox" id="hidePost" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                <label for="hidePost" class="ml-2 block text-sm text-gray-900">Hide from Customer Dashboard</label>
+            <div>
+                <label for="postSlug" class="block text-sm font-medium text-gray-700">Custom Post Link (optional)</label>
+                <input type="text" id="postSlug" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-between">
+                <div class="flex items-center">
+                    <input type="checkbox" id="pinPost" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="pinPost" class="ml-2 block text-sm text-gray-900">Pin this post</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="hidePost" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="hidePost" class="ml-2 block text-sm text-gray-900">Hide from main page</label>
+                </div>
             </div>
             <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200">
-                Submit Script/Post
+                Submit Post
             </button>
         </form>
         <p id="postMessage" class="mt-4 text-center text-sm"></p>
     </div>
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
+        <h2 class="text-2xl font-bold mb-6">Manage Posts</h2>
+        <div id="adminPostsList" class="space-y-4"></div>
+    </div>
     
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
-        <h2 class="text-2xl font-bold">Generate Script Key for User</h2>
+        <h2 class="text-2xl font-bold">Generate Script Key</h2>
         <form id="keyForm" class="space-y-4 mt-6">
             <div>
-                <label for="userEmail" class="block text-sm font-medium text-gray-700">User Email (Must be a registered Supabase user)</label>
-                <input type="email" id="userEmail" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., user@gmail.com" required>
+                <label for="keyUserId" class="block text-sm font-medium text-gray-700">Supabase User ID (Opsional, direkomendasikan)</label>
+                <input type="text" id="keyUserId" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., UUID dari Supabase Auth">
             </div>
             <div>
                 <label for="customKey" class="block text-sm font-medium text-gray-700">Custom Key (Optional)</label>
@@ -79,13 +102,12 @@
     </div>
 
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto mt-8">
-        <h2 class="text-2xl font-bold mb-6">Manage All Script Keys</h2>
-        <p class="text-sm text-red-500 mb-4">Note: This view is simplified and does not automatically show the associated user email. Only use this for general management.</p>
+        <h2 class="text-2xl font-bold mb-6">Manage Script Keys</h2>
         <div id="adminKeysList" class="space-y-4">
             <p>Loading keys...</p>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <script>
         let supabase;
@@ -93,6 +115,7 @@
         // --- Elements ---
         const logoutBtn = document.getElementById('logoutBtn');
         const postForm = document.getElementById('postForm');
+        const adminPostsList = document.getElementById('adminPostsList');
         const postMessage = document.getElementById('postMessage');
         const keyForm = document.getElementById('keyForm');
         const keyMessage = document.getElementById('keyMessage');
@@ -105,18 +128,59 @@
             supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
 
             if (!document.cookie.includes("loggedIn=true")) {
-                window.location.href = '/login.html';
+                window.location.href = '/admin/login'; // DIPERBARUI: Menggunakan clean URL /admin/login
                 return;
             }
             
+            fetchAdminPosts();
             fetchAdminKeys();
         }
 
-        // --- POST/SCRIPT MANAGEMENT ---
+        // --- POST MANAGEMENT ---
+        async function fetchAdminPosts() {
+            const { data: posts, error } = await supabase.from('posts').select('id, title, created_at, is_hidden').order('created_at', { ascending: false });
+            if (error) { adminPostsList.innerHTML = `<p class="text-red-500">Error fetching posts.</p>`; return; }
+            adminPostsList.innerHTML = posts.length === 0 
+                ? `<p class="text-gray-500">No posts to manage yet.</p>`
+                : posts.map(post => `
+                    <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                        <div>
+                            <h3 class="font-semibold">${post.title}</h3>
+                            <p class="text-sm text-gray-500">ID: ${post.id} | Status: <span class="${post.is_hidden ? 'text-yellow-600' : 'text-green-600'}">${post.is_hidden ? 'Hidden' : 'Visible'}</span></p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleHiddenStatus('${post.id}', ${post.is_hidden})" class="bg-gray-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-gray-600">${post.is_hidden ? 'Show' : 'Hide'}</button>
+                            <button onclick="deletePost('${post.id}')" class="bg-red-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-red-600">Delete</button>
+                        </div>
+                    </div>`).join('');
+        }
+        
+        async function deletePost(id) {
+            if (!confirm('Are you sure you want to delete this post?')) return;
+            // This now requires a backend function for security with service_role key
+            const response = await fetch('/.netlify/functions/delete-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (!response.ok) alert(`Error deleting post.`);
+            else fetchAdminPosts();
+        }
+
+        async function toggleHiddenStatus(id, isHidden) {
+            // This now requires a backend function for security with service_role key
+            const response = await fetch('/.netlify/functions/update-post-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, is_hidden: !isHidden })
+            });
+            if (!response.ok) alert(`Error updating post status.`);
+            else fetchAdminPosts();
+        }
+
         postForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             postMessage.textContent = 'Submitting post...';
-            // Menghilangkan is_pinned dan slug karena tidak relevan di portal script
             const response = await fetch('/.netlify/functions/create-post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -124,27 +188,26 @@
                     title: document.getElementById('postTitle').value,
                     description: document.getElementById('postDescription').value,
                     content: document.getElementById('postContent').value,
-                    slug: null, 
-                    is_pinned: false,
+                    slug: document.getElementById('postSlug').value,
+                    is_pinned: document.getElementById('pinPost').checked,
                     is_hidden: document.getElementById('hidePost').checked,
-                    author: 'Admin'
+                    author: 'novascatia'
                 })
             });
             const result = await response.json();
             if (response.ok) {
-                postMessage.textContent = 'Script submitted successfully!';
+                postMessage.textContent = 'Post submitted successfully!';
                 postMessage.className = 'mt-4 text-center text-sm text-green-500';
                 postForm.reset();
+                fetchAdminPosts();
             } else {
                 postMessage.textContent = `Error: ${result.error || 'Failed to create post.'}`;
-                postMessage.className = 'mt-t-4 text-center text-sm text-red-500';
+                postMessage.className = 'mt-4 text-center text-sm text-red-500';
             }
         });
 
-
-        // --- KEY GENERATION AND MANAGEMENT ---
+        // --- KEY MANAGEMENT ---
         async function fetchAdminKeys() {
-            // Mengambil semua kunci (tanpa filter user ID)
             const { data: keys, error } = await supabase.from('script_keys').select('*').order('created_at', { ascending: false });
             if (error) { adminKeysList.innerHTML = `<p class="text-red-500">Error fetching keys: ${error.message}</p>`; return; }
             adminKeysList.innerHTML = keys.length === 0
@@ -155,15 +218,13 @@
                     if (key.duration > 0) {
                         expiresText = `Expires on ${new Date(new Date(key.created_at).getTime() + key.duration * 1000).toLocaleString()}`;
                     }
+                    
+                    let userIdDisplay = key.user_id ? `<p class="text-sm text-gray-500">User ID: ${key.user_id}</p>` : ''; // NEW: Tampilkan User ID
 
                     let toggleButton = '';
                     if (key.duration === 0) {
                         toggleButton = `<button onclick="toggleKeyStatus('${key.id}', ${key.is_active})" class="bg-gray-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-gray-600">${key.is_active ? 'Deactivate' : 'Activate'}</button>`;
                     }
-                    
-                    // Tampilkan user_id jika ada
-                    const userIdDisplay = key.user_id ? `<p class="text-xs text-gray-500">User ID: ${key.user_id}</p>` : '';
-
 
                     return `
                     <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
@@ -182,7 +243,6 @@
                 }).join('');
         }
         
-        // PERUBAHAN KRUSIAL: Mengirim userEmail
         keyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             keyMessage.textContent = 'Generating key...';
@@ -190,7 +250,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userEmail: document.getElementById('userEmail').value, // <-- Tambahan
+                    user_id: document.getElementById('keyUserId').value, // DIPERBARUI: Mengirimkan User ID
                     customKey: document.getElementById('customKey').value,
                     duration: parseInt(document.getElementById('keyDuration').value, 10),
                     note: document.getElementById('keyNote').value
@@ -198,7 +258,7 @@
             });
             const result = await response.json();
             if (response.ok) {
-                keyMessage.textContent = `Key generated: ${result.key} for User ID: ${result.user_id}`;
+                keyMessage.textContent = `Key generated: ${result.key}`;
                 keyMessage.className = 'mt-4 text-center text-sm text-green-500';
                 keyForm.reset();
                 fetchAdminKeys();
@@ -224,7 +284,7 @@
         // --- GENERAL ---
         logoutBtn.addEventListener('click', () => {
             document.cookie = "loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            window.location.href = '/login.html';
+            window.location.href = '/admin/login'; // DIPERBARUI: Menggunakan clean URL /admin/login
         });
 
         initAndAuth();

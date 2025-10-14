@@ -1,15 +1,22 @@
 [functions]
   directory = "netlify/functions"
 
-# ==================================
-# Redirects untuk Customer Portal BARU
-# ==================================
+## Clean URLs & New Flow Configuration (Point 1, 2, 3, 4)
 
+# 1. User Login (Main Page: / atau /login)
+[[redirects]]
+  from = "/login"
+  to = "/index.html"
+  status = 200
+  force = true
+  
 [[redirects]]
   from = "/"
   to = "/index.html"
   status = 200
+  force = true
 
+# 2. New User Dashboard (Menggunakan fetch-user-data.js)
 [[redirects]]
   from = "/dashboard"
   to = "/dashboard.html"
@@ -17,65 +24,55 @@
   force = true
 
 [[redirects]]
-  from = "/.netlify/functions/auth-callback"
-  to = "/.netlify/functions/auth-callback"
+  from = "/.netlify/functions/fetch-user-data"
+  to = "/.netlify/functions/fetch-user-data"
   status = 200
-  
-[[redirects]]
-  from = "/.netlify/functions/fetch-user-keys"
-  to = "/.netlify/functions/fetch-user-keys"
-  status = 200
-  
-[[redirects]]
-  from = "/.netlify/functions/fetch-scripts"
-  to = "/.netlify/functions/fetch-scripts"
-  status = 200
+  force = true
 
+# 3. Admin Login & Dashboard
 [[redirects]]
-  from = "/.netlify/functions/get-config"
-  to = "/.netlify/functions/get-config"
+  from = "/admin/login"
+  to = "/login.html"
   status = 200
-
-# ==================================
-# Redirects Admin dan Key System
-# ==================================
+  force = true
 
 [[redirects]]
   from = "/admin"
   to = "/admin.html"
   status = 200
   force = true
-  conditions = {Role = ["authenticated"]}
+  conditions = {Cookie = ["loggedIn=true"]}
 
 [[redirects]]
   from = "/admin"
-  to = "/login.html"
+  to = "/admin/login"
   status = 302
   force = true
-  
-[[redirects]]
-  from = "/post/raw/:id"
-  to = "/.netlify/functions/get-raw-post"
-  status = 200
-  force = true
-  
+
+## Key Verification & Other Admin Functions (Point 5 - Tetap Berfungsi)
+
 [[redirects]]
   from = "/.netlify/functions/verify-key"
   to = "/.netlify/functions/verify-key"
   status = 200
+  force = true
+
+# Passthrough untuk semua Netlify Functions lainnya
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# Cleanup lama
+[[redirects]]
+  from = "/posts/:id"
+  to = "/.netlify/functions/get-post"
+  status = 200
+  force = true
 
 [[redirects]]
-  from = "/.netlify/functions/admin-generate-key"
-  to = "/.netlify/functions/admin-generate-key"
-  status = 200
-
-[[redirects]]
-  from = "/.netlify/functions/create-post"
-  to = "/.netlify/functions/create-post"
-  status = 200
-  
-[[redirects]]
-  from = "/.netlify/functions/delete-post"
-  to = "/.netlify/functions/delete-post"
+  from = "/post/raw/:id"
+  to = "/.netlify/functions/get-raw-post"
   status = 200
   force = true

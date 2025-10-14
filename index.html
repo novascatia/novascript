@@ -3,107 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova.Scripts - Access Login</title>
-    <link rel="icon" type="image/png" href="/logo.png">
+    <title>Login - NovaScript</title>
+    <link rel="icon" type="image/x-icon" href="/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Shared Elegant Styling */
-        body { 
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Dark background */
-            color: #f8fafc; /* Light text */
-        }
-        .text-primary-dark { color: #4f46e5; } /* Indigo 600 */
-        .bg-card { background-color: #1e293b; } /* Deep Slate Gray for card */
-        .bg-accent { background-color: #3b82f6; } /* Blue 500 for button */
-        .hover-bg-accent:hover { background-color: #2563eb; } /* Blue 600 on hover */
-    </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 text-white">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-    <div class="max-w-sm w-full mx-auto p-12 bg-card rounded-2xl shadow-2xl border border-indigo-500/20">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6 text-center">NovaScript User Login</h2>
         
-        <div class="mb-8 text-center">
-            <h1 class="text-4xl font-extrabold text-primary-dark mb-2 tracking-tight">Portal Login</h1>
-            <p class="text-sm text-gray-400 font-light">Enter your credentials to access Nova.Scripts</p>
-        </div>
-
-        <div id="loadingMessage" class="text-sm text-gray-500 mb-6 text-center">Initializing connection...</div>
-        
-        <form id="loginForm" class="space-y-4" style="display: none;">
+        <form id="loginForm" class="space-y-4">
             <div>
-                <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                <input type="email" id="email" required
-                       class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-primary-dark focus:border-primary-dark">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" name="email" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             </div>
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                <input type="password" id="password" required
-                       class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-primary-dark focus:border-primary-dark">
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" name="password" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             </div>
-            <button type="submit" id="loginBtn" 
-                    class="bg-accent hover-bg-accent text-white font-semibold py-3 rounded-lg 
-                           transition duration-300 ease-in-out w-full shadow-lg transform hover:scale-[1.01]">
-                Sign In
+            <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200">
+                Log In
             </button>
         </form>
 
-        <p id="authMessage" class="mt-4 text-center text-sm text-red-400"></p>
+        <p class="mt-4 text-center text-sm">
+            Belum punya akun? <a href="#" id="signupLink" class="text-blue-500 hover:underline">Daftar di sini</a>
+        </p>
+        <p class="mt-2 text-center text-sm">
+            Admin? <a href="/admin/login" class="text-gray-500 hover:underline">Login Admin</a>
+        </p>
+
+        <div id="message" class="mt-4 text-center text-sm"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <script>
-        let supabase;
         const loginForm = document.getElementById('loginForm');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const loadingMessage = document.getElementById('loadingMessage');
-        const authMessage = document.getElementById('authMessage');
-        const loginBtn = document.getElementById('loginBtn');
+        const signupLink = document.getElementById('signupLink');
+        const messageDiv = document.getElementById('message');
+        let supabase;
 
         async function initSupabase() {
-            try {
-                const response = await fetch('/.netlify/functions/get-config');
-                if (!response.ok) throw new Error('Could not get Supabase keys.');
-                const keys = await response.json();
-                supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
-                
-                loadingMessage.style.display = 'none';
-                loginForm.style.display = 'block';
-                
-                // Check if user is already logged in
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    window.location.href = '/dashboard.html';
-                }
+            const response = await fetch('/.netlify/functions/get-config');
+            if (!response.ok) {
+                messageDiv.textContent = 'Error: Could not get Supabase keys.';
+                return;
+            }
+            const keys = await response.json();
+            supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
+            messageDiv.textContent = '';
 
-            } catch (error) {
-                loadingMessage.textContent = `Error initializing: ${error.message}`;
+            // Check if user is already logged in
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                window.location.href = '/dashboard';
             }
         }
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            authMessage.textContent = 'Logging in...';
-            loginBtn.disabled = true;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-            const email = emailInput.value;
-            const password = passwordInput.value;
+            if (!supabase) { await initSupabase(); }
 
-            // Supabase Standard Sign In
+            messageDiv.textContent = 'Logging in...';
+
             const { error } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password,
             });
 
             if (error) {
-                authMessage.textContent = `Error: ${error.message}. Please check your credentials.`;
+                messageDiv.textContent = `Login Error: ${error.message}`;
             } else {
-                authMessage.textContent = 'Login successful! Redirecting...';
-                window.location.href = '/dashboard.html';
+                messageDiv.textContent = 'Login successful! Redirecting...';
+                window.location.href = '/dashboard';
             }
+        });
+        
+        signupLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             
-            loginBtn.disabled = false;
+            if (!email || !password) {
+                messageDiv.textContent = 'Mohon isi email dan password untuk mendaftar.';
+                return;
+            }
+
+            if (!supabase) { await initSupabase(); }
+            
+            messageDiv.textContent = 'Signing up...';
+            
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+            
+            if (error) {
+                messageDiv.textContent = `Signup Error: ${error.message}`;
+            } else if (data.session) {
+                messageDiv.textContent = 'Pendaftaran dan Login Berhasil! Mengalihkan...';
+                window.location.href = '/dashboard';
+            } else {
+                 messageDiv.textContent = 'Pendaftaran berhasil. Cek email Anda untuk verifikasi.';
+            }
         });
 
         initSupabase();
