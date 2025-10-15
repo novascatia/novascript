@@ -6,7 +6,6 @@
     <title>Key Activity Checker - NovaScript</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Semua style CSS dari sebelumnya tetap sama */
         body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
         .container { width: 90%; max-width: 550px; padding: 40px; background-color: #1E1E1E; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
         header h1 { font-size: 2.5rem; color: #FFFFFF; margin-bottom: 10px; }
@@ -16,12 +15,16 @@
         .form-group input:focus { outline: none; border-color: #2575FC; }
         .btn { display: inline-block; padding: 15px 30px; border: none; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1rem; transition: all 0.3s ease; cursor: pointer; background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); color: white; box-shadow: 0 4px 15px rgba(65, 132, 244, 0.4); }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(65, 132, 244, 0.6); }
-        .result-area { margin-top: 30px; padding: 20px; background-color: #2a2a2a; border-radius: 10px; display: none; color: #A0A0A0; }
-        .result-area.valid { border-left: 5px solid #4CAF50; }
-        .result-area.invalid, .result-area.expired { border-left: 5px solid #F44336; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .result-area { margin-top: 30px; padding: 20px; background-color: #2a2a2a; border-radius: 10px; display: none; color: #A0A0A0; border-left: 5px solid #444; }
+        .result-area.valid { border-left-color: #4CAF50; }
+        .result-area.invalid, .result-area.expired { border-left-color: #F44336; }
         footer { margin-top: 40px; }
         .back-link { color: #777; text-decoration: none; font-size: 0.9rem; transition: color 0.3s ease; }
         .back-link:hover { color: #EAEAEA; }
+        .site-footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; }
+        .site-footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
+        .site-footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -44,6 +47,11 @@
             <a href="index.html" class="back-link">← Back to Script Library</a>
         </footer>
     </div>
+
+    <footer class="site-footer">
+        Made with ❤️ by nov4. &nbsp;|&nbsp;
+        <a href="https://discord.gg/mBVJ2mewPp" target="_blank">Join us on Discord</a>
+    </footer>
 
     <script>
         document.getElementById('key-checker-form').addEventListener('submit', async function(e) {
@@ -71,7 +79,7 @@
                 });
                 
                 const result = await response.json();
-                resultDisplay.className = `result-area ${result.status}`; // valid, invalid, or expired
+                resultDisplay.className = `result-area ${result.status}`;
 
                 if (result.status === 'valid') {
                     const expiryDate = new Date(result.expires_at).toLocaleString('en-GB');

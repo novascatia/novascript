@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaScript - Script List</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Source+Code+Pro&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px 20px 80px 20px; }
         header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
         header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
         header p { font-size: 1.1rem; color: #A0A0A0; margin-top: 10px; }
@@ -21,17 +21,25 @@
         .script-item p { margin: 0 0 15px 0; color: #A0A0A0; line-height: 1.6; }
         .script-info { font-size: 0.9rem; color: #777; }
         .loading-message { text-align: center; color: #A0A0A0; font-size: 1.2rem; }
-        .code-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .code-modal-content { background-color: #1E1E1E; padding: 20px; border-radius: 15px; width: 90%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; }
-        .code-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .code-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
+        .code-modal-content { background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid #444; padding: 0; border-radius: 15px; width: 90%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5); }
+        .code-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #444; }
         .code-modal-header h3 { margin: 0; color: #fff; }
-        .code-modal-header .close-btn { font-size: 1.5rem; color: #aaa; cursor: pointer; border: none; background: none; }
-        .code-modal-body { flex-grow: 1; overflow-y: auto; background-color: #121212; border-radius: 8px; }
-        .code-modal-body pre { margin: 0; padding: 15px; }
-        .code-modal-body code { font-family: monospace; font-size: 0.9rem; color: #EAEAEA; white-space: pre-wrap; word-wrap: break-word; }
-        .code-modal-footer { margin-top: 15px; text-align: right; }
-        .copy-btn { background-color: #2575FC; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
-        .copy-btn:hover { background-color: #0056b3; }
+        .code-modal-header .close-btn { font-size: 1.5rem; color: #aaa; cursor: pointer; border: none; background: none; transition: color 0.2s; }
+        .code-modal-header .close-btn:hover { color: #fff; }
+        .code-modal-body { flex-grow: 1; overflow-y: auto; background-color: #121212; padding: 15px; }
+        .code-modal-body pre { margin: 0; }
+        .code-modal-body code { font-family: 'Source Code Pro', monospace; font-size: 0.9rem; color: #EAEAEA; white-space: pre-wrap; word-wrap: break-word; }
+        .code-modal-footer { padding: 15px 20px; background-color: #2a2a2e; border-top: 1px solid #444; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; text-align: right; }
+        .copy-btn { background-color: #2575FC; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background-color 0.2s, transform 0.2s; }
+        .copy-btn:hover { background-color: #0056b3; transform: scale(1.05); }
+        .code-modal-body::-webkit-scrollbar { width: 8px; }
+        .code-modal-body::-webkit-scrollbar-track { background: #121212; }
+        .code-modal-body::-webkit-scrollbar-thumb { background-color: #555; border-radius: 4px; }
+        .code-modal-body::-webkit-scrollbar-thumb:hover { background-color: #777; }
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; }
+        .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
+        .footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -60,6 +68,11 @@
             </div>
         </div>
     </div>
+    
+    <footer class="footer">
+        Made with ❤️ by nov4. &nbsp;|&nbsp;
+        <a href="https://discord.gg/mBVJ2mewPp" target="_blank">Join us on Discord</a>
+    </footer>
 
     <script>
         window.addEventListener('DOMContentLoaded', async () => {
