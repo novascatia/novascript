@@ -1,3 +1,6 @@
+[build]
+  functions = "netlify/functions"
+
 [[redirects]]
   from = "/encrypt/*"
   to = "/.netlify/functions/get-post?slug=:splat"
