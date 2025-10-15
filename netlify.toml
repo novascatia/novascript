@@ -2,6 +2,6 @@
   functions = "netlify/functions"
 
 [[redirects]]
-  from = "/encrypt/*"
-  to = "/.netlify/functions/get-post?slug=:splat"
+  from = "/encrypt/:slug"
+  to = "/.netlify/functions/get-post?slug=:slug"
   status = 200
