@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/encrypt/*"
+  to = "/.netlify/functions/get-post?slug=:splat"
+  status = 200
