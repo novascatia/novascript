@@ -18,6 +18,7 @@
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; color: #A0A0A0; text-align: left; }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 15px; background-color: #2a2a2a; border: 2px solid #444; border-radius: 10px; color: #EAEAEA; font-size: 1rem; box-sizing: border-box; }
+        .form-group .slug-preview { font-size: 0.8rem; color: #777; margin-top: 5px; font-family: monospace; }
         .checkbox-group { display: flex; align-items: center; gap: 10px; text-align: left; margin-top: 20px; }
         .checkbox-group input { width: auto; }
         .checkbox-group label { margin: 0; }
@@ -62,29 +63,18 @@
             <div class="admin-section">
                 <h2>Key Management</h2>
                 <form id="key-generator-form">
-                    <div class="form-group">
-                        <label for="custom-key">Custom Key (Optional)</label>
-                        <input type="text" id="custom-key" placeholder="Leave empty for random key">
-                    </div>
+                    <div class="form-group"><label for="custom-key">Custom Key (Optional)</label><input type="text" id="custom-key" placeholder="Leave empty for random key"></div>
                     <div id="duration-group">
                         <label for="key-duration">Expiration Time</label>
                         <div style="display: flex; gap: 10px;">
                             <input type="number" id="key-duration" value="1" min="1" style="flex-grow: 1;">
-                            <select id="key-unit">
-                                <option value="days">Days</option>
-                                <option value="hours">Hours</option>
-                                <option value="minutes">Minutes</option>
-                            </select>
+                            <select id="key-unit"><option value="days">Days</option><option value="hours">Hours</option><option value="minutes">Minutes</option></select>
                         </div>
                     </div>
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="unlimited-key">
-                        <label for="unlimited-key">Unlimited Duration</label>
-                    </div>
+                    <div class="form-group checkbox-group"><input type="checkbox" id="unlimited-key"><label for="unlimited-key">Unlimited Duration</label></div>
                     <button type="submit" class="btn btn-primary">Create Key</button>
                 </form>
                 <div id="key-message" class="general-message"></div>
-                
                 <h2 style="margin-top: 40px;">Existing Keys</h2>
                 <div id="keys-list-container" class="table-wrapper"></div>
             </div>
@@ -92,14 +82,14 @@
             <div class="admin-section">
                 <h2>Script Management</h2>
                 <form id="post-script-form">
-                    <div class="form-group"><label>Script Title</label><input type="text" id="script-title" required></div>
-                    <div class="form-group"><label>Script Description</label><textarea id="script-desc" required></textarea></div>
-                    <div class="form-group"><label>Version</label><input type="text" id="script-version" required></div>
-                    <div class="form-group"><label>Lua Script Code</label><textarea id="script-code" style="min-height: 200px; font-family: monospace;" required></textarea></div>
-                    <button type="submit" class="btn btn-primary">Post Script</button>
+                    <div class="form-group"><label for="script-title">Title</label><input type="text" id="script-title" required></div>
+                    <div class="form-group"><label for="post-slug">Post Name (for URL)</label><input type="text" id="post-slug" placeholder="contoh: script-keren-pertama" required><p class="slug-preview">URL: novascript.site/encrypt/<span id="slug-live-preview">...</span></p></div>
+                    <div class="form-group"><label for="script-desc">Description</label><textarea id="script-desc" required></textarea></div>
+                    <div class="form-group"><label for="script-version">Version</label><input type="text" id="script-version" required></div>
+                    <div class="form-group"><label for="script-code">Raw Text / Source Code</label><textarea id="script-code" style="min-height: 200px; font-family: monospace;" required></textarea></div>
+                    <button type="submit" class="btn btn-primary">Publish Script</button>
                 </form>
                 <div id="script-message" class="general-message"></div>
-
                 <h2 style="margin-top: 40px;">Posted Scripts</h2>
                 <div id="scripts-list-container" class="table-wrapper"></div>
             </div>
@@ -123,6 +113,8 @@
         const keysListContainer = document.getElementById('keys-list-container');
         const unlimitedCheckbox = document.getElementById('unlimited-key');
         const durationGroup = document.getElementById('duration-group');
+        const slugInput = document.getElementById('post-slug');
+        const slugPreview = document.getElementById('slug-live-preview');
 
         function showMessage(element, text, isSuccess) {
             element.textContent = text;
@@ -138,25 +130,18 @@
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
                 if (!result.success) throw new Error(result.message);
-                
-                if (result.scripts.length === 0) {
-                    scriptsListContainer.innerHTML = '<p>No scripts posted yet.</p>';
-                    return;
-                }
-                
+                if (result.scripts.length === 0) { scriptsListContainer.innerHTML = '<p>No scripts posted yet.</p>'; return; }
                 const table = document.createElement('table');
-                table.innerHTML = `<thead><tr><th>Title</th><th>Version</th><th>Action</th></tr></thead><tbody></tbody>`;
+                table.innerHTML = `<thead><tr><th>Title</th><th>URL Slug</th><th>Action</th></tr></thead><tbody></tbody>`;
                 const tbody = table.querySelector('tbody');
                 result.scripts.forEach(script => {
                     const row = tbody.insertRow();
                     row.setAttribute('data-id', script.id);
-                    row.innerHTML = `<td>${script.title}</td><td>${script.version || 'N/A'}</td><td><button class="btn btn-danger btn-sm">Delete</button></td>`;
+                    row.innerHTML = `<td>${script.title}</td><td>${script.slug}</td><td><button class="btn btn-danger btn-sm">Delete</button></td>`;
                 });
                 scriptsListContainer.innerHTML = '';
                 scriptsListContainer.appendChild(table);
-            } catch (error) {
-                scriptsListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
-            }
+            } catch (error) { scriptsListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
         }
 
         async function fetchAndDisplayKeys() {
@@ -165,12 +150,7 @@
                 const response = await fetch('/.netlify/functions/get-keys');
                 const result = await response.json();
                 if (!result.success) throw new Error(result.message);
-
-                if (result.keys.length === 0) {
-                    keysListContainer.innerHTML = '<p>No keys generated yet.</p>';
-                    return;
-                }
-                
+                if (result.keys.length === 0) { keysListContainer.innerHTML = '<p>No keys generated yet.</p>'; return; }
                 const table = document.createElement('table');
                 table.innerHTML = `<thead><tr><th>Key</th><th>Status</th><th>Expires At</th><th>Action</th></tr></thead><tbody></tbody>`;
                 const tbody = table.querySelector('tbody');
@@ -190,123 +170,96 @@
                 });
                 keysListContainer.innerHTML = '';
                 keysListContainer.appendChild(table);
-            } catch (error) {
-                keysListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
-            }
+            } catch (error) { keysListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`; }
         }
         
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('login-error-msg');
             const submitButton = loginForm.querySelector('button[type="submit"]');
-            
-            errorMsg.style.display = 'none';
             submitButton.disabled = true;
-
             try {
                 const response = await fetch('/.netlify/functions/admin-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value })
                 });
                 const result = await response.json();
                 if (result.success) {
                     loginModal.style.display = 'none';
                     mainContent.style.display = 'block';
                     await Promise.all([fetchAndDisplayScripts(), fetchAndDisplayKeys()]);
-                } else {
-                    errorMsg.style.display = 'block';
-                }
+                } else { document.getElementById('login-error-msg').style.display = 'block'; }
             } catch (error) {
+                const errorMsg = document.getElementById('login-error-msg');
                 errorMsg.textContent = 'An error occurred.';
                 errorMsg.style.display = 'block';
-            } finally {
-                submitButton.disabled = false;
-            }
+            } finally { submitButton.disabled = false; }
         });
         
         unlimitedCheckbox.addEventListener('change', (e) => {
             durationGroup.style.display = e.target.checked ? 'none' : 'block';
         });
 
+        slugInput.addEventListener('input', () => {
+            slugPreview.textContent = slugInput.value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        });
+
         keyForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const submitButton = keyForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            
-            const is_unlimited = unlimitedCheckbox.checked;
-            let key = document.getElementById('custom-key').value || (Date.now().toString(36) + Math.random().toString(36).substr(2)).toUpperCase();
-            const duration = document.getElementById('key-duration').value;
-            const unit = document.getElementById('key-unit').value;
-            
+            const body = {
+                key: document.getElementById('custom-key').value || (Date.now().toString(36) + Math.random().toString(36).substr(2)).toUpperCase(),
+                duration: document.getElementById('key-duration').value,
+                unit: document.getElementById('key-unit').value,
+                is_unlimited: unlimitedCheckbox.checked
+            };
             try {
-                const response = await fetch('/.netlify/functions/create-key', {
-                    method: 'POST',
-                    body: JSON.stringify({ key, duration, unit, is_unlimited })
-                });
+                const response = await fetch('/.netlify/functions/create-key', { method: 'POST', body: JSON.stringify(body) });
                 const result = await response.json();
                 if (result.success) {
                     showMessage(keyMessage, 'Key created successfully!', true);
                     keyForm.reset();
                     durationGroup.style.display = 'block';
                     await fetchAndDisplayKeys();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                showMessage(keyMessage, error.message, false);
-            } finally {
-                submitButton.disabled = false;
-            }
+                } else { throw new Error(result.message); }
+            } catch (error) { showMessage(keyMessage, error.message, false); } finally { submitButton.disabled = false; }
         });
         
         scriptForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const submitButton = scriptForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
+            const slug = slugInput.value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             const body = {
                 title: document.getElementById('script-title').value,
                 description: document.getElementById('script-desc').value,
                 version: document.getElementById('script-version').value,
                 script_code: document.getElementById('script-code').value,
+                slug: slug
             };
             try {
-                const response = await fetch('/.netlify/functions/post-script', {
-                    method: 'POST',
-                    body: JSON.stringify(body)
-                });
+                const response = await fetch('/.netlify/functions/post-script', { method: 'POST', body: JSON.stringify(body) });
                 const result = await response.json();
                 if (result.success) {
-                    showMessage(scriptMessage, `Script posted successfully!`, true);
+                    showMessage(scriptMessage, `Post published! URL: /encrypt/${slug}`, true);
                     scriptForm.reset();
+                    slugPreview.textContent = '...';
                     await fetchAndDisplayScripts();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                showMessage(scriptMessage, error.message, false);
-            } finally {
-                submitButton.disabled = false;
-            }
+                } else { throw new Error(result.message); }
+            } catch (error) { showMessage(scriptMessage, error.message, false); } finally { submitButton.disabled = false; }
         });
 
         scriptsListContainer.addEventListener('click', async function(e) {
             if (e.target.classList.contains('btn-danger')) {
                 const row = e.target.closest('tr');
                 const id = parseInt(row.dataset.id, 10);
-                if (!confirm('Are you sure you want to delete this script?')) return;
+                if (!confirm('Delete this script?')) return;
                 try {
-                    const response = await fetch('/.netlify/functions/delete-script', {
-                        method: 'POST',
-                        body: JSON.stringify({ id })
-                    });
+                    const response = await fetch('/.netlify/functions/delete-script', { method: 'POST', body: JSON.stringify({ id }) });
                     const result = await response.json();
-                    if (result.success) {
-                        row.remove();
-                        showMessage(scriptMessage, 'Script deleted!', true);
-                    } else { throw new Error(result.message); }
+                    if (result.success) { row.remove(); showMessage(scriptMessage, 'Script deleted!', true); } 
+                    else { throw new Error(result.message); }
                 } catch (error) { showMessage(scriptMessage, error.message, false); }
             }
         });
@@ -315,17 +268,12 @@
             if (e.target.classList.contains('btn-danger')) {
                 const row = e.target.closest('tr');
                 const id = parseInt(row.dataset.id, 10);
-                if (!confirm('Are you sure you want to delete this key?')) return;
+                if (!confirm('Delete this key?')) return;
                 try {
-                    const response = await fetch('/.netlify/functions/delete-key', {
-                        method: 'POST',
-                        body: JSON.stringify({ id })
-                    });
+                    const response = await fetch('/.netlify/functions/delete-key', { method: 'POST', body: JSON.stringify({ id }) });
                     const result = await response.json();
-                    if (result.success) {
-                        row.remove();
-                        showMessage(keyMessage, 'Key deleted!', true);
-                    } else { throw new Error(result.message); }
+                    if (result.success) { row.remove(); showMessage(keyMessage, 'Key deleted!', true); }
+                    else { throw new Error(result.message); }
                 } catch (error) { showMessage(keyMessage, error.message, false); }
             }
         });
