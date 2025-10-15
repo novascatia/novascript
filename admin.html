@@ -10,8 +10,6 @@
         .container { max-width: 800px; margin: 20px auto; padding: 20px 20px 100px 20px; }
         .login-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .login-modal-content { background-color: #1E1E1E; padding: 40px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
-        .login-modal-content h2 { margin-top: 0; color: #FFFFFF; }
-        #login-error-msg { color: #F44336; margin-top: 15px; display: none; }
         #main-content { display: none; }
         header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
         header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
@@ -19,29 +17,29 @@
         .admin-section h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 25px; color: #FFFFFF; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; color: #A0A0A0; text-align: left; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 15px; background-color: #2a2a2a; border: 2px solid #444; border-radius: 10px; color: #EAEAEA; font-size: 1rem; box-sizing: border-box; transition: border-color 0.3s ease; }
-        .form-group textarea { resize: vertical; min-height: 120px; }
-        .form-group textarea.code-input { min-height: 250px; font-family: monospace; font-size: 0.9rem; background-color: #111; }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #2575FC; }
-        .flex-group { display: flex; gap: 10px; align-items: center; }
-        .flex-group input { flex-grow: 1; }
-        .btn { padding: 15px 30px; border: none; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1rem; transition: all 0.3s ease; cursor: pointer; color: white; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 15px; background-color: #2a2a2a; border: 2px solid #444; border-radius: 10px; color: #EAEAEA; font-size: 1rem; box-sizing: border-box; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; text-align: left; margin-top: 20px; }
+        .checkbox-group input { width: auto; }
+        .checkbox-group label { margin: 0; }
+        .btn { padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; }
         .btn:disabled { background: #555; cursor: not-allowed; }
         .btn-sm { padding: 8px 15px; font-size: 0.9rem; }
         .btn-danger { background-color: #c82333; font-size: 0.9rem; padding: 10px 18px; }
-        .btn-primary { background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); box-shadow: 0 4px 15px rgba(65, 132, 244, 0.4); }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(65, 132, 244, 0.6); }
-        .script-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background-color: #2a2a2a; border-radius: 10px; margin-bottom: 10px; }
-        .script-item-info h3 { margin: 0 0 5px 0; }
-        .script-item-info p { margin: 0; color: #A0A0A0; font-size: 0.9rem; }
+        .btn-primary { background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); }
         .general-message { text-align: center; padding: 10px; margin-top: 15px; border-radius: 8px; display: none; }
         .general-message.success { background-color: #28a745; color: white; }
         .general-message.error { background-color: #dc3545; color: white; }
-        #key-result-area { margin-top: 20px; padding: 15px; background-color: #2a2a2a; border-radius: 10px; display: none; text-align: left; }
-        #key-result-area code { background-color: #121212; padding: 5px 8px; border-radius: 5px; font-family: monospace; color: #4CAF50; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { background-color: #2a2a2e; }
+        td .key-string { font-family: monospace; background: #111; padding: 2px 6px; border-radius: 4px; }
+        .status { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .status-valid { background-color: #28a745; color: white; }
+        .status-unlimited { background-color: #17a2b8; color: white; }
+        .status-expired { background-color: #6c757d; color: white; }
         .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; z-index: 500; }
         .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
-        .footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -66,15 +64,12 @@
                 <form id="key-generator-form">
                     <div class="form-group">
                         <label for="custom-key">Custom Key (Optional)</label>
-                        <div class="flex-group">
-                            <input type="text" id="custom-key" placeholder="Leave empty for random key">
-                            <button type="button" id="generate-random-btn" class="btn btn-primary btn-sm">Random</button>
-                        </div>
+                        <input type="text" id="custom-key" placeholder="Leave empty for random key">
                     </div>
-                    <div class="form-group">
+                    <div id="duration-group">
                         <label for="key-duration">Expiration Time</label>
-                        <div class="flex-group">
-                            <input type="number" id="key-duration" value="1" min="1" required>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="key-duration" value="1" min="1" style="flex-grow: 1;">
                             <select id="key-unit">
                                 <option value="days">Days</option>
                                 <option value="hours">Hours</option>
@@ -82,33 +77,31 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="unlimited-key">
+                        <label for="unlimited-key">Unlimited Duration</label>
+                    </div>
                     <button type="submit" class="btn btn-primary">Create Key</button>
                 </form>
-                <div id="key-result-area">
-                    <p><strong>Key Created:</strong> <code id="generated-key-text"></code></p>
-                    <p><strong>Expires At:</strong> <span id="generated-key-expiry"></span></p>
-                </div>
                 <div id="key-message" class="general-message"></div>
+                
+                <h2 style="margin-top: 40px;">Existing Keys</h2>
+                <div id="keys-list-container" class="table-wrapper"></div>
             </div>
 
             <div class="admin-section">
-                <h2>Post a New Script</h2>
+                <h2>Script Management</h2>
                 <form id="post-script-form">
-                    <div class="form-group"><label for="script-title">Script Title</label><input type="text" id="script-title" required></div>
-                    <div class="form-group"><label for="script-desc">Script Description</label><textarea id="script-desc" required></textarea></div>
-                    <div class="form-group"><label for="script-version">Version</label><input type="text" id="script-version" required></div>
-                    <div class="form-group">
-                        <label for="script-code">Lua Script Code</label>
-                        <textarea id="script-code" class="code-input" placeholder="-- Paste your Lua script code here..." required></textarea>
-                    </div>
+                    <div class="form-group"><label>Script Title</label><input type="text" id="script-title" required></div>
+                    <div class="form-group"><label>Script Description</label><textarea id="script-desc" required></textarea></div>
+                    <div class="form-group"><label>Version</label><input type="text" id="script-version" required></div>
+                    <div class="form-group"><label>Lua Script Code</label><textarea id="script-code" style="min-height: 200px; font-family: monospace;" required></textarea></div>
                     <button type="submit" class="btn btn-primary">Post Script</button>
                 </form>
                 <div id="script-message" class="general-message"></div>
-            </div>
 
-            <div class="admin-section">
-                <h2>Currently Posted Scripts</h2>
-                <div id="current-scripts-list"></div>
+                <h2 style="margin-top: 40px;">Posted Scripts</h2>
+                <div id="scripts-list-container" class="table-wrapper"></div>
             </div>
         </div>
     </div>
@@ -124,10 +117,12 @@
         const loginModal = document.getElementById('login-modal');
         const scriptForm = document.getElementById('post-script-form');
         const scriptMessage = document.getElementById('script-message');
-        const scriptsListContainer = document.getElementById('current-scripts-list');
+        const scriptsListContainer = document.getElementById('scripts-list-container');
         const keyForm = document.getElementById('key-generator-form');
-        const keyResultArea = document.getElementById('key-result-area');
         const keyMessage = document.getElementById('key-message');
+        const keysListContainer = document.getElementById('keys-list-container');
+        const unlimitedCheckbox = document.getElementById('unlimited-key');
+        const durationGroup = document.getElementById('duration-group');
 
         function showMessage(element, text, isSuccess) {
             element.textContent = text;
@@ -137,66 +132,69 @@
             setTimeout(() => { element.style.display = 'none'; }, 5000);
         }
 
-        function generateRandomKey(length = 16) {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
-            for (let i = 0; i < length; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
         async function fetchAndDisplayScripts() {
-            scriptsListContainer.innerHTML = '<p>Loading scripts...</p>';
+            scriptsListContainer.innerHTML = '<p>Loading...</p>';
             try {
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
                 if (!result.success) throw new Error(result.message);
                 
-                scriptsListContainer.innerHTML = '';
                 if (result.scripts.length === 0) {
                     scriptsListContainer.innerHTML = '<p>No scripts posted yet.</p>';
                     return;
                 }
                 
+                const table = document.createElement('table');
+                table.innerHTML = `<thead><tr><th>Title</th><th>Version</th><th>Action</th></tr></thead><tbody></tbody>`;
+                const tbody = table.querySelector('tbody');
                 result.scripts.forEach(script => {
-                    const item = document.createElement('div');
-                    item.className = 'script-item';
-                    item.setAttribute('data-id', script.id);
-                    item.innerHTML = `
-                        <div class="script-item-info">
-                            <h3>${script.title}</h3>
-                            <p>Version: ${script.version || 'N/A'}</p>
-                        </div>
-                        <button class="btn btn-danger">Delete</button>
-                    `;
-                    scriptsListContainer.appendChild(item);
+                    const row = tbody.insertRow();
+                    row.setAttribute('data-id', script.id);
+                    row.innerHTML = `<td>${script.title}</td><td>${script.version || 'N/A'}</td><td><button class="btn btn-danger btn-sm">Delete</button></td>`;
                 });
+                scriptsListContainer.innerHTML = '';
+                scriptsListContainer.appendChild(table);
             } catch (error) {
-                scriptsListContainer.innerHTML = `<p style="color:red;">Error loading scripts: ${error.message}</p>`;
+                scriptsListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
             }
         }
 
-        async function deleteScript(id, element) {
-            if (!confirm('Are you sure you want to delete this script?')) return;
+        async function fetchAndDisplayKeys() {
+            keysListContainer.innerHTML = '<p>Loading...</p>';
             try {
-                const response = await fetch('/.netlify/functions/delete-script', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
+                const response = await fetch('/.netlify/functions/get-keys');
                 const result = await response.json();
-                if (result.success) {
-                    element.remove();
-                    showMessage(scriptMessage, 'Script deleted successfully!', true);
-                } else {
-                    throw new Error(result.message);
+                if (!result.success) throw new Error(result.message);
+
+                if (result.keys.length === 0) {
+                    keysListContainer.innerHTML = '<p>No keys generated yet.</p>';
+                    return;
                 }
+                
+                const table = document.createElement('table');
+                table.innerHTML = `<thead><tr><th>Key</th><th>Status</th><th>Expires At</th><th>Action</th></tr></thead><tbody></tbody>`;
+                const tbody = table.querySelector('tbody');
+                result.keys.forEach(key => {
+                    const row = tbody.insertRow();
+                    row.setAttribute('data-id', key.id);
+                    let statusHtml, expiryText;
+                    if (key.expires_at === null) {
+                        statusHtml = '<span class="status status-unlimited">Unlimited</span>';
+                        expiryText = 'N/A';
+                    } else {
+                        const isExpired = new Date() > new Date(key.expires_at);
+                        statusHtml = `<span class="status ${isExpired ? 'status-expired' : 'status-valid'}">${isExpired ? 'Expired' : 'Active'}</span>`;
+                        expiryText = new Date(key.expires_at).toLocaleString('en-GB');
+                    }
+                    row.innerHTML = `<td><span class="key-string">${key.key_string}</span></td><td>${statusHtml}</td><td>${expiryText}</td><td><button class="btn btn-danger btn-sm">Delete</button></td>`;
+                });
+                keysListContainer.innerHTML = '';
+                keysListContainer.appendChild(table);
             } catch (error) {
-                showMessage(scriptMessage, `Error deleting script: ${error.message}`, false);
+                keysListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
             }
         }
-
+        
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -206,7 +204,6 @@
             
             errorMsg.style.display = 'none';
             submitButton.disabled = true;
-            submitButton.textContent = 'Verifying...';
 
             try {
                 const response = await fetch('/.netlify/functions/admin-login', {
@@ -218,71 +215,67 @@
                 if (result.success) {
                     loginModal.style.display = 'none';
                     mainContent.style.display = 'block';
-                    await fetchAndDisplayScripts();
+                    await Promise.all([fetchAndDisplayScripts(), fetchAndDisplayKeys()]);
                 } else {
                     errorMsg.style.display = 'block';
                 }
             } catch (error) {
-                errorMsg.textContent = 'An error occurred. Please try again.';
+                errorMsg.textContent = 'An error occurred.';
                 errorMsg.style.display = 'block';
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = 'Login';
             }
         });
         
-        document.getElementById('generate-random-btn').addEventListener('click', () => {
-            document.getElementById('custom-key').value = generateRandomKey();
+        unlimitedCheckbox.addEventListener('change', (e) => {
+            durationGroup.style.display = e.target.checked ? 'none' : 'block';
         });
 
         keyForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const submitButton = keyForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            submitButton.textContent = 'Creating...';
-            let key = document.getElementById('custom-key').value || generateRandomKey();
+            
+            const is_unlimited = unlimitedCheckbox.checked;
+            let key = document.getElementById('custom-key').value || (Date.now().toString(36) + Math.random().toString(36).substr(2)).toUpperCase();
             const duration = document.getElementById('key-duration').value;
             const unit = document.getElementById('key-unit').value;
+            
             try {
                 const response = await fetch('/.netlify/functions/create-key', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key, duration, unit })
+                    body: JSON.stringify({ key, duration, unit, is_unlimited })
                 });
                 const result = await response.json();
                 if (result.success) {
-                    const createdKey = result.createdKey;
-                    document.getElementById('generated-key-text').textContent = createdKey.key_string;
-                    document.getElementById('generated-key-expiry').textContent = new Date(createdKey.expires_at).toLocaleString();
-                    keyResultArea.style.display = 'block';
                     showMessage(keyMessage, 'Key created successfully!', true);
                     keyForm.reset();
+                    durationGroup.style.display = 'block';
+                    await fetchAndDisplayKeys();
                 } else {
-                    throw new Error(result.message || 'Failed to create key.');
+                    throw new Error(result.message);
                 }
             } catch (error) {
                 showMessage(keyMessage, error.message, false);
-                keyResultArea.style.display = 'none';
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = 'Create Key';
             }
         });
-
+        
         scriptForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const submitButton = scriptForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            submitButton.textContent = 'Posting...';
-            const title = document.getElementById('script-title').value;
-            const description = document.getElementById('script-desc').value;
-            const version = document.getElementById('script-version').value;
-            const script_code = document.getElementById('script-code').value;
+            const body = {
+                title: document.getElementById('script-title').value,
+                description: document.getElementById('script-desc').value,
+                version: document.getElementById('script-version').value,
+                script_code: document.getElementById('script-code').value,
+            };
             try {
                 const response = await fetch('/.netlify/functions/post-script', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, description, version, script_code })
+                    body: JSON.stringify(body)
                 });
                 const result = await response.json();
                 if (result.success) {
@@ -290,21 +283,50 @@
                     scriptForm.reset();
                     await fetchAndDisplayScripts();
                 } else {
-                    throw new Error(result.message || 'Failed to post script.');
+                    throw new Error(result.message);
                 }
             } catch (error) {
                 showMessage(scriptMessage, error.message, false);
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = 'Post Script';
             }
         });
 
-        scriptsListContainer.addEventListener('click', function(e) {
+        scriptsListContainer.addEventListener('click', async function(e) {
             if (e.target.classList.contains('btn-danger')) {
-                const scriptItem = e.target.closest('.script-item');
-                const scriptId = parseInt(scriptItem.dataset.id, 10);
-                deleteScript(scriptId, scriptItem);
+                const row = e.target.closest('tr');
+                const id = parseInt(row.dataset.id, 10);
+                if (!confirm('Are you sure you want to delete this script?')) return;
+                try {
+                    const response = await fetch('/.netlify/functions/delete-script', {
+                        method: 'POST',
+                        body: JSON.stringify({ id })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        row.remove();
+                        showMessage(scriptMessage, 'Script deleted!', true);
+                    } else { throw new Error(result.message); }
+                } catch (error) { showMessage(scriptMessage, error.message, false); }
+            }
+        });
+
+        keysListContainer.addEventListener('click', async function(e) {
+            if (e.target.classList.contains('btn-danger')) {
+                const row = e.target.closest('tr');
+                const id = parseInt(row.dataset.id, 10);
+                if (!confirm('Are you sure you want to delete this key?')) return;
+                try {
+                    const response = await fetch('/.netlify/functions/delete-key', {
+                        method: 'POST',
+                        body: JSON.stringify({ id })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        row.remove();
+                        showMessage(keyMessage, 'Key deleted!', true);
+                    } else { throw new Error(result.message); }
+                } catch (error) { showMessage(keyMessage, error.message, false); }
             }
         });
     </script>

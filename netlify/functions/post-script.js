@@ -1,39 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
+// /netlify/functions/post-script.js
 
 exports.handler = async function(event, context) {
-    // Ambil semua data, termasuk script_code, dari body request
-    const { title, description, version, script_code } = JSON.parse(event.body);
+    // Di dunia nyata, Anda memerlukan otentikasi admin di sini
     
-    // Jadikan script_code sebagai input wajib
-    if (!title || !description || !script_code) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ success: false, message: 'Title, description, and script code are required.' })
-        };
-    }
+    const { title, description, version } = JSON.parse(event.body);
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log(`Received request to post script: ${title}`);
 
-    // Masukkan semua data, termasuk script_code, ke dalam tabel
-    const { data, error } = await supabase
-        .from('scripts')
-        .insert([
-            { title, description, version, script_code }
-        ])
-        .select();
+    // LOGIKA SEBENARNYA: Simpan detail skrip ini ke database
+    // Untuk saat ini, kita hanya akan mensimulasikan keberhasilan.
 
-    if (error) {
-        console.error('Supabase error:', error);
-        return { 
-            statusCode: 500, 
-            body: JSON.stringify({ success: false, message: error.message }) 
-        };
-    }
-
-    return { 
-        statusCode: 200, 
-        body: JSON.stringify({ success: true, postedScript: data[0] }) 
+    return {
+        statusCode: 200,
+        body: JSON.stringify({ 
+            success: true, 
+            message: `Script '${title}' posted successfully (simulation).` 
+        })
     };
 };
