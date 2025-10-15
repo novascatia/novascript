@@ -62,29 +62,18 @@
             <div class="admin-section">
                 <h2>Key Management</h2>
                 <form id="key-generator-form">
-                    <div class="form-group">
-                        <label for="custom-key">Custom Key (Optional)</label>
-                        <input type="text" id="custom-key" placeholder="Leave empty for random key">
-                    </div>
+                    <div class="form-group"><label for="custom-key">Custom Key (Optional)</label><input type="text" id="custom-key" placeholder="Leave empty for random key"></div>
                     <div id="duration-group">
                         <label for="key-duration">Expiration Time</label>
                         <div style="display: flex; gap: 10px;">
                             <input type="number" id="key-duration" value="1" min="1" style="flex-grow: 1;">
-                            <select id="key-unit">
-                                <option value="days">Days</option>
-                                <option value="hours">Hours</option>
-                                <option value="minutes">Minutes</option>
-                            </select>
+                            <select id="key-unit"><option value="days">Days</option><option value="hours">Hours</option><option value="minutes">Minutes</option></select>
                         </div>
                     </div>
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="unlimited-key">
-                        <label for="unlimited-key">Unlimited Duration</label>
-                    </div>
+                    <div class="form-group checkbox-group"><input type="checkbox" id="unlimited-key"><label for="unlimited-key">Unlimited Duration</label></div>
                     <button type="submit" class="btn btn-primary">Create Key</button>
                 </form>
                 <div id="key-message" class="general-message"></div>
-                
                 <h2 style="margin-top: 40px;">Existing Keys</h2>
                 <div id="keys-list-container" class="table-wrapper"></div>
             </div>
@@ -94,19 +83,22 @@
                 <form id="post-script-form">
                     <div class="form-group"><label for="script-title">Title</label><input type="text" id="script-title" required></div>
                     <div class="form-group"><label for="script-desc">Description</label><textarea id="script-desc" required></textarea></div>
-                    <div class="form-group"><label for="script-version">Version</label><input type="text" id="script-version" required></div>
+                    <div class="form-group"><label for="script-version">Version</label><input type="text" id="script-version"></div>
                     <div class="form-group">
-                        <label for="loader-script">Loader Script</label>
-                        <textarea id="loader-script" style="height: 120px; font-family: monospace;" placeholder="local handle = io.popen(...)" required></textarea>
+                        <label for="post-slug">Source URL Name (Unique)</label>
+                        <input type="text" id="post-slug" placeholder="contoh: auto-farm-v2" required>
                     </div>
                     <div class="form-group">
-                        <label for="source-script">Source Script</label>
-                        <textarea id="source-script" style="height: 250px; font-family: monospace;" placeholder="function dialogHook(...)" required></textarea>
+                        <label for="loader-script">Loader Script (Ditampilkan ke user)</label>
+                        <textarea id="loader-script" style="height: 120px; font-family: monospace;" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="source-script">Source Script (Konten utama yang di-load)</label>
+                        <textarea id="source-script" style="height: 250px; font-family: monospace;" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Publish Script</button>
                 </form>
                 <div id="script-message" class="general-message"></div>
-
                 <h2 style="margin-top: 40px;">Posted Scripts</h2>
                 <div id="scripts-list-container" class="table-wrapper"></div>
             </div>
@@ -145,19 +137,17 @@
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
                 if (!result.success) throw new Error(result.message);
-                
                 if (result.scripts.length === 0) {
                     scriptsListContainer.innerHTML = '<p>No scripts posted yet.</p>';
                     return;
                 }
-                
                 const table = document.createElement('table');
-                table.innerHTML = `<thead><tr><th>Title</th><th>Version</th><th>Action</th></tr></thead><tbody></tbody>`;
+                table.innerHTML = `<thead><tr><th>Title</th><th>URL Slug</th><th>Action</th></tr></thead><tbody></tbody>`;
                 const tbody = table.querySelector('tbody');
                 result.scripts.forEach(script => {
                     const row = tbody.insertRow();
                     row.setAttribute('data-id', script.id);
-                    row.innerHTML = `<td>${script.title}</td><td>${script.version || 'N/A'}</td><td><button class="btn btn-danger btn-sm">Delete</button></td>`;
+                    row.innerHTML = `<td>${script.title}</td><td>${script.slug || 'N/A'}</td><td><button class="btn btn-danger btn-sm">Delete</button></td>`;
                 });
                 scriptsListContainer.innerHTML = '';
                 scriptsListContainer.appendChild(table);
@@ -172,12 +162,10 @@
                 const response = await fetch('/.netlify/functions/get-keys');
                 const result = await response.json();
                 if (!result.success) throw new Error(result.message);
-
                 if (result.keys.length === 0) {
                     keysListContainer.innerHTML = '<p>No keys generated yet.</p>';
                     return;
                 }
-                
                 const table = document.createElement('table');
                 table.innerHTML = `<thead><tr><th>Key</th><th>Status</th><th>Expires At</th><th>Action</th></tr></thead><tbody></tbody>`;
                 const tbody = table.querySelector('tbody');
@@ -206,7 +194,6 @@
             e.preventDefault();
             const submitButton = loginForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-
             try {
                 const response = await fetch('/.netlify/functions/admin-login', {
                     method: 'POST',
@@ -238,26 +225,21 @@
             e.preventDefault();
             const submitButton = keyForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            
-            const is_unlimited = unlimitedCheckbox.checked;
-            let key = document.getElementById('custom-key').value || (Date.now().toString(36) + Math.random().toString(36).substr(2)).toUpperCase();
-            const duration = document.getElementById('key-duration').value;
-            const unit = document.getElementById('key-unit').value;
-            
+            const body = {
+                key: document.getElementById('custom-key').value || (Date.now().toString(36) + Math.random().toString(36).substr(2)).toUpperCase(),
+                duration: document.getElementById('key-duration').value,
+                unit: document.getElementById('key-unit').value,
+                is_unlimited: unlimitedCheckbox.checked
+            };
             try {
-                const response = await fetch('/.netlify/functions/create-key', {
-                    method: 'POST',
-                    body: JSON.stringify({ key, duration, unit, is_unlimited })
-                });
+                const response = await fetch('/.netlify/functions/create-key', { method: 'POST', body: JSON.stringify(body) });
                 const result = await response.json();
                 if (result.success) {
                     showMessage(keyMessage, 'Key created successfully!', true);
                     keyForm.reset();
                     durationGroup.style.display = 'block';
                     await fetchAndDisplayKeys();
-                } else {
-                    throw new Error(result.message);
-                }
+                } else { throw new Error(result.message); }
             } catch (error) {
                 showMessage(keyMessage, error.message, false);
             } finally {
@@ -275,15 +257,13 @@
                 version: document.getElementById('script-version').value,
                 loader_script: document.getElementById('loader-script').value,
                 source_script: document.getElementById('source-script').value,
+                slug: document.getElementById('post-slug').value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
             };
             try {
-                const response = await fetch('/.netlify/functions/post-script', {
-                    method: 'POST',
-                    body: JSON.stringify(body)
-                });
+                const response = await fetch('/.netlify/functions/post-script', { method: 'POST', body: JSON.stringify(body) });
                 const result = await response.json();
                 if (result.success) {
-                    showMessage(scriptMessage, `Script posted successfully!`, true);
+                    showMessage(scriptMessage, `Script published successfully!`, true);
                     scriptForm.reset();
                     await fetchAndDisplayScripts();
                 } else {
@@ -302,16 +282,15 @@
                 const id = parseInt(row.dataset.id, 10);
                 if (!confirm('Are you sure you want to delete this script?')) return;
                 try {
-                    const response = await fetch('/.netlify/functions/delete-script', {
-                        method: 'POST',
-                        body: JSON.stringify({ id })
-                    });
+                    const response = await fetch('/.netlify/functions/delete-script', { method: 'POST', body: JSON.stringify({ id }) });
                     const result = await response.json();
                     if (result.success) {
                         row.remove();
                         showMessage(scriptMessage, 'Script deleted!', true);
                     } else { throw new Error(result.message); }
-                } catch (error) { showMessage(scriptMessage, error.message, false); }
+                } catch (error) {
+                    showMessage(scriptMessage, error.message, false);
+                }
             }
         });
 
@@ -321,16 +300,15 @@
                 const id = parseInt(row.dataset.id, 10);
                 if (!confirm('Are you sure you want to delete this key?')) return;
                 try {
-                    const response = await fetch('/.netlify/functions/delete-key', {
-                        method: 'POST',
-                        body: JSON.stringify({ id })
-                    });
+                    const response = await fetch('/.netlify/functions/delete-key', { method: 'POST', body: JSON.stringify({ id }) });
                     const result = await response.json();
                     if (result.success) {
                         row.remove();
                         showMessage(keyMessage, 'Key deleted!', true);
                     } else { throw new Error(result.message); }
-                } catch (error) { showMessage(keyMessage, error.message, false); }
+                } catch (error) {
+                    showMessage(keyMessage, error.message, false);
+                }
             }
         });
     </script>

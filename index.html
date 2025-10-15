@@ -19,54 +19,36 @@
         .script-info { font-size: 0.9rem; color: #777; }
         .loading-message { text-align: center; color: #A0A0A0; font-size: 1.2rem; }
         .code-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
-        .code-modal-content { background: #1E1E1E; border: 1px solid #444; padding: 0; border-radius: 15px; width: 90%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5); }
+        .code-modal-content { background: linear-gradient(145deg, #2c2c2e, #1a1a1c); border: 1px solid #444; padding: 0; border-radius: 15px; width: 90%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5); }
         .code-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #444; }
         .code-modal-header h3 { margin: 0; color: #fff; }
-        .code-modal-header .close-btn { font-size: 1.5rem; color: #aaa; cursor: pointer; border: none; background: none; transition: color 0.2s; }
-        .code-modal-header .close-btn:hover { color: #fff; }
-        .code-modal-body { flex-grow: 1; overflow-y: auto; padding: 10px 20px; }
-        .code-block { margin-bottom: 20px; }
-        .code-block h4 { margin: 0 0 10px 0; color: #aaa; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        .code-wrapper { position: relative; background-color: #121212; border-radius: 8px; }
-        .code-wrapper pre { margin: 0; padding: 15px; }
-        .code-wrapper code { font-family: 'Source Code Pro', monospace; font-size: 0.9rem; color: #EAEAEA; white-space: pre-wrap; word-wrap: break-word; }
-        .copy-btn { position: absolute; top: 10px; right: 10px; background-color: #2575FC; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
-        .code-wrapper:hover .copy-btn { opacity: 1; }
+        .code-modal-header .close-btn { font-size: 1.5rem; color: #aaa; cursor: pointer; border: none; background: none; }
+        .code-modal-body { flex-grow: 1; overflow-y: auto; background-color: #121212; padding: 15px; }
+        .code-modal-body pre { margin: 0; }
+        .code-modal-body code { font-family: 'Source Code Pro', monospace; font-size: 0.9rem; color: #EAEAEA; white-space: pre-wrap; word-wrap: break-word; }
+        .code-modal-footer { padding: 15px 20px; background-color: #2a2a2e; border-top: 1px solid #444; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; text-align: right; }
+        .copy-btn { background-color: #2575FC; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; }
         .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
-        .footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>NovaScript Library</h1>
-            <p>Click on a script to view its code.</p>
-        </header>
+        <header><h1>NovaScript Library</h1><p>Click on a script to get the loader code.</p></header>
         <div id="script-list" class="script-list"></div>
     </div>
 
     <div id="code-modal" class="code-modal-overlay">
         <div class="code-modal-content">
             <div class="code-modal-header">
-                <h3 id="modal-title">Script Code</h3>
-                <button id="modal-close-btn" style="font-size: 1.5rem; color: #aaa; cursor: pointer; border: none; background: none;">&times;</button>
+                <h3 id="modal-title">Loader Script</h3>
+                <button id="modal-close-btn">&times;</button>
             </div>
             <div class="code-modal-body">
-                <div class="code-block">
-                    <h4>Loader Script</h4>
-                    <div class="code-wrapper">
-                        <pre><code id="modal-loader-code"></code></pre>
-                        <button class="copy-btn" data-target="modal-loader-code">Copy</button>
-                    </div>
-                </div>
-                <div class="code-block">
-                    <h4>Source Script</h4>
-                    <div class="code-wrapper">
-                        <pre><code id="modal-source-code"></code></pre>
-                        <button class="copy-btn" data-target="modal-source-code">Copy</button>
-                    </div>
-                </div>
+                <pre><code id="modal-loader-code"></code></pre>
+            </div>
+            <div class="code-modal-footer">
+                <button id="modal-copy-btn" class="copy-btn">Copy Loader</button>
             </div>
         </div>
     </div>
@@ -82,12 +64,11 @@
             const codeModal = document.getElementById('code-modal');
             const modalTitle = document.getElementById('modal-title');
             const modalLoaderCode = document.getElementById('modal-loader-code');
-            const modalSourceCode = document.getElementById('modal-source-code');
             const modalCloseBtn = document.getElementById('modal-close-btn');
+            const modalCopyBtn = document.getElementById('modal-copy-btn');
             let scriptsData = [];
 
-            scriptListContainer.innerHTML = '<p class="loading-message">Loading scripts...</p>';
-
+            scriptListContainer.innerHTML = '<p>Loading scripts...</p>';
             try {
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
@@ -100,19 +81,14 @@
                         const item = document.createElement('div');
                         item.className = 'script-item';
                         item.setAttribute('data-index', index);
-                        const lastUpdated = new Date(script.created_at).toLocaleDateString('en-GB');
-                        item.innerHTML = `
-                            <h2>${script.title}</h2>
-                            <p>${script.description}</p>
-                            <div class="script-info">Version: ${script.version || 'N/A'} | Last Updated: ${lastUpdated}</div>
-                        `;
+                        item.innerHTML = `<h2>${script.title}</h2><p>${script.description}</p><div class="script-info">Version: ${script.version || 'N/A'}</div>`;
                         scriptListContainer.appendChild(item);
                     });
                 } else {
-                    scriptListContainer.innerHTML = '<p class="loading-message">No scripts posted yet.</p>';
+                    scriptListContainer.innerHTML = '<p>No scripts posted yet.</p>';
                 }
             } catch (error) {
-                scriptListContainer.innerHTML = `<p class="loading-message" style="color:red;">Could not load scripts.</p>`;
+                scriptListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
             }
 
             scriptListContainer.addEventListener('click', (e) => {
@@ -120,9 +96,8 @@
                 if (scriptItem) {
                     const index = scriptItem.dataset.index;
                     const script = scriptsData[index];
-                    modalTitle.textContent = script.title;
+                    modalTitle.textContent = `${script.title} - Loader`;
                     modalLoaderCode.textContent = script.loader_script;
-                    modalSourceCode.textContent = script.source_script;
                     codeModal.style.display = 'flex';
                 }
             });
@@ -131,15 +106,11 @@
             modalCloseBtn.addEventListener('click', closeModal);
             codeModal.addEventListener('click', (e) => { if (e.target === codeModal) closeModal(); });
 
-            codeModal.addEventListener('click', (e) => {
-                if (e.target.classList.contains('copy-btn')) {
-                    const targetId = e.target.dataset.target;
-                    const codeToCopy = document.getElementById(targetId).textContent;
-                    navigator.clipboard.writeText(codeToCopy).then(() => {
-                        e.target.textContent = 'Copied!';
-                        setTimeout(() => { e.target.textContent = 'Copy'; }, 2000);
-                    });
-                }
+            modalCopyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(modalLoaderCode.textContent).then(() => {
+                    modalCopyBtn.textContent = 'Copied!';
+                    setTimeout(() => { modalCopyBtn.textContent = 'Copy Loader'; }, 2000);
+                });
             });
         });
     </script>
