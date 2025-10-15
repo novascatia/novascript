@@ -27,7 +27,7 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Mengubah align-items agar card tidak terpotong */
+            align-items: flex-start;
             min-height: 100vh;
             background-color: var(--bg-dark);
             color: var(--text-light);
@@ -112,7 +112,7 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
         }
         
-        #file-input-container { display: none; } /* Default sembunyikan file */
+        #file-input-container { display: none; }
         
         .custom-file-input {
             display: block; width: 100%; padding: 12px;
@@ -134,64 +134,63 @@
         }
         .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
         
-        #output-container { display: none; } /* Sembunyikan output secara default */
+        #output-container { display: none; }
         .output-controls { display: flex; gap: 15px; margin-top: 15px; }
         .output-controls button { width: 100%; }
 
     </style>
 </head>
 <body>
-    <div id="encrypt-form" class="card">
+    <form id="encrypt-form" class="card">
         <div class="card-header">
             <h1>NovaScript Encryptor</h1>
         </div>
         <div class="card-body">
             
             <div class="form-group">
-                <label>1. Pilih Metode Input</label>
+                <label>1. Select Input Method</label>
                 <div class="input-toggle">
-                    <div class="toggle-button active" id="toggle-text">Input Teks</div>
-                    <div class="toggle-button" id="toggle-file">Upload File</div>
+                    <div class="toggle-button active" id="toggle-text">Text Input</div>
+                    <div class="toggle-button" id="toggle-file">File Upload</div>
                 </div>
                 
                 <div id="text-input-container">
-                    <textarea id="script-input" class="input-area" placeholder="-- Paste script Anda di sini..."></textarea>
+                    <textarea id="script-input" class="input-area" placeholder="-- Paste your script here..."></textarea>
                 </div>
                 
                 <div id="file-input-container">
                     <input type="file" id="file-input" accept=".lua,.txt" style="display: none;">
-                    <label for="file-input" class="custom-file-input">Pilih File (.lua atau .txt)</label>
-                    <div id="file-status">Belum ada file dipilih</div>
+                    <label for="file-input" class="custom-file-input">Select File (.lua or .txt)</label>
+                    <div id="file-status">No file chosen</div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="key-input">2. Masukkan Kunci Enkripsi</label>
-                <input type="text" id="key-input" class="text-input" placeholder="Kunci rahasia Anda" required>
+                <label for="key-input">2. Enter Encryption Key</label>
+                <input type="text" id="key-input" class="text-input" placeholder="Your secret key" required>
             </div>
 
-            <button type="submit" class="submit-btn" id="encrypt-btn">Enkripsi Script</button>
+            <button type="submit" class="submit-btn" id="encrypt-btn">Encrypt Script</button>
 
             <div id="output-container" class="form-group">
-                <label for="script-output">3. Hasil Enkripsi</label>
+                <label for="script-output">3. Encrypted Result</label>
                 <textarea id="script-output" class="output-area" readonly></textarea>
                 <div class="output-controls">
-                    <button id="copy-btn" class="submit-btn">Copy</button>
-                    <button id="download-btn" class="submit-btn">Download</button>
+                    <button type="button" id="copy-btn" class="submit-btn">Copy</button>
+                    <button type="button" id="download-btn" class="submit-btn">Download</button>
                 </div>
             </div>
             
         </div>
-    </div>
+    </form>
 
     <script>
-        // --- Setup Awal ---
+        // --- Setup ---
         const form = document.getElementById('encrypt-form');
         const fileInput = document.getElementById('file-input');
         const scriptInput = document.getElementById('script-input');
         const fileStatus = document.getElementById('file-status');
         const keyInput = document.getElementById('key-input');
-        const encryptBtn = document.getElementById('encrypt-btn');
         
         const outputContainer = document.getElementById('output-container');
         const scriptOutput = document.getElementById('script-output');
@@ -208,7 +207,7 @@
         const CHAR_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         let inputMode = 'text';
 
-        // --- Fungsi Bantuan ---
+        // --- Helper Functions ---
         const generateRandomString = (length) => {
             let result = '';
             for (let i = 0; i < length; i++) {
@@ -220,22 +219,20 @@
         const xorEncrypt = (script, key) => {
             const encryptedBytes = [];
             for (let i = 0; i < script.length; i++) {
-                const scriptByte = script.charCodeAt(i);
-                const keyByte = key.charCodeAt(i % key.length);
-                encryptedBytes.push(scriptByte ^ keyByte);
+                encryptedBytes.push(script.charCodeAt(i) ^ key.charCodeAt(i % key.length));
             }
             return encryptedBytes;
         };
 
         const createLuaTemplate = (encryptedBytes, key) => {
             const vars = {
-                encryptedTable: generateRandomString(8), keyString: generateRandomString(8),
-                decryptedString: generateRandomString(8), i: generateRandomString(1),
-                watermark: generateRandomString(10),
+                tbl: generateRandomString(8), key: generateRandomString(8),
+                str: generateRandomString(8), i: generateRandomString(1),
+                w: generateRandomString(10),
             };
-            const encryptedLuaTable = `{${encryptedBytes.join(',')}}`;
-            const keyLuaString = `"${key.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-            return `-- ${WATERMARK}\nlocal ${vars.encryptedTable}=${encryptedLuaTable};local ${vars.keyString}=${keyLuaString};local ${vars.decryptedString}="";local ${vars.watermark}="${LUA_WATERMARK_BYTES}";for ${vars.i}=1,#${vars.encryptedTable} do local a,b=${vars.encryptedTable}[${vars.i}],string.byte(${vars.keyString},(${vars.i}-1)%#${vars.keyString}+1);${vars.decryptedString}=${vars.decryptedString}..string.char(bit32.bxor(a,b)) end;if ${vars.watermark}=="${LUA_WATERMARK_BYTES}" then local c,d=load(${vars.decryptedString});if c then c()else print("Error:",d)end else print("Invalid script watermark.")end`;
+            const luaTable = `{${encryptedBytes.join(',')}}`;
+            const luaKey = `"${key.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+            return `-- ${WATERMARK}\nlocal ${vars.tbl}=${luaTable};local ${vars.key}=${luaKey};local ${vars.str}="";local ${vars.w}="${LUA_WATERMARK_BYTES}";for ${vars.i}=1,#${vars.tbl} do local a,b=${vars.tbl}[${vars.i}],string.byte(${vars.key},(${vars.i}-1)%#${vars.key}+1);${vars.str}=${vars.str}..string.char(bit32.bxor(a,b)) end;if ${vars.w}=="${LUA_WATERMARK_BYTES}" then local c,d=load(${vars.str});if c then c()else print("Error:",d)end else print("Invalid script watermark.")end`;
         };
 
         // --- Event Listeners ---
@@ -262,12 +259,12 @@
                     fileStatus.textContent = `File: ${file.name}`;
                     fileStatus.style.color = 'var(--text-light)';
                 } else {
-                    fileStatus.textContent = `Error: Format file harus .lua atau .txt`;
+                    fileStatus.textContent = `Error: File format must be .lua or .txt`;
                     fileStatus.style.color = '#ff6b6b';
                     fileInput.value = '';
                 }
             } else {
-                fileStatus.textContent = 'Belum ada file dipilih';
+                fileStatus.textContent = 'No file chosen';
             }
         });
 
@@ -275,27 +272,27 @@
             event.preventDefault();
             const key = keyInput.value;
             if (!key) {
-                alert("Silakan masukkan kunci enkripsi.");
+                alert("Please enter an encryption key.");
                 return;
             }
 
             if (inputMode === 'text') {
                 const scriptContent = scriptInput.value;
                 if (!scriptContent.trim()) {
-                    alert("Silakan masukkan script di area teks.");
+                    alert("Please enter a script in the text area.");
                     return;
                 }
                 processEncryption(scriptContent, key);
             } else {
                 const file = fileInput.files[0];
                 if (!file) {
-                    alert("Silakan pilih file script terlebih dahulu.");
+                    alert("Please select a script file first.");
                     return;
                 }
                 const reader = new FileReader();
                 reader.readAsText(file);
                 reader.onload = () => processEncryption(reader.result, key);
-                reader.onerror = () => alert("Gagal membaca file.");
+                reader.onerror = () => alert("Failed to read the file.");
             }
         });
         
@@ -305,17 +302,17 @@
                 const finalScript = createLuaTemplate(encryptedBytes, key);
                 
                 scriptOutput.value = finalScript;
-                outputContainer.style.display = 'block'; // Tampilkan hasil
-                alert("Enkripsi berhasil!");
+                outputContainer.style.display = 'block';
+                alert("Encryption successful!");
 
             } catch (error) {
-                alert(`Terjadi kesalahan saat enkripsi: ${error.message}`);
+                alert(`An error occurred during encryption: ${error.message}`);
             }
         };
 
         copyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(scriptOutput.value).then(() => {
-                alert('Hasil disalin ke clipboard!');
+                alert('Result copied to clipboard!');
             });
         });
 
