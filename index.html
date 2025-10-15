@@ -6,7 +6,6 @@
     <title>NovaScript - Script List</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Semua style CSS dari sebelumnya tetap sama */
         body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
@@ -16,71 +15,112 @@
         .btn { display: inline-block; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); color: white; box-shadow: 0 4px 15px rgba(65, 132, 244, 0.4); }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(65, 132, 244, 0.6); }
         .script-list { display: grid; gap: 20px; }
-        .script-item { background-color: #1E1E1E; padding: 25px; border-radius: 15px; border-left: 5px solid #2575FC; transition: background-color 0.3s ease, transform 0.2s ease; }
+        .script-item { background-color: #1E1E1E; padding: 25px; border-radius: 15px; border-left: 5px solid #2575FC; transition: background-color 0.3s ease, transform 0.2s ease; cursor: pointer; }
         .script-item:hover { background-color: #2a2a2a; transform: scale(1.02); }
         .script-item h2 { margin-top: 0; margin-bottom: 10px; color: #FFFFFF; }
         .script-item p { margin: 0 0 15px 0; color: #A0A0A0; line-height: 1.6; }
         .script-info { font-size: 0.9rem; color: #777; }
         .loading-message { text-align: center; color: #A0A0A0; font-size: 1.2rem; }
+        .code-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .code-modal-content { background-color: #1E1E1E; padding: 20px; border-radius: 15px; width: 90%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; }
+        .code-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .code-modal-header h3 { margin: 0; color: #fff; }
+        .code-modal-header .close-btn { font-size: 1.5rem; color: #aaa; cursor: pointer; border: none; background: none; }
+        .code-modal-body { flex-grow: 1; overflow-y: auto; background-color: #121212; border-radius: 8px; }
+        .code-modal-body pre { margin: 0; padding: 15px; }
+        .code-modal-body code { font-family: monospace; font-size: 0.9rem; color: #EAEAEA; white-space: pre-wrap; word-wrap: break-word; }
+        .code-modal-footer { margin-top: 15px; text-align: right; }
+        .copy-btn { background-color: #2575FC; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+        .copy-btn:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>NovaScript Library</h1>
-            <p>Welcome! Here are the latest available scripts.</p>
+            <p>Welcome! Click on a script to view its code.</p>
         </header>
         <div class="btn-wrapper">
              <a href="key-checker.html" class="btn">Check Key Activity</a>
         </div>
-        <div id="script-list" class="script-list">
+        <div id="script-list" class="script-list"></div>
+    </div>
+
+    <div id="code-modal" class="code-modal-overlay">
+        <div class="code-modal-content">
+            <div class="code-modal-header">
+                <h3 id="modal-title">Script Code</h3>
+                <button id="modal-close-btn" class="close-btn">&times;</button>
             </div>
+            <div class="code-modal-body">
+                <pre><code id="modal-code-content"></code></pre>
+            </div>
+            <div class="code-modal-footer">
+                <button id="modal-copy-btn" class="copy-btn">Copy Code</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Jalankan skrip ini setelah halaman HTML selesai dimuat
         window.addEventListener('DOMContentLoaded', async () => {
             const scriptListContainer = document.getElementById('script-list');
+            const codeModal = document.getElementById('code-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalCodeContent = document.getElementById('modal-code-content');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const modalCopyBtn = document.getElementById('modal-copy-btn');
+            let scriptsData = [];
 
-            // Tampilkan pesan loading
             scriptListContainer.innerHTML = '<p class="loading-message">Loading scripts...</p>';
 
             try {
-                // Panggil fungsi backend untuk mengambil data skrip
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
+                if (!result.success) throw new Error(result.message);
 
-                if (result.success && result.scripts.length > 0) {
-                    // Jika berhasil dan ada skrip, kosongkan kontainer
-                    scriptListContainer.innerHTML = ''; 
-
-                    // Loop melalui setiap skrip dan buat elemen HTML-nya
-                    result.scripts.forEach(script => {
-                        const scriptItem = document.createElement('div');
-                        scriptItem.className = 'script-item';
-                        
+                scriptListContainer.innerHTML = '';
+                if (result.scripts.length > 0) {
+                    scriptsData = result.scripts;
+                    scriptsData.forEach((script, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'script-item';
+                        item.setAttribute('data-index', index);
                         const lastUpdated = new Date(script.created_at).toLocaleDateString('en-GB');
-
-                        scriptItem.innerHTML = `
+                        item.innerHTML = `
                             <h2>${script.title}</h2>
                             <p>${script.description}</p>
                             <div class="script-info">Version: ${script.version || 'N/A'} | Last Updated: ${lastUpdated}</div>
                         `;
-                        
-                        scriptListContainer.appendChild(scriptItem);
+                        scriptListContainer.appendChild(item);
                     });
-                } else if (result.success && result.scripts.length === 0) {
-                    // Jika berhasil tapi tidak ada skrip
-                    scriptListContainer.innerHTML = '<p class="loading-message">No scripts have been posted yet. Check back later!</p>';
                 } else {
-                    // Jika terjadi error dari backend
-                    throw new Error(result.message || 'Failed to load scripts.');
+                    scriptListContainer.innerHTML = '<p class="loading-message">No scripts have been posted yet. Check back later!</p>';
                 }
             } catch (error) {
-                // Jika terjadi error jaringan atau lainnya
-                console.error('Error fetching scripts:', error);
-                scriptListContainer.innerHTML = '<p class="loading-message" style="color: #F44336;">Could not load scripts. Please try again later.</p>';
+                scriptListContainer.innerHTML = `<p class="loading-message" style="color:red;">Could not load scripts. Please try again later.</p>`;
             }
+
+            scriptListContainer.addEventListener('click', (e) => {
+                const scriptItem = e.target.closest('.script-item');
+                if (scriptItem) {
+                    const index = scriptItem.dataset.index;
+                    const script = scriptsData[index];
+                    modalTitle.textContent = `${script.title} - Code`;
+                    modalCodeContent.textContent = script.script_code;
+                    codeModal.style.display = 'flex';
+                }
+            });
+
+            const closeModal = () => { codeModal.style.display = 'none'; };
+            modalCloseBtn.addEventListener('click', closeModal);
+            codeModal.addEventListener('click', (e) => { if (e.target === codeModal) closeModal(); });
+
+            modalCopyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(modalCodeContent.textContent).then(() => {
+                    modalCopyBtn.textContent = 'Copied!';
+                    setTimeout(() => { modalCopyBtn.textContent = 'Copy Code'; }, 2000);
+                });
+            });
         });
     </script>
 </body>

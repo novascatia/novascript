@@ -1,45 +1,39 @@
-// /netlify/functions/post-script.js
 import { createClient } from '@supabase/supabase-js';
 
 exports.handler = async function(event, context) {
-    // 1. Ambil data skrip dari request
-    const { title, description, version } = JSON.parse(event.body);
+    // Ambil semua data, termasuk script_code, dari body request
+    const { title, description, version, script_code } = JSON.parse(event.body);
     
-    // Periksa apakah data yang dibutuhkan ada
-    if (!title || !description) {
+    // Jadikan script_code sebagai input wajib
+    if (!title || !description || !script_code) {
         return {
-            statusCode: 400, // Bad Request
-            body: JSON.stringify({ success: false, message: 'Title and description are required.' })
+            statusCode: 400,
+            body: JSON.stringify({ success: false, message: 'Title, description, and script code are required.' })
         };
     }
 
-    // 2. Inisialisasi koneksi ke Supabase
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 3. Masukkan data ke tabel 'scripts'
+    // Masukkan semua data, termasuk script_code, ke dalam tabel
     const { data, error } = await supabase
         .from('scripts')
         .insert([
-            { title: title, description: description, version: version }
+            { title, description, version, script_code }
         ])
         .select();
 
-    // 4. Kirim respons
     if (error) {
         console.error('Supabase error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ success: false, message: error.message })
+        return { 
+            statusCode: 500, 
+            body: JSON.stringify({ success: false, message: error.message }) 
         };
     }
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify({ 
-            success: true, 
-            postedScript: data[0] 
-        })
+    return { 
+        statusCode: 200, 
+        body: JSON.stringify({ success: true, postedScript: data[0] }) 
     };
 };
