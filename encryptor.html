@@ -13,43 +13,44 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg-color-dark); color: var(--text-color-light); padding: 40px 20px 100px 20px; }
-        .obfuscator-card { width: 90%; max-width: 650px; padding: 35px; background-color: var(--bg-color-medium); border-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+        .obfuscator-card { width: 90%; max-width: 700px; padding: 35px; background-color: var(--bg-color-medium); border-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
         h2 { text-align: center; margin-bottom: 20px; font-size: 1.8rem; color: var(--primary-color); }
         .form-section { margin-bottom: 25px; }
         .form-section label { display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-color-light); font-size: 1rem; }
-        #script-text { width: 100%; min-height: 250px; padding: 15px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
-        #script-text:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); outline: none; }
-        .select-input { width: 100%; padding: 12px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 1rem; }
-        button { width: 100%; padding: 14px; background-color: var(--primary-color); color: #ffffff; font-size: 1.05rem; font-weight: 600; border: none; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease; }
+        .input-area, .output-area { width: 100%; min-height: 250px; padding: 15px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
+        .input-area:focus, .output-area:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); outline: none; }
+        button { width: 100%; padding: 14px; background-color: var(--primary-color); color: #ffffff; font-size: 1.05rem; font-weight: 600; border: none; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease; margin-top: 10px; }
         button:disabled { background-color: #4b5563; cursor: not-allowed; }
         button:hover:not(:disabled) { background-color: #2563eb; }
         button:active:not(:disabled) { transform: translateY(1px); }
         .status-message { text-align: center; margin-top: 20px; font-weight: 500; height: 20px; }
+        #output-section { display: none; } /* Sembunyikan output secara default */
+        .output-controls { display: flex; gap: 15px; justify-content: center; margin-top: 15px; }
+        .output-controls button { width: auto; padding: 10px 20px; font-size: 0.95rem; }
         .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; z-index: 500; }
         .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="form" class="obfuscator-card">
-        <h2>Lua Obfuscator</h2>
+    <div class="obfuscator-card">
+        <h2>Lua Obfuscator (Strong Preset)</h2>
         
         <div class="form-section">
-            <label for="script-text">1. Paste Your Lua Script</label>
-            <textarea id="script-text" placeholder="-- Masukkan script Lua di sini..."></textarea>
+            <label for="script-input">1. Masukkan Script Anda</label>
+            <textarea id="script-input" class="input-area" placeholder="-- Paste your Lua code here..."></textarea>
         </div>
         
-        <div class="form-section">
-            <label for="preset">2. Choose Obfuscation Preset</label>
-            <select id="preset" class="select-input">
-                <option value="Minify">Minify</option>
-                <option value="Weak">Weak</option>
-                <option value="Medium" selected>Medium</option>
-                <option value="Strong">Strong</option>
-            </select>
-        </div>
-
-        <button type="submit" id="obfuscate-btn">Obfuscate & Download</button>
+        <button id="obfuscate-btn">Obfuscate Script</button>
         <div id="status" class="status-message"></div>
+
+        <div id="output-section" class="form-section">
+            <label for="script-output">2. Hasil Obfuscate</label>
+            <textarea id="script-output" class="output-area" readonly></textarea>
+            <div class="output-controls">
+                <button id="copy-btn">Copy</button>
+                <button id="download-btn">Download</button>
+            </div>
+        </div>
     </div>
 
     <footer class="footer">
@@ -59,50 +60,46 @@
     <script>
         const obfuscateBtn = document.getElementById('obfuscate-btn');
         const statusDiv = document.getElementById('status');
-        const scriptTextArea = document.getElementById('script-text');
-        const presetSelect = document.getElementById('preset');
+        const scriptInput = document.getElementById('script-input');
+        
+        const outputSection = document.getElementById('output-section');
+        const scriptOutput = document.getElementById('script-output');
+        const copyBtn = document.getElementById('copy-btn');
+        const downloadBtn = document.getElementById('download-btn');
 
         obfuscateBtn.addEventListener('click', async () => {
-            const script = scriptTextArea.value;
-            const preset = presetSelect.value;
+            const script = scriptInput.value;
 
             if (!script.trim()) {
-                statusDiv.textContent = 'Error: Script cannot be empty.';
+                statusDiv.textContent = 'Error: Script tidak boleh kosong.';
                 statusDiv.style.color = '#f87171';
                 return;
             }
 
             obfuscateBtn.disabled = true;
             obfuscateBtn.textContent = 'Obfuscating...';
-            statusDiv.textContent = 'Please wait, processing your script...';
+            statusDiv.textContent = 'Mohon tunggu, sedang memproses script Anda...';
             statusDiv.style.color = '#60a5fa';
+            outputSection.style.display = 'none';
 
             try {
                 const response = await fetch('/.netlify/functions/obfuscate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ script, preset })
+                    body: JSON.stringify({ script: script })
                 });
 
                 const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(result.message || 'An unknown error occurred.');
+                    throw new Error(result.message || 'Terjadi kesalahan tidak diketahui.');
                 }
+                
+                // Tampilkan hasil di textarea output
+                scriptOutput.value = result.obfuscatedScript;
+                outputSection.style.display = 'block';
 
-                // Trigger file download
-                const blob = new Blob([result.obfuscatedScript], { type: 'text/plain' });
-                const href = URL.createObjectURL(blob);
-                const a = Object.assign(document.createElement('a'), {
-                    href,
-                    download: 'obfuscated-script.lua',
-                });
-                document.body.appendChild(a);
-                a.click();
-                URL.revokeObjectURL(href);
-                a.remove();
-
-                statusDiv.textContent = 'Success! Your file has been downloaded.';
+                statusDiv.textContent = 'Berhasil! Hasil tersedia di bawah.';
                 statusDiv.style.color = '#4ade80';
 
             } catch (error) {
@@ -110,8 +107,33 @@
                 statusDiv.style.color = '#f87171';
             } finally {
                 obfuscateBtn.disabled = false;
-                obfuscateBtn.textContent = 'Obfuscate & Download';
+                obfuscateBtn.textContent = 'Obfuscate Script';
             }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(scriptOutput.value).then(() => {
+                statusDiv.textContent = 'Hasil disalin ke clipboard!';
+                statusDiv.style.color = '#4ade80';
+                setTimeout(() => {
+                    if (statusDiv.textContent === 'Hasil disalin ke clipboard!') {
+                       statusDiv.textContent = '';
+                    }
+                }, 3000);
+            });
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([scriptOutput.value], { type: 'text/plain' });
+            const href = URL.createObjectURL(blob);
+            const a = Object.assign(document.createElement('a'), {
+                href,
+                download: 'obfuscated-script.lua',
+            });
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(href);
+            a.remove();
         });
     </script>
 </body>
