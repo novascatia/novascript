@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Manager - NovaScript</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px 20px 100px 20px; }
+        header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
+        header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
+        .admin-section { background-color: #1E1E1E; padding: 30px; border-radius: 15px; margin-bottom: 30px; }
+        .admin-section h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 25px; color: #FFFFFF; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #A0A0A0; text-align: left; }
+        .form-group input, .form-group select { width: 100%; padding: 15px; background-color: #2a2a2a; border: 2px solid #444; border-radius: 10px; color: #EAEAEA; font-size: 1rem; box-sizing: border-box; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; text-align: left; margin-top: 20px; }
+        .checkbox-group input { width: auto; }
+        .checkbox-group label { margin: 0; }
+        .btn { padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .btn-sm { padding: 8px 15px; font-size: 0.9rem; }
+        .btn-danger { background-color: #c82333; padding: 10px 18px; }
+        .btn-primary { background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); }
+        .general-message { text-align: center; padding: 10px; margin-top: 15px; border-radius: 8px; display: none; }
+        .general-message.success { background-color: #28a745; color: white; }
+        .general-message.error { background-color: #dc3545; color: white; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { background-color: #2a2a2e; }
+        td .key-string { font-family: monospace; background: #111; padding: 2px 6px; border-radius: 4px; }
+        .status { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .status-valid { background-color: #28a745; color: white; }
+        .status-unlimited { background-color: #17a2b8; color: white; }
+        .status-expired { background-color: #6c757d; color: white; }
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; z-index: 500; }
+        .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header><h1>Key Manager</h1></header>
+
+        <div class="admin-section">
+            <h2>Create New Key</h2>
+            <form id="key-generator-form">
+                <div class="form-group"><label for="custom-key">Custom Key (Optional)</label><input type="text" id="custom-key" placeholder="Leave empty for random key"></div>
+                <div id="duration-group">
+                    <label for="key-duration">Expiration Time</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="key-duration" value="1" min="1" style="flex-grow: 1;">
+                        <select id="key-unit"><option value="days">Days</option><option value="hours">Hours</option><option value="minutes">Minutes</option></select>
+                    </div>
+                </div>
+                <div class="form-group checkbox-group"><input type="checkbox" id="unlimited-key"><label for="unlimited-key">Unlimited Duration</label></div>
+                <button type="submit" class="btn btn-primary">Create Key</button>
+            </form>
+            <div id="key-message" class="general-message"></div>
+        </div>
+
+        <div class="admin-section">
+            <h2>Existing Keys</h2>
+            <div id="keys-list-container" class="table-wrapper"></div>
+        </div>
+    </div>
+    <footer class="footer">
+        <a href="admin.html" style="color: #777; text-decoration: none;">← Back to Admin Hub</a>
+    </footer>
+
+    <script>
+        const keyForm = document.getElementById('key-generator-form');
+        const keyMessage = document.getElementById('key-message');
+        const keysListContainer = document.getElementById('keys-list-container');
+        const unlimitedCheckbox = document.getElementById('unlimited-key');
+        const durationGroup = document.getElementById('duration-group');
+        
+        function showMessage(element, text, isSuccess) {
+            element.textContent = text;
+            element.className = 'general-message';
+            element.classList.add(isSuccess ? 'success' : 'error');
+            element.style.display = 'block';
+            setTimeout(() => { element.style.display = 'none'; }, 5000);
+        }
+
+        async function fetchAndDisplayKeys() {
+            keysListContainer.innerHTML = '<p>Loading...</p>';
+            try {
+                const response = await fetch('/.netlify/functions/get-keys');
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message);
+                if (result.keys.length === 0) {
+                    keysListContainer.innerHTML = '<p>No keys generated yet.</p>';
+                    return;
+                }
+                const table = document.createElement('table');
+                table.innerHTML = `<thead><tr><th>Key</th><th>Status</th><th>Expires At</th><th>Action</th></tr></thead><tbody></tbody>`;
+                const tbody = table.querySelector('tbody');
+                result.keys.forEach(key => {
+                    const row = tbody.insertRow();
+                    row.setAttribute('data-id', key.id);
+                    let statusHtml, expiryText;
+                    if (key.expires_at === null) {
+                        statusHtml = '<span class="status status-unlimited">Unlimited</span>';
+                        expiryText = 'N/A';
+                    } else {
+                        const isExpired = new Date() > new Date(key.expires_at);
+                        statusHtml = `<span class="status ${isExpired ? 'status-expired' : 'status-valid'}">${isExpired ? 'Expired' : 'Active'}</span>`;
+                        expiryText = new Date(key.expires_at).toLocaleString('en-GB');
+                    }
+                    row.innerHTML = `<td><span class="key-string">${key.key_string}</span></td><td>${statusHtml}</td><td>${expiryText}</td><td><button class="btn btn-danger btn-sm">Delete</button></td>`;
+                });
+                keysListContainer.innerHTML = '';
+                keysListContainer.appendChild(table);
+            } catch (error) {
+                keysListContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchAndDisplayKeys);
+
+        unlimitedCheckbox.addEventListener('change', (e) => {
+            durationGroup.style.display = e.target.checked ? 'none' : 'block';
+        });
+
+        keyForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = keyForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            const body = {
+                key: document.getElementById('custom-key').value || (Date.now().toString(36) + Math.random().toString(36).substr(2)).toUpperCase(),
+                duration: document.getElementById('key-duration').value,
+                unit: document.getElementById('key-unit').value,
+                is_unlimited: unlimitedCheckbox.checked
+            };
+            try {
+                const response = await fetch('/.netlify/functions/create-key', { method: 'POST', body: JSON.stringify(body) });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage(keyMessage, 'Key created successfully!', true);
+                    keyForm.reset();
+                    durationGroup.style.display = 'block';
+                    await fetchAndDisplayKeys();
+                } else { throw new Error(result.message); }
+            } catch (error) {
+                showMessage(keyMessage, error.message, false);
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+
+        keysListContainer.addEventListener('click', async function(e) {
+            if (e.target.classList.contains('btn-danger')) {
+                const row = e.target.closest('tr');
+                const id = parseInt(row.dataset.id, 10);
+                if (!confirm('Are you sure you want to delete this key?')) return;
+                try {
+                    const response = await fetch('/.netlify/functions/delete-key', { method: 'POST', body: JSON.stringify({ id }) });
+                    const result = await response.json();
+                    if (result.success) {
+                        row.remove();
+                        showMessage(keyMessage, 'Key deleted!', true);
+                    } else { throw new Error(result.message); }
+                } catch (error) {
+                    showMessage(keyMessage, error.message, false);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
