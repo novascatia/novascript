@@ -3,279 +3,116 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lua Encryptor - NovaScript</title>
+    <title>Lua Obfuscator - NovaScript</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #3b82f6;
-            --bg-color-dark: #121212;
-            --bg-color-medium: #1f2937;
-            --bg-color-light: #374151;
-            --text-color-light: #e5e7eb;
-            --text-color-dark: #9ca3af;
-            --border-color: #4b5563;
-            --border-radius: 8px;
+            --primary-color: #3b82f6; --bg-color-dark: #121212; --bg-color-medium: #1f2937;
+            --bg-color-light: #374151; --text-color-light: #e5e7eb; --text-color-dark: #9ca3af;
+            --border-color: #4b5563; --border-radius: 8px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg-color-dark); color: var(--text-color-light); padding: 40px 20px 100px 20px; }
-        .obfuscator-card { width: 90%; max-width: 550px; padding: 35px; background-color: var(--bg-color-medium); border-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
-        h2 { text-align: center; margin-bottom: 30px; font-size: 1.8rem; color: var(--primary-color); }
-        p.description { text-align: center; color: var(--text-color-dark); margin-bottom: 30px; font-size: 0.95rem; line-height: 1.6; }
+        .obfuscator-card { width: 90%; max-width: 650px; padding: 35px; background-color: var(--bg-color-medium); border-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+        h2 { text-align: center; margin-bottom: 20px; font-size: 1.8rem; color: var(--primary-color); }
         .form-section { margin-bottom: 25px; }
-        .form-section label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-color-light); font-size: 0.95rem; }
-        .input-toggle { display: flex; justify-content: space-around; margin-bottom: 15px; background-color: var(--bg-color-dark); padding: 5px; border-radius: var(--border-radius); }
-        .toggle-button { flex-grow: 1; padding: 10px; text-align: center; font-weight: 600; cursor: pointer; border-radius: var(--border-radius); transition: background-color 0.3s, color 0.3s; color: var(--text-color-light); border: 1px solid transparent; }
-        .toggle-button.active { background-color: var(--primary-color); color: #ffffff; }
-        #file-input-area, #text-input-area { border: 1px solid var(--border-color); padding: 15px; border-radius: var(--border-radius); }
-        #script-text { width: 100%; min-height: 200px; padding: 10px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
+        .form-section label { display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-color-light); font-size: 1rem; }
+        #script-text { width: 100%; min-height: 250px; padding: 15px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
         #script-text:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); outline: none; }
-        .custom-file-input { display: flex; align-items: center; justify-content: center; width: 100%; padding: 12px; background-color: var(--bg-color-dark); color: var(--text-color-light); border: 2px dashed var(--border-color); border-radius: var(--border-radius); cursor: pointer; transition: all 0.3s ease; font-weight: 500; font-size: 0.95rem; }
-        #file { display: none; }
-        #num-of-files { margin-top: 10px; font-size: 0.85rem; color: #6b7280; text-align: center; }
-        .text-input { width: 100%; padding: 12px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 1rem; }
-        .text-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); outline: none; }
+        .select-input { width: 100%; padding: 12px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 1rem; }
         button { width: 100%; padding: 14px; background-color: var(--primary-color); color: #ffffff; font-size: 1.05rem; font-weight: 600; border: none; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease; }
-        button:hover { background-color: #2563eb; }
-        button:active { transform: translateY(1px); }
+        button:disabled { background-color: #4b5563; cursor: not-allowed; }
+        button:hover:not(:disabled) { background-color: #2563eb; }
+        button:active:not(:disabled) { transform: translateY(1px); }
+        .status-message { text-align: center; margin-top: 20px; font-weight: 500; height: 20px; }
         .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; z-index: 500; }
         .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <form id="form" class="obfuscator-card">
-        <h2>Lua Encryptor</h2>
-        <p class="description">
-            Choose input method: Upload a file or paste the script directly to be encrypted.
-        </p>
+    <div id="form" class="obfuscator-card">
+        <h2>Lua Obfuscator</h2>
         
         <div class="form-section">
-            <label>1. Choose Script Input Method</label>
-            <div class="input-toggle">
-                <div class="toggle-button active" id="toggle-upload">Upload File</div>
-                <div class="toggle-button" id="toggle-text">Paste Text</div>
-            </div>
-            
-            <div id="file-input-area">
-                <input type="file" id="file" accept=".lua,.txt" />
-                <label for="file" class="custom-file-input">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; margin-right: 8px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    Upload File (.lua or .txt)
-                </label>
-                <div id="num-of-files">Status: Ready to accept file</div>
-            </div>
-            
-            <div id="text-input-area" style="display: none;">
-                <textarea id="script-text" placeholder="-- Paste your Lua code here..."></textarea>
-            </div>
+            <label for="script-text">1. Paste Your Lua Script</label>
+            <textarea id="script-text" placeholder="-- Masukkan script Lua di sini..."></textarea>
         </div>
         
         <div class="form-section">
-            <label for="key">2. Enter Encryption Key (Secret)</label>
-            <input type="text" id="key" class="text-input" placeholder="e.g., secretKey123" required />
+            <label for="preset">2. Choose Obfuscation Preset</label>
+            <select id="preset" class="select-input">
+                <option value="Minify">Minify</option>
+                <option value="Weak">Weak</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Strong">Strong</option>
+            </select>
         </div>
 
-        <button type="submit" id="obfuscate">Obfuscate & Download Script</button>
-    </form>
+        <button type="submit" id="obfuscate-btn">Obfuscate & Download</button>
+        <div id="status" class="status-message"></div>
+    </div>
 
     <footer class="footer">
         <a href="admin.html" style="color: #777; text-decoration: none;">← Back to Admin Hub</a>
     </footer>
     
     <script>
-        const ENCRYPT_MSG = "NovaENCV1";
-        const ENCRYPT_MSG_LUA_BYTE = (() => {
-            let luaByteString = "";
-            for (let i = 0; i < ENCRYPT_MSG.length; i++) {
-                luaByteString += "\\" + ENCRYPT_MSG.charCodeAt(i);
-            }
-            return luaByteString;
-        })();
-        
-        let realKey = "";
-        let leng = 128;
-        let inputMode = 'upload';
-        
-        const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        let abcTab = Array.from(abc);
+        const obfuscateBtn = document.getElementById('obfuscate-btn');
+        const statusDiv = document.getElementById('status');
+        const scriptTextArea = document.getElementById('script-text');
+        const presetSelect = document.getElementById('preset');
 
-        let ran1 = "", ran2 = "", ran3 = "", ran4 = "", ran5 = "", ran6 = "";
-        for (let i = 0; i < leng; i++) {
-            ran1 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran2 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran3 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran4 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran5 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran6 += abcTab[Math.floor(Math.random() * abcTab.length)];
-        }
+        obfuscateBtn.addEventListener('click', async () => {
+            const script = scriptTextArea.value;
+            const preset = presetSelect.value;
 
-        const xorE = (sc, key) => {
-            const tabel = [];
-            let k = 0;
-            for (let i = 0; i < sc.length; i++) {
-                let byteValue = sc.charCodeAt(i);
-                let keyByte = key.charCodeAt(k);
-                let xoredByte = byteValue ^ keyByte;
-                tabel.push(xoredByte);
-                k = (k + 1) % key.length;
-            }
-            return tabel;
-        };
-
-        let tab1 = [], tab2 = [], tab3 = [], tab4 = [], tab5 = [], tab6 = [];
-        for (let i = 0; i < leng; i++) {
-            tab1[i] = abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
-            tab2[i] = abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
-            tab3[i] = abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
-            tab4[i] = abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
-            tab5[i] = abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
-            tab6[i] = abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
-        }
-        tab1 = tab1.join(); tab2 = tab2.join(); tab3 = tab3.join();
-        tab4 = tab4.join(); tab5 = tab5.join(); tab6 = tab6.join();
-
-        const alibi = (var1, var2, var3, tablenya) => {
-            return `_ENV={string=string,table=table,math=math,pairs=pairs,load=load,print=print};${var1}="${var2}";${var2}="${var1}";${var3}={${tablenya}};${ran1}z="${ENCRYPT_MSG}";`;
-        };
-
-        const decX = (tabel, keyLength) => {
-            let script = ran3, indexVar = ran4, charVar = ran1, valueVar = ran2, resultVar = ran5, rawKeyVar = ran6;
-            const env_setup = `_ENV={string=string,table=table,math=math,pairs=pairs,load=load,print=print,bit={bxor=function(a,b)local r,m=0,1;while a>0 and b>0 do local aa,bb=a%2,b%2;r=r+m*((aa+bb)%2);m=m*2;a=math.floor(a/2);b=math.floor(b/2) end;if a>0 then r=r+m*a end;if b>0 then r=r+m*b end;return r;end}}`
-            const decrypt_logic = `
-            ${rawKeyVar}="${realKey}";
-            ${script}={${tabel.join()}};
-            ${indexVar}=0;
-            ${resultVar}='';
-            for ${charVar},${valueVar} in pairs(${script}) do 
-                ${indexVar}=${indexVar}+1;
-                ${resultVar}=${resultVar}.._ENV["\\115\\116\\114\\105\\110\\103"]["\\99\\104\\97\\114"](
-                    _ENV["\\98\\105\\116"]["\\98\\120\\111\\114"](
-                        ${valueVar},
-                        _ENV["\\115\\116\\114\\105\\110\\103"]["\\98\\121\\116\\101"](${rawKeyVar},${indexVar})
-                    )
-                );
-                if ${indexVar}==${keyLength} then ${indexVar}=0;end;
-            end;
-            if ${ran1}z=="${ENCRYPT_MSG_LUA_BYTE}" then 
-                _ENV["\\108\\111\\97\\100"](${resultVar})() 
-            else 
-                _ENV["\\112\\114\\105\\110\\116"]("\\69\\114\\114\\111\\114\\32\\119\\104\\108\\101\\32\\114\\117\\110\\105\\110\\103\\32\\116\\104\\105\\115\\32\\99\\111\\100\\101");
-            end;`;
-            return env_setup + decrypt_logic;
-        };
-
-        const fileInput = document.getElementById("file");
-        const fileChoosen = document.getElementById("num-of-files");
-        const read = new FileReader();
-        const form = document.getElementById("form");
-        const scriptTextarea = document.getElementById("script-text");
-        
-        const toggleUpload = document.getElementById('toggle-upload');
-        const toggleText = document.getElementById('toggle-text');
-        const fileArea = document.getElementById('file-input-area');
-        const textArea = document.getElementById('text-input-area');
-        
-        const setInputMode = (mode) => {
-            inputMode = mode;
-            if (mode === 'upload') {
-                fileArea.style.display = 'block';
-                textArea.style.display = 'none';
-                toggleUpload.classList.add('active');
-                toggleText.classList.remove('active');
-            } else {
-                fileArea.style.display = 'none';
-                textArea.style.display = 'block';
-                toggleText.classList.add('active');
-                toggleUpload.classList.remove('active');
-            }
-        }
-        
-        toggleUpload.addEventListener('click', () => setInputMode('upload'));
-        toggleText.addEventListener('click', () => setInputMode('text'));
-        
-        fileInput.addEventListener("change", () => {
-            if (fileInput.files.length > 0) {
-                let file = fileInput.files[0];
-                let fileName = file.name;
-                let fileSize = (file.size / 1024).toFixed(2);
-                if (fileName.endsWith(".lua") || fileName.endsWith(".txt")) {
-                    fileChoosen.innerHTML = `File chosen: <strong>${fileName}</strong> (${fileSize} Kb)`;
-                } else {
-                    fileChoosen.innerHTML = `Unsupported file format! Choose .lua or .txt`;
-                }
-            } else {
-                fileChoosen.innerHTML = `No file chosen`;
-            }
-        });
-
-        form.addEventListener("submit", (event) => {
-            event.preventDefault();
-            
-            let keys = document.getElementById("key").value;
-            if (keys.length === 0) {
-                alert("Please enter an Encryption Key!");
+            if (!script.trim()) {
+                statusDiv.textContent = 'Error: Script cannot be empty.';
+                statusDiv.style.color = '#f87171';
                 return;
             }
-            
-            let scriptContent = "";
-            let fileName = "script.lua";
-            
-            if (inputMode === 'upload') {
-                let file = fileInput.files[0];
-                if (!file || (!file.name.endsWith(".lua") && !file.name.endsWith(".txt"))) {
-                    alert("Please upload a valid .lua/.txt file!");
-                    return;
-                }
-                fileName = file.name;
-                
-                read.readAsText(file);
-                read.onload = () => processObfuscation(read.result, keys, fileName);
-                return;
 
-            } else if (inputMode === 'text') {
-                scriptContent = scriptTextarea.value;
-                if (scriptContent.trim() === "") {
-                    alert("Please enter a script in the text area!");
-                    return;
+            obfuscateBtn.disabled = true;
+            obfuscateBtn.textContent = 'Obfuscating...';
+            statusDiv.textContent = 'Please wait, processing your script...';
+            statusDiv.style.color = '#60a5fa';
+
+            try {
+                const response = await fetch('/.netlify/functions/obfuscate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ script, preset })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'An unknown error occurred.');
                 }
-                processObfuscation(scriptContent, keys, fileName);
+
+                // Trigger file download
+                const blob = new Blob([result.obfuscatedScript], { type: 'text/plain' });
+                const href = URL.createObjectURL(blob);
+                const a = Object.assign(document.createElement('a'), {
+                    href,
+                    download: 'obfuscated-script.lua',
+                });
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(href);
+                a.remove();
+
+                statusDiv.textContent = 'Success! Your file has been downloaded.';
+                statusDiv.style.color = '#4ade80';
+
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                statusDiv.style.color = '#f87171';
+            } finally {
+                obfuscateBtn.disabled = false;
+                obfuscateBtn.textContent = 'Obfuscate & Download';
             }
         });
-        
-        const processObfuscation = (sc, keys, fileName) => {
-            realKey = "";
-            for (let i = 0; i < keys.length; i++) {
-                realKey += "\\" + keys.charCodeAt(i);
-            }
-            const keyLength = keys.length;
-            
-            const templateE = `${ran2}=${ran1};${ran3}=${ran2};${ran4}=${ran3};${ran5}=${ran4};${ran6}=${ran5};`;
-            
-            const Output =
-                templateE +
-                alibi(ran1, ran2, ran3, tab1) +
-                alibi(ran4, ran2, ran5, tab2) +
-                alibi(ran6, ran3, ran1, tab3) +
-                decX(xorE(sc, keys), keyLength) + 
-                alibi(ran2, ran4, ran6, tab4) +
-                alibi(ran1, ran4, ran5, tab5) +
-                alibi(ran2, ran1, ran3, tab6);
-
-            let downloadName = (inputMode === 'text') ? `NovaENCV1_Text_Obfuscated.lua` : `NovaENCV1_Obfuscated_${fileName}`;
-            
-            let blob = new Blob([Output], { type: "octet-stream" });
-            const href = URL.createObjectURL(blob);
-            const a = Object.assign(document.createElement("a"), {
-                href,
-                style: "display:none",
-                download: downloadName,
-            });
-            a.click();
-            URL.revokeObjectURL(href);
-            a.remove();
-            alert("Obfuscation successful! Your file is downloading.");
-        };
     </script>
 </body>
 </html>
