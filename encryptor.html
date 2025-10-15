@@ -149,10 +149,10 @@
             ${resultVar}='';
             for ${charVar},${valueVar} in pairs(${script}) do 
                 ${indexVar}=${indexVar}+1;
-                ${resultVar}=${resultVar}.._ENV["\\115\\116\\114\\101\\110\\103"]["\\99\\104\\97\\114"](
+                ${resultVar}=${resultVar}.._ENV["\\115\\116\\114\\105\\110\\103"]["\\99\\104\\97\\114"](
                     _ENV["\\98\\105\\116"]["\\98\\120\\111\\114"](
                         ${valueVar},
-                        _ENV["\\115\\116\\114\\101\\110\\103"]["\\98\\121\\116\\101"](${rawKeyVar},${indexVar})
+                        _ENV["\\115\\116\\114\\105\\110\\103"]["\\98\\121\\116\\101"](${rawKeyVar},${indexVar})
                     )
                 );
                 if ${indexVar}==${keyLength} then ${indexVar}=0;end;
