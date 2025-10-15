@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 exports.handler = async function(event, context) {
-    const { title, description, version, script_code, slug } = JSON.parse(event.body);
+    const { title, description, version, loader_script, source_script } = JSON.parse(event.body);
     
-    if (!title || !description || !script_code || !slug) {
+    if (!title || !description || !loader_script || !source_script) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ success: false, message: 'Title, description, script code, and post name (slug) are required.' })
+            body: JSON.stringify({ success: false, message: 'All fields including loader and source scripts are required.' })
         };
     }
 
@@ -16,7 +16,7 @@ exports.handler = async function(event, context) {
 
     const { data, error } = await supabase
         .from('scripts')
-        .insert([{ title, description, version, script_code, slug }])
+        .insert([{ title, description, version, loader_script, source_script }])
         .select();
 
     if (error) {
