@@ -3,138 +3,334 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lua Obfuscator - NovaScript</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <title>NovaScript Encryptor</title>
     <style>
         :root {
-            --primary-color: #3b82f6; --bg-color-dark: #121212; --bg-color-medium: #1f2937;
-            --bg-color-light: #374151; --text-color-light: #e5e7eb; --text-color-dark: #9ca3af;
-            --border-color: #4b5563; --border-radius: 8px;
+            --bg-dark: #121212;
+            --bg-medium: #1f2937;
+            --bg-light: #374151;
+            --text-light: #e5e7eb;
+            --text-muted: #9ca3af;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border-color: #4b5563;
+            --border-radius: 10px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg-color-dark); color: var(--text-color-light); padding: 40px 20px 100px 20px; }
-        .obfuscator-card { width: 90%; max-width: 700px; padding: 35px; background-color: var(--bg-color-medium); border-radius: var(--border-radius); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
-        h2 { text-align: center; margin-bottom: 20px; font-size: 1.8rem; color: var(--primary-color); }
-        .form-section { margin-bottom: 25px; }
-        .form-section label { display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-color-light); font-size: 1rem; }
-        .input-area, .output-area { width: 100%; min-height: 250px; padding: 15px; background-color: var(--bg-color-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-color-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
-        .input-area:focus, .output-area:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); outline: none; }
-        button { width: 100%; padding: 14px; background-color: var(--primary-color); color: #ffffff; font-size: 1.05rem; font-weight: 600; border: none; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease; margin-top: 10px; }
-        button:disabled { background-color: #4b5563; cursor: not-allowed; }
-        button:hover:not(:disabled) { background-color: #2563eb; }
-        button:active:not(:disabled) { transform: translateY(1px); }
-        .status-message { text-align: center; margin-top: 20px; font-weight: 500; height: 20px; }
-        #output-section { display: none; } /* Sembunyikan output secara default */
-        .output-controls { display: flex; gap: 15px; justify-content: center; margin-top: 15px; }
-        .output-controls button { width: auto; padding: 10px 20px; font-size: 0.95rem; }
-        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; z-index: 500; }
-        .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Mengubah align-items agar card tidak terpotong */
+            min-height: 100vh;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            padding: 40px 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 700px;
+            background: var(--bg-medium);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            text-align: center;
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-header h1 {
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .input-toggle {
+            display: flex;
+            background-color: var(--bg-dark);
+            border-radius: var(--border-radius);
+            padding: 5px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-button {
+            flex-grow: 1;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            transition: background-color 0.3s, color 0.3s;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+        }
+
+        .toggle-button.active {
+            background-color: var(--accent);
+            color: #ffffff;
+        }
+        
+        .input-area, .output-area {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-light);
+            font-size: 0.9rem;
+            resize: vertical;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .input-area:focus, .output-area:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        
+        #file-input-container { display: none; } /* Default sembunyikan file */
+        
+        .custom-file-input {
+            display: block; width: 100%; padding: 12px;
+            background-color: var(--bg-dark); border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius); text-align: center; cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .custom-file-input:hover { background-color: #333; border-color: var(--accent); }
+        #file-status { font-size: 0.9em; color: var(--text-muted); margin-top: 10px; text-align: center; }
+
+        .text-input { width: 100%; padding: 12px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 1em; }
+        .text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.3); }
+        
+        .submit-btn {
+            padding: 15px; border: none; border-radius: var(--border-radius);
+            background-image: linear-gradient(90deg, var(--accent-hover) 0%, var(--accent) 100%);
+            color: white; font-size: 1.1em; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        
+        #output-container { display: none; } /* Sembunyikan output secara default */
+        .output-controls { display: flex; gap: 15px; margin-top: 15px; }
+        .output-controls button { width: 100%; }
+
     </style>
 </head>
 <body>
-    <div class="obfuscator-card">
-        <h2>Lua Obfuscator (Strong Preset)</h2>
-        
-        <div class="form-section">
-            <label for="script-input">1. Masukkan Script Anda</label>
-            <textarea id="script-input" class="input-area" placeholder="-- Paste your Lua code here..."></textarea>
+    <div id="encrypt-form" class="card">
+        <div class="card-header">
+            <h1>NovaScript Encryptor</h1>
         </div>
-        
-        <button id="obfuscate-btn">Obfuscate Script</button>
-        <div id="status" class="status-message"></div>
-
-        <div id="output-section" class="form-section">
-            <label for="script-output">2. Hasil Obfuscate</label>
-            <textarea id="script-output" class="output-area" readonly></textarea>
-            <div class="output-controls">
-                <button id="copy-btn">Copy</button>
-                <button id="download-btn">Download</button>
+        <div class="card-body">
+            
+            <div class="form-group">
+                <label>1. Pilih Metode Input</label>
+                <div class="input-toggle">
+                    <div class="toggle-button active" id="toggle-text">Input Teks</div>
+                    <div class="toggle-button" id="toggle-file">Upload File</div>
+                </div>
+                
+                <div id="text-input-container">
+                    <textarea id="script-input" class="input-area" placeholder="-- Paste script Anda di sini..."></textarea>
+                </div>
+                
+                <div id="file-input-container">
+                    <input type="file" id="file-input" accept=".lua,.txt" style="display: none;">
+                    <label for="file-input" class="custom-file-input">Pilih File (.lua atau .txt)</label>
+                    <div id="file-status">Belum ada file dipilih</div>
+                </div>
             </div>
+
+            <div class="form-group">
+                <label for="key-input">2. Masukkan Kunci Enkripsi</label>
+                <input type="text" id="key-input" class="text-input" placeholder="Kunci rahasia Anda" required>
+            </div>
+
+            <button type="submit" class="submit-btn" id="encrypt-btn">Enkripsi Script</button>
+
+            <div id="output-container" class="form-group">
+                <label for="script-output">3. Hasil Enkripsi</label>
+                <textarea id="script-output" class="output-area" readonly></textarea>
+                <div class="output-controls">
+                    <button id="copy-btn" class="submit-btn">Copy</button>
+                    <button id="download-btn" class="submit-btn">Download</button>
+                </div>
+            </div>
+            
         </div>
     </div>
 
-    <footer class="footer">
-        <a href="admin.html" style="color: #777; text-decoration: none;">← Back to Admin Hub</a>
-    </footer>
-    
     <script>
-        const obfuscateBtn = document.getElementById('obfuscate-btn');
-        const statusDiv = document.getElementById('status');
+        // --- Setup Awal ---
+        const form = document.getElementById('encrypt-form');
+        const fileInput = document.getElementById('file-input');
         const scriptInput = document.getElementById('script-input');
+        const fileStatus = document.getElementById('file-status');
+        const keyInput = document.getElementById('key-input');
+        const encryptBtn = document.getElementById('encrypt-btn');
         
-        const outputSection = document.getElementById('output-section');
+        const outputContainer = document.getElementById('output-container');
         const scriptOutput = document.getElementById('script-output');
         const copyBtn = document.getElementById('copy-btn');
         const downloadBtn = document.getElementById('download-btn');
+        
+        const toggleText = document.getElementById('toggle-text');
+        const toggleFile = document.getElementById('toggle-file');
+        const textContainer = document.getElementById('text-input-container');
+        const fileContainer = document.getElementById('file-input-container');
 
-        obfuscateBtn.addEventListener('click', async () => {
-            const script = scriptInput.value;
+        const WATERMARK = "Encrypted by nov4script";
+        const LUA_WATERMARK_BYTES = Array.from(WATERMARK).map(c => `\\${c.charCodeAt(0)}`).join('');
+        const CHAR_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        let inputMode = 'text';
 
-            if (!script.trim()) {
-                statusDiv.textContent = 'Error: Script tidak boleh kosong.';
-                statusDiv.style.color = '#f87171';
-                return;
+        // --- Fungsi Bantuan ---
+        const generateRandomString = (length) => {
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += CHAR_SET.charAt(Math.floor(Math.random() * CHAR_SET.length));
             }
+            return result;
+        };
+        
+        const xorEncrypt = (script, key) => {
+            const encryptedBytes = [];
+            for (let i = 0; i < script.length; i++) {
+                const scriptByte = script.charCodeAt(i);
+                const keyByte = key.charCodeAt(i % key.length);
+                encryptedBytes.push(scriptByte ^ keyByte);
+            }
+            return encryptedBytes;
+        };
 
-            obfuscateBtn.disabled = true;
-            obfuscateBtn.textContent = 'Obfuscating...';
-            statusDiv.textContent = 'Mohon tunggu, sedang memproses script Anda...';
-            statusDiv.style.color = '#60a5fa';
-            outputSection.style.display = 'none';
+        const createLuaTemplate = (encryptedBytes, key) => {
+            const vars = {
+                encryptedTable: generateRandomString(8), keyString: generateRandomString(8),
+                decryptedString: generateRandomString(8), i: generateRandomString(1),
+                watermark: generateRandomString(10),
+            };
+            const encryptedLuaTable = `{${encryptedBytes.join(',')}}`;
+            const keyLuaString = `"${key.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+            return `-- ${WATERMARK}\nlocal ${vars.encryptedTable}=${encryptedLuaTable};local ${vars.keyString}=${keyLuaString};local ${vars.decryptedString}="";local ${vars.watermark}="${LUA_WATERMARK_BYTES}";for ${vars.i}=1,#${vars.encryptedTable} do local a,b=${vars.encryptedTable}[${vars.i}],string.byte(${vars.keyString},(${vars.i}-1)%#${vars.keyString}+1);${vars.decryptedString}=${vars.decryptedString}..string.char(bit32.bxor(a,b)) end;if ${vars.watermark}=="${LUA_WATERMARK_BYTES}" then local c,d=load(${vars.decryptedString});if c then c()else print("Error:",d)end else print("Invalid script watermark.")end`;
+        };
 
-            try {
-                const response = await fetch('/.netlify/functions/obfuscate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ script: script })
-                });
+        // --- Event Listeners ---
+        toggleText.addEventListener('click', () => {
+            inputMode = 'text';
+            textContainer.style.display = 'block';
+            fileContainer.style.display = 'none';
+            toggleText.classList.add('active');
+            toggleFile.classList.remove('active');
+        });
+        
+        toggleFile.addEventListener('click', () => {
+            inputMode = 'file';
+            textContainer.style.display = 'none';
+            fileContainer.style.display = 'block';
+            toggleFile.classList.add('active');
+            toggleText.classList.remove('active');
+        });
 
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Terjadi kesalahan tidak diketahui.');
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.name.endsWith(".lua") || file.name.endsWith(".txt")) {
+                    fileStatus.textContent = `File: ${file.name}`;
+                    fileStatus.style.color = 'var(--text-light)';
+                } else {
+                    fileStatus.textContent = `Error: Format file harus .lua atau .txt`;
+                    fileStatus.style.color = '#ff6b6b';
+                    fileInput.value = '';
                 }
-                
-                // Tampilkan hasil di textarea output
-                scriptOutput.value = result.obfuscatedScript;
-                outputSection.style.display = 'block';
-
-                statusDiv.textContent = 'Berhasil! Hasil tersedia di bawah.';
-                statusDiv.style.color = '#4ade80';
-
-            } catch (error) {
-                statusDiv.textContent = `Error: ${error.message}`;
-                statusDiv.style.color = '#f87171';
-            } finally {
-                obfuscateBtn.disabled = false;
-                obfuscateBtn.textContent = 'Obfuscate Script';
+            } else {
+                fileStatus.textContent = 'Belum ada file dipilih';
             }
         });
 
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const key = keyInput.value;
+            if (!key) {
+                alert("Silakan masukkan kunci enkripsi.");
+                return;
+            }
+
+            if (inputMode === 'text') {
+                const scriptContent = scriptInput.value;
+                if (!scriptContent.trim()) {
+                    alert("Silakan masukkan script di area teks.");
+                    return;
+                }
+                processEncryption(scriptContent, key);
+            } else {
+                const file = fileInput.files[0];
+                if (!file) {
+                    alert("Silakan pilih file script terlebih dahulu.");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = () => processEncryption(reader.result, key);
+                reader.onerror = () => alert("Gagal membaca file.");
+            }
+        });
+        
+        const processEncryption = (scriptContent, key) => {
+            try {
+                const encryptedBytes = xorEncrypt(scriptContent, key);
+                const finalScript = createLuaTemplate(encryptedBytes, key);
+                
+                scriptOutput.value = finalScript;
+                outputContainer.style.display = 'block'; // Tampilkan hasil
+                alert("Enkripsi berhasil!");
+
+            } catch (error) {
+                alert(`Terjadi kesalahan saat enkripsi: ${error.message}`);
+            }
+        };
+
         copyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(scriptOutput.value).then(() => {
-                statusDiv.textContent = 'Hasil disalin ke clipboard!';
-                statusDiv.style.color = '#4ade80';
-                setTimeout(() => {
-                    if (statusDiv.textContent === 'Hasil disalin ke clipboard!') {
-                       statusDiv.textContent = '';
-                    }
-                }, 3000);
+                alert('Hasil disalin ke clipboard!');
             });
         });
 
         downloadBtn.addEventListener('click', () => {
-            const blob = new Blob([scriptOutput.value], { type: 'text/plain' });
+            const blob = new Blob([scriptOutput.value], { type: "text/plain;charset=utf-8" });
             const href = URL.createObjectURL(blob);
-            const a = Object.assign(document.createElement('a'), {
-                href,
-                download: 'obfuscated-script.lua',
-            });
+            const a = document.createElement("a");
+            a.href = href;
+            a.download = "Encrypted_by_nov4script.lua";
             document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(href);
-            a.remove();
         });
+
     </script>
 </body>
 </html>
