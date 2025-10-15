@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
-    "luaparse": "^0.3.1"
+    "wasmoon": "^1.15.0"
   }
 }
