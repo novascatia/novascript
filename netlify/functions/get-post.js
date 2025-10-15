@@ -13,8 +13,8 @@ exports.handler = async function(event, context) {
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         const { data, error } = await supabase
-            .from('scripts')
-            .select('script_code')
+            .from('posts') // DIUBAH KE TABEL 'posts'
+            .select('content') // DIUBAH KE KOLOM 'content'
             .eq('slug', slug)
             .single();
 
@@ -25,7 +25,7 @@ exports.handler = async function(event, context) {
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-            body: data.script_code
+            body: data.content // DIUBAH KE KOLOM 'content'
         };
     } catch (e) {
         return { statusCode: 500, headers: { 'Content-Type': 'text/plain' }, body: 'Internal server error.' };

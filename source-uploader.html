@@ -11,13 +11,11 @@
         header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
         header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
         .admin-section { background-color: #1E1E1E; padding: 30px; border-radius: 15px; margin-bottom: 30px; }
-        .admin-section h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 25px; color: #FFFFFF; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; color: #A0A0A0; text-align: left; }
         .form-group input, .form-group textarea { width: 100%; padding: 15px; background-color: #2a2a2a; border: 2px solid #444; border-radius: 10px; color: #EAEAEA; font-size: 1rem; box-sizing: border-box; }
         .form-group .slug-preview { font-size: 0.8rem; color: #777; margin-top: 5px; font-family: monospace; }
-        .btn { padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; }
-        .btn-primary { background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); }
+        .btn-primary { padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); }
         .general-message { text-align: center; padding: 10px; margin-top: 15px; border-radius: 8px; display: none; }
         .general-message.success { background-color: #28a745; color: white; }
         .general-message.error { background-color: #dc3545; color: white; }
@@ -37,8 +35,8 @@
                     <p class="slug-preview">URL akan menjadi: novascript.site/encrypt/<span id="source-slug-preview">...</span></p>
                 </div>
                 <div class="form-group">
-                    <label for="source-script">Source Script (Konten utama yang di-load)</label>
-                    <textarea id="source-script" style="height: 250px; font-family: monospace;" placeholder="-- Kode utama Anda di sini" required></textarea>
+                    <label for="source-content">Raw Content</label>
+                    <textarea id="source-content" style="height: 250px; font-family: monospace;" required></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Publish Raw Source</button>
             </form>
@@ -76,11 +74,12 @@
             const slug = slugInput.value.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             const body = {
                 slug: slug,
-                source_script: document.getElementById('source-script').value
+                content: document.getElementById('source-content').value
             };
 
             try {
-                const response = await fetch('/.netlify/functions/post-script', { method: 'POST', body: JSON.stringify(body) });
+                // Panggil fungsi backend yang BARU dan BENAR
+                const response = await fetch('/.netlify/functions/publish-post', { method: 'POST', body: JSON.stringify(body) });
                 const result = await response.json();
                 if (!result.success) throw new Error(result.message);
                 

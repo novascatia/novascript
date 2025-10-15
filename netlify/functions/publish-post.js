@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 exports.handler = async function(event, context) {
-    const { title, description, version, loader_script } = JSON.parse(event.body);
+    const { slug, content } = JSON.parse(event.body);
     
-    if (!title || !description || !loader_script) {
+    if (!slug || !content) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ success: false, message: 'Title, description, and loader script are required.' })
+            body: JSON.stringify({ success: false, message: 'Slug and content are required.' })
         };
     }
 
@@ -14,10 +14,9 @@ exports.handler = async function(event, context) {
     const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Hapus source_script dan slug dari sini
     const { data, error } = await supabase
-        .from('scripts')
-        .insert([{ title, description, version, loader_script }])
+        .from('posts') // Kirim ke tabel 'posts'
+        .insert([{ slug, content }])
         .select();
 
     if (error) {
@@ -29,6 +28,6 @@ exports.handler = async function(event, context) {
 
     return { 
         statusCode: 200, 
-        body: JSON.stringify({ success: true, postedScript: data[0] }) 
+        body: JSON.stringify({ success: true, posted: data[0] }) 
     };
 };
