@@ -1,13 +1,7 @@
 {
-  "name": "script-uploader",
+  "name": "novascript-project",
   "version": "1.0.0",
-  "description": "A simple script uploader using Netlify Functions and Supabase.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.4",
-    "node-fetch": "^3.3.2"
+    "@supabase/supabase-js": "^2.0.0"
   }
 }

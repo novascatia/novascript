@@ -3,189 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard - NovaScript</title>
-    <link rel="icon" type="image/png" href="/logo.png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Admin Panel - NovaScript</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Semua style CSS dari sebelumnya tetap sama */
+        body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .login-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-modal-content { background-color: #1E1E1E; padding: 40px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+        .login-modal-content h2 { margin-top: 0; color: #FFFFFF; }
+        #login-error-msg { color: #F44336; margin-top: 15px; display: none; }
+        #main-content { display: none; }
+        header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
+        header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
+        .admin-section { background-color: #1E1E1E; padding: 30px; border-radius: 15px; margin-bottom: 30px; }
+        .admin-section h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 25px; color: #FFFFFF; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #A0A0A0; text-align: left; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 15px; background-color: #2a2a2a; border: 2px solid #444; border-radius: 10px; color: #EAEAEA; font-size: 1rem; box-sizing: border-box; transition: border-color 0.3s ease; }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #2575FC; }
+        .flex-group { display: flex; gap: 10px; align-items: center; }
+        .flex-group input { flex-grow: 1; }
+        .btn { padding: 15px 30px; border: none; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1rem; transition: all 0.3s ease; cursor: pointer; color: white; }
+        .btn-sm { padding: 8px 15px; font-size: 0.9rem; }
+        .btn-primary { background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); box-shadow: 0 4px 15px rgba(65, 132, 244, 0.4); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(65, 132, 244, 0.6); }
+        #key-result-area { margin-top: 20px; padding: 15px; background-color: #2a2a2a; border-radius: 10px; display: none; text-align: left; }
+        #key-result-area code { background-color: #121212; padding: 5px 8px; border-radius: 5px; font-family: monospace; color: #4CAF50; }
+        .general-message { text-align: center; padding: 10px; margin-top: 15px; border-radius: 8px; display: none; }
+        .general-message.success { background-color: #28a745; color: white; }
+        .general-message.error { background-color: #dc3545; color: white; }
+    </style>
 </head>
-<body class="bg-gray-100 p-8">
-    <header class="flex justify-between items-center mb-8 w-full max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold">NovaScript Dashboard</h1>
-        <button id="logoutBtn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-200">
-            Log Out
-        </button>
-    </header>
+<body>
 
-    <div class="space-y-8 w-full max-w-4xl mx-auto">
-        
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold mb-4">Admin Script (<span id="scriptTitle">Loading...</span>)</h2>
-            <div class="bg-gray-100 p-4 rounded-md relative">
-                <pre id="scriptContent" class="text-gray-800 whitespace-pre-wrap text-sm">Loading script...</pre>
-                <button id="copyScriptBtn" class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold py-1 px-2 rounded hover:bg-blue-600">
-                    Copy
-                </button>
-            </div>
-            <p id="scriptMessage" class="text-sm mt-2 text-green-600 hidden">Copied!</p>
+    <div id="login-modal" class="login-modal-overlay">
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold mb-4">Your Keys</h2>
-            <div id="keysList" class="space-y-4">
-                <p>Loading keys...</p>
+    <div id="main-content">
+        <div class="container">
+            <header><h1>Admin Panel</h1></header>
+
+            <div class="admin-section">
+                <h2>Key Management</h2>
+                <form id="key-generator-form">
+                    </form>
+                <div id="key-result-area">
+                    <p><strong>Key Created:</strong> <code id="generated-key-text"></code></p>
+                    <p><strong>Expires At:</strong> <span id="generated-key-expiry"></span></p>
+                </div>
+                <div id="key-message" class="general-message"></div>
+            </div>
+
+            <div class="admin-section">
+                <h2>Script Management</h2>
+                <form id="post-script-form">
+                    </form>
+                <div id="script-message" class="general-message"></div>
             </div>
         </div>
-        
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+
     <script>
-        const keysList = document.getElementById('keysList');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const scriptContentPre = document.getElementById('scriptContent');
-        const scriptTitleSpan = document.getElementById('scriptTitle');
-        const copyScriptBtn = document.getElementById('copyScriptBtn');
-        const scriptMessage = document.getElementById('scriptMessage');
-        let supabase;
+        const keyForm = document.getElementById('key-generator-form');
+        const scriptForm = document.getElementById('post-script-form');
+        const keyResultArea = document.getElementById('key-result-area');
+        const keyMessage = document.getElementById('key-message');
+        const scriptMessage = document.getElementById('script-message');
 
-        async function initAndAuth() {
-            const configResponse = await fetch('/.netlify/functions/get-config');
-            if (!configResponse.ok) { 
-                alert('Error: Could not get Supabase keys.');
-                window.location.href = '/login';
-                return;
-            }
-            const keys = await configResponse.json();
-            supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
-
-            // Check Supabase Auth session
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session) {
-                window.location.href = '/login';
-                return;
-            }
-            
-            fetchUserData();
+        // Fungsi untuk menampilkan pesan (sukses atau error)
+        function showMessage(element, text, isSuccess) {
+            element.textContent = text;
+            element.className = 'general-message'; // reset class
+            element.classList.add(isSuccess ? 'success' : 'error');
+            element.style.display = 'block';
+            setTimeout(() => { element.style.display = 'none'; }, 5000); // Sembunyikan setelah 5 detik
         }
-
-        function formatDuration(seconds) {
-            if (seconds === 0) return 'Unlimited';
-            if (seconds < 60) return `${seconds} detik`;
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
-            const hours = Math.floor(minutes / 60);
-            const remainingMinutes = minutes % 60;
-            return `${hours}j ${remainingMinutes}m ${remainingSeconds}s`;
-        }
-
-        async function fetchUserData() {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session) {
-                window.location.href = '/login';
-                return;
-            }
-
-            // DIPERBAIKI: Kirim JWT Supabase sebagai header Authorization
-            const response = await fetch('/.netlify/functions/fetch-user-data', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}` 
-                }
-            });
-
-            if (response.status === 401) {
-                // Jika fungsi mengembalikan 401, token tidak valid
-                await supabase.auth.signOut();
-                window.location.href = '/login';
-                return;
-            }
-
-            if (!response.ok) {
-                keysList.innerHTML = `<p class="text-red-500">Error loading data. (Pastikan Netlify Function dan Env Vars sudah dikonfigurasi)</p>`;
-                return;
-            }
-
-            const data = await response.json();
-            const { keys, script } = data;
-            
-            // --- Script Display ---
-            if (script) {
-                scriptTitleSpan.textContent = script.title;
-                scriptContentPre.textContent = script.content;
-            } else {
-                scriptTitleSpan.textContent = 'Belum Diunggah';
-                scriptContentPre.textContent = 'Admin belum mengunggah script. Admin dapat mengunggah script dengan ID: latest-script.';
-            }
-
-            // --- Keys Display ---
-            if (keys.length === 0) {
-                keysList.innerHTML = `<p class="text-gray-500">Anda belum memiliki kunci.</p>`;
-                return;
-            }
-
-            const now = new Date().getTime();
-            
-            const renderedKeys = keys.map(key => {
-                const isActive = key.is_active;
-                let statusText = 'Inactive';
-                let statusColor = 'text-red-600';
-                let durationText = formatDuration(key.duration);
-                let expiryText = 'Tidak Pernah Kadaluarsa';
-                let timeRemaining = 'N/A';
-                
-                if (isActive) {
-                    if (key.duration === 0) {
-                        statusText = 'Aktif (Unlimited)';
-                        statusColor = 'text-green-600';
-                    } else {
-                        const createdAtTime = new Date(key.created_at).getTime();
-                        const expiresAt = createdAtTime + key.duration * 1000;
-                        const secondsLeft = Math.floor((expiresAt - now) / 1000);
-                        
-                        if (secondsLeft > 0) {
-                            statusText = 'Aktif (Berjangka)';
-                            statusColor = 'text-green-600';
-                            timeRemaining = formatDuration(secondsLeft);
-                            expiryText = `Kadaluarsa pada ${new Date(expiresAt).toLocaleString()}`;
-                        } else {
-                            statusText = 'Kadaluarsa';
-                            statusColor = 'text-yellow-600';
-                        }
-                    }
-                }
-                
-                return `
-                    <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <code class="font-semibold text-blue-600">${key.key_value}</code>
-                            <p class="text-sm text-gray-500">Note: ${key.note || 'N/A'}</p>
-                            <p class="text-sm text-gray-500">Durasi: ${durationText} | Status: <span class="${statusColor}">${statusText}</span></p>
-                            ${key.duration > 0 && statusColor === 'text-green-600' ? `<p class="text-sm text-gray-500">Sisa Waktu: ${timeRemaining}</p>` : `<p class="text-sm text-gray-500">${expiryText}</p>`}
-                        </div>
-                    </div>`;
-            }).join('');
-            
-            keysList.innerHTML = renderedKeys;
-        }
-
-        logoutBtn.addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.href = '/login';
-        });
         
-        copyScriptBtn.addEventListener('click', () => {
-            const textToCopy = scriptContentPre.textContent;
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                scriptMessage.classList.remove('hidden');
-                setTimeout(() => { scriptMessage.classList.add('hidden'); }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-            });
+        // --- LOGIKA BARU YANG SUDAH TERHUBUNG ---
+
+        // Event listener untuk form 'Create Key'
+        keyForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = keyForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Creating...';
+
+            let key = document.getElementById('custom-key').value || generateRandomKey();
+            const duration = document.getElementById('key-duration').value;
+            const unit = document.getElementById('key-unit').value;
+            
+            try {
+                const response = await fetch('/.netlify/functions/create-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, duration, unit })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const createdKey = result.createdKey;
+                    document.getElementById('generated-key-text').textContent = createdKey.key_string;
+                    document.getElementById('generated-key-expiry').textContent = new Date(createdKey.expires_at).toLocaleString();
+                    keyResultArea.style.display = 'block';
+                    showMessage(keyMessage, 'Key created successfully!', true);
+                    keyForm.reset();
+                } else {
+                    throw new Error(result.message || 'Failed to create key.');
+                }
+            } catch (error) {
+                showMessage(keyMessage, error.message, false);
+                keyResultArea.style.display = 'none';
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Create Key';
+            }
         });
 
-        initAndAuth();
+        // Event listener untuk form 'Post Script'
+        scriptForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = scriptForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Posting...';
+
+            const title = document.getElementById('script-title').value;
+            const description = document.getElementById('script-desc').value;
+            const version = document.getElementById('script-version').value;
+
+            try {
+                const response = await fetch('/.netlify/functions/post-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, version })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(scriptMessage, `Script "${result.postedScript.title}" posted successfully!`, true);
+                    scriptForm.reset();
+                } else {
+                    throw new Error(result.message || 'Failed to post script.');
+                }
+            } catch (error) {
+                showMessage(scriptMessage, error.message, false);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Post Script';
+            }
+        });
+
+        // --- Sisipkan kode login dan fungsi generateRandomKey dari jawaban sebelumnya di sini ---
+        document.getElementById('login-form').addEventListener('submit', async function(e) { /* ... kode login lengkap ... */ });
+        function generateRandomKey(length = 16) { /* ... kode random key ... */ }
+
     </script>
 </body>
 </html>

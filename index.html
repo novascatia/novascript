@@ -3,115 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - NovaScript</title>
-    <link rel="icon" type="image/x-icon" href="/logo.png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>NovaScript - Script List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Semua style CSS dari sebelumnya tetap sama */
+        body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
+        header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
+        header p { font-size: 1.1rem; color: #A0A0A0; margin-top: 10px; }
+        .btn-wrapper { text-align: center; margin-bottom: 40px; }
+        .btn { display: inline-block; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); color: white; box-shadow: 0 4px 15px rgba(65, 132, 244, 0.4); }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(65, 132, 244, 0.6); }
+        .script-list { display: grid; gap: 20px; }
+        .script-item { background-color: #1E1E1E; padding: 25px; border-radius: 15px; border-left: 5px solid #2575FC; transition: background-color 0.3s ease, transform 0.2s ease; }
+        .script-item:hover { background-color: #2a2a2a; transform: scale(1.02); }
+        .script-item h2 { margin-top: 0; margin-bottom: 10px; color: #FFFFFF; }
+        .script-item p { margin: 0 0 15px 0; color: #A0A0A0; line-height: 1.6; }
+        .script-info { font-size: 0.9rem; color: #777; }
+        .loading-message { text-align: center; color: #A0A0A0; font-size: 1.2rem; }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 class="text-2xl font-bold mb-6 text-center">NovaScript User Login</h2>
-        
-        <form id="loginForm" class="space-y-4">
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="email" name="email" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+<body>
+    <div class="container">
+        <header>
+            <h1>NovaScript Library</h1>
+            <p>Welcome! Here are the latest available scripts.</p>
+        </header>
+        <div class="btn-wrapper">
+             <a href="key-checker.html" class="btn">Check Key Activity</a>
+        </div>
+        <div id="script-list" class="script-list">
             </div>
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="password" name="password" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
-            <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200">
-                Log In
-            </button>
-        </form>
-
-        <p class="mt-4 text-center text-sm">
-            Belum punya akun? <a href="#" id="signupLink" class="text-blue-500 hover:underline">Daftar di sini</a>
-        </p>
-        <p class="mt-2 text-center text-sm">
-            Admin? <a href="/admin/login" class="text-gray-500 hover:underline">Login Admin</a>
-        </p>
-
-        <div id="message" class="mt-4 text-center text-sm"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <script>
-        const loginForm = document.getElementById('loginForm');
-        const signupLink = document.getElementById('signupLink');
-        const messageDiv = document.getElementById('message');
-        let supabase;
+        // Jalankan skrip ini setelah halaman HTML selesai dimuat
+        window.addEventListener('DOMContentLoaded', async () => {
+            const scriptListContainer = document.getElementById('script-list');
 
-        async function initSupabase() {
-            const response = await fetch('/.netlify/functions/get-config');
-            if (!response.ok) {
-                messageDiv.textContent = 'Error: Could not get Supabase keys.';
-                return;
-            }
-            const keys = await response.json();
-            supabase = window.supabase.createClient(keys.supabaseUrl, keys.supabaseKey);
-            messageDiv.textContent = '';
+            // Tampilkan pesan loading
+            scriptListContainer.innerHTML = '<p class="loading-message">Loading scripts...</p>';
 
-            // Check if user is already logged in
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                window.location.href = '/dashboard';
-            }
-        }
+            try {
+                // Panggil fungsi backend untuk mengambil data skrip
+                const response = await fetch('/.netlify/functions/get-scripts');
+                const result = await response.json();
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+                if (result.success && result.scripts.length > 0) {
+                    // Jika berhasil dan ada skrip, kosongkan kontainer
+                    scriptListContainer.innerHTML = ''; 
 
-            if (!supabase) { await initSupabase(); }
+                    // Loop melalui setiap skrip dan buat elemen HTML-nya
+                    result.scripts.forEach(script => {
+                        const scriptItem = document.createElement('div');
+                        scriptItem.className = 'script-item';
+                        
+                        const lastUpdated = new Date(script.created_at).toLocaleDateString('en-GB');
 
-            messageDiv.textContent = 'Logging in...';
-
-            const { error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
-            if (error) {
-                messageDiv.textContent = `Login Error: ${error.message}`;
-            } else {
-                messageDiv.textContent = 'Login successful! Redirecting...';
-                window.location.href = '/dashboard';
-            }
-        });
-        
-        signupLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            if (!email || !password) {
-                messageDiv.textContent = 'Mohon isi email dan password untuk mendaftar.';
-                return;
-            }
-
-            if (!supabase) { await initSupabase(); }
-            
-            messageDiv.textContent = 'Signing up...';
-            
-            const { data, error } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-            });
-            
-            if (error) {
-                messageDiv.textContent = `Signup Error: ${error.message}`;
-            } else if (data.session) {
-                messageDiv.textContent = 'Pendaftaran dan Login Berhasil! Mengalihkan...';
-                window.location.href = '/dashboard';
-            } else {
-                 messageDiv.textContent = 'Pendaftaran berhasil. Cek email Anda untuk verifikasi.';
+                        scriptItem.innerHTML = `
+                            <h2>${script.title}</h2>
+                            <p>${script.description}</p>
+                            <div class="script-info">Version: ${script.version || 'N/A'} | Last Updated: ${lastUpdated}</div>
+                        `;
+                        
+                        scriptListContainer.appendChild(scriptItem);
+                    });
+                } else if (result.success && result.scripts.length === 0) {
+                    // Jika berhasil tapi tidak ada skrip
+                    scriptListContainer.innerHTML = '<p class="loading-message">No scripts have been posted yet. Check back later!</p>';
+                } else {
+                    // Jika terjadi error dari backend
+                    throw new Error(result.message || 'Failed to load scripts.');
+                }
+            } catch (error) {
+                // Jika terjadi error jaringan atau lainnya
+                console.error('Error fetching scripts:', error);
+                scriptListContainer.innerHTML = '<p class="loading-message" style="color: #F44336;">Could not load scripts. Please try again later.</p>';
             }
         });
-
-        initSupabase();
     </script>
 </body>
 </html>
