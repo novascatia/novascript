@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFG Rental Status</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px 20px 100px 20px; }
+        header { text-align: center; margin-bottom: 40px; }
+        header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
+        header p { color: #A0A0A0; }
+        .controls { display: flex; gap: 10px; margin-bottom: 30px; }
+        .controls input { flex-grow: 1; padding: 15px; background-color: #2a2a2a; border: 2px solid #444; border-radius: 10px; color: #EAEAEA; font-size: 1rem; }
+        .btn-primary { padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%); }
+        .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .slot-card { background-color: #1E1E1E; padding: 20px; border-radius: 15px; border-left: 5px solid #444; }
+        .slot-card.available { border-left-color: #28a745; }
+        .slot-card.rented { border-left-color: #ffc107; }
+        .slot-card.offline { border-left-color: #6c757d; }
+        .slot-card h2 { margin-top: 0; font-size: 1.5rem; }
+        .slot-card p { margin: 5px 0; color: #A0A0A0; }
+        .slot-card .renter { color: #FFFFFF; font-weight: bold; }
+        .slot-card .time { color: #2575FC; font-weight: bold; }
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1E1E1E; color: #777; text-align: center; padding: 15px 0; font-size: 0.9rem; border-top: 1px solid #333; }
+        .footer a { color: #2575FC; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BFG Rental Status</h1>
+            <p>Real-time status of BFG slots. Data refreshes automatically.</p>
+        </header>
+
+        <div class="controls">
+            <input type="text" id="world-input" placeholder="Enter BFG world name (e.g., MYBFG)">
+            <button id="fetch-btn" class="btn-primary">Load</button>
+        </div>
+
+        <div id="slots-container" class="slots-grid">
+            <p>Enter a world name and click "Load" to see the status.</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        Made with ❤️ by nov4. &nbsp;|&nbsp;
+        <a href="https://discord.gg/mBVJ2mewPp" target="_blank">Join us on Discord</a>
+    </footer>
+
+    <script>
+        const worldInput = document.getElementById('world-input');
+        const fetchBtn = document.getElementById('fetch-btn');
+        const slotsContainer = document.getElementById('slots-container');
+        let refreshInterval;
+
+        function formatDuration(seconds) {
+            if (seconds <= 0) return 'Expired';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return [
+                h > 0 ? `${h}h` : '',
+                m > 0 ? `${m}m` : '',
+                s > 0 ? `${s}s` : ''
+            ].filter(Boolean).join(' ') || '0s';
+        }
+
+        async function fetchSlotData() {
+            const worldName = worldInput.value.trim().toUpperCase();
+            if (!worldName) return;
+
+            try {
+                const response = await fetch(`/.netlify/functions/bfg-data?world=${worldName}`);
+                const data = await response.json();
+
+                if (!data.success || !data.slots) {
+                    throw new Error(data.message || 'Failed to load data.');
+                }
+                
+                slotsContainer.innerHTML = ''; // Clear previous content
+
+                if (data.slots.length === 0) {
+                     slotsContainer.innerHTML = '<p>No rental data found for this world yet.</p>';
+                     return;
+                }
+
+                data.slots.forEach(slot => {
+                    const card = document.createElement('div');
+                    card.className = 'slot-card';
+                    
+                    let content = `<h2>Slot #${slot.slot_id}</h2>`;
+                    
+                    if (slot.renter_name) {
+                        const endTime = new Date(slot.end_time).getTime();
+                        const remainingSeconds = (endTime - Date.now()) / 1000;
+                        
+                        card.classList.add(slot.is_offline ? 'offline' : 'rented');
+                        content += `<p>Renter: <span class="renter">${slot.renter_name}</span></p>`;
+                        content += `<p>Time Left: <span class="time">${formatDuration(remainingSeconds)}</span></p>`;
+                        if(slot.is_offline) {
+                            content += `<p>Status: <span style="color:#A0A0A0;">Offline</span></p>`;
+                        }
+                    } else {
+                        card.classList.add('available');
+                        content += `<p style="color:#28a745; font-weight:bold;">Available</p>`;
+                    }
+                    card.innerHTML = content;
+                    slotsContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                slotsContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        fetchBtn.addEventListener('click', () => {
+            clearInterval(refreshInterval); // Clear any previous interval
+            fetchSlotData(); // Fetch immediately
+            refreshInterval = setInterval(fetchSlotData, 5000); // Then refresh every 5 seconds
+        });
+
+    </script>
+</body>
+</html>
