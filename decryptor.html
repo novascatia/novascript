@@ -100,6 +100,7 @@
         // --- DECRYPTION LOGIC ---
         // Extracts the byte array from the encrypted Lua script
         const extractEncryptedBytes = (encryptedScript) => {
+            // Menemukan array angka yang diapit oleh kurung kurawal, yang berisi data terenkripsi.
             const match = encryptedScript.match(/\{([\d,\s]+)\}/);
             if (match && match[1]) {
                 try {
@@ -112,12 +113,13 @@
             return null;
         };
         
-        // Performs the reverse XOR operation
+        // Performs the reverse XOR operation (which is subtraction)
         const xorD = (byteTable, key) => {
             let decryptedString = "";
             let k = 0;
             for (let i = 0; i < byteTable.length; i++) {
-                let originalCharCode = byteTable[i] - key.charCodeAt(k);
+                // Operasi balikan: Kurangi nilai byte terenkripsi dengan kode karakter kunci
+                let originalCharCode = byteTable[i] - key.charCodeAt(k); 
                 decryptedString += String.fromCharCode(originalCharCode);
                 k++;
                 if (k >= key.length) k = 0;
