@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NovaScript Decryptor (Updated)</title>
+    <title>NovaScript Decryptor (Robust)</title>
     <style>
         :root {
             --bg-dark: #121212; --bg-medium: #1f2937; --bg-light: #374151;
-            --text-light: #e5e7eb; --text-muted: #9ca3af; --accent: #f63b3b; /* Accent color changed for decryptor */
+            --text-light: #e5e7eb; --text-muted: #9ca3af; --accent: #f63b3b;
             --accent-hover: #eb2525; --border-color: #4b5563; --border-radius: 10px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -21,13 +21,13 @@
         .toggle-button { flex-grow: 1; padding: 10px; text-align: center; font-weight: 600; cursor: pointer; border-radius: var(--border-radius); transition: background-color 0.3s, color 0.3s; color: var(--text-muted); border: 1px solid transparent; }
         .toggle-button.active { background-color: var(--accent); color: #ffffff; }
         .input-area, .output-area { width: 100%; min-height: 200px; padding: 15px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
-        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(246, 59, 59, 0.3); } /* Adjusted focus color */
+        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(246, 59, 59, 0.3); }
         #file-input-container { display: none; }
         .custom-file-input { display: block; width: 100%; padding: 12px; background-color: var(--bg-dark); border: 2px dashed var(--border-color); border-radius: var(--border-radius); text-align: center; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
         .custom-file-input:hover { background-color: #333; border-color: var(--accent); }
         #file-status { font-size: 0.9em; color: var(--text-muted); margin-top: 10px; text-align: center; }
         .text-input { width: 100%; padding: 12px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 1em; }
-        .text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(246, 59, 59, 0.3); } /* Adjusted focus color */
+        .text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(246, 59, 59, 0.3); }
         .submit-btn { padding: 15px; border: none; border-radius: var(--border-radius); background-image: linear-gradient(90deg, var(--accent-hover) 0%, var(--accent) 100%); color: white; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
         .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
         #output-container { display: none; }
@@ -39,7 +39,7 @@
 <body>
     <form id="decrypt-form" class="card">
         <div class="card-header">
-            <h1>NovaScript Decryptor (Updated)</h1>
+            <h1>NovaScript Decryptor (Robust)</h1>
         </div>
         <div class="card-body">
             <div class="form-group">
@@ -98,31 +98,30 @@
         let inputMode = 'text';
 
         // --- DECRYPTION LOGIC ---
-        // MODIFIED: Extracts the SMALLEST byte array, which is the actual encrypted data (not the alibi tables).
         const extractEncryptedBytes = (encryptedScript) => {
             const regex = /\{([\d,\s]+)\}/g;
             let match;
-            let smallestArray = null;
-            let minLength = Infinity;
+            let matchCount = 0;
 
-            // Iterasi melalui semua array angka yang ditemukan
+            // Logika baru: Mencari array angka ke-4
+            // 1, 2, 3 adalah Alibi Tables (128 byte acak)
+            // Array ke-4 adalah data enkripsi yang sebenarnya.
             while ((match = regex.exec(encryptedScript)) !== null) {
-                try {
-                    const currentArray = match[1].split(',').map(Number);
-                    
-                    // Ambil array terpendek (ini adalah data enkripsi yang sebenarnya, bukan alibi 128 byte)
-                    if (currentArray.length < minLength) {
-                        minLength = currentArray.length;
-                        smallestArray = currentArray;
+                matchCount++;
+                
+                if (matchCount === 4) { 
+                    try {
+                        return match[1].split(',').map(Number);
+                    } catch (e) {
+                        console.error("Error parsing 4th byte array:", e);
+                        return null;
                     }
-                } catch (e) {
-                    console.error("Error parsing byte array:", e);
                 }
             }
-            return smallestArray;
+            return null; // Array ke-4 tidak ditemukan
         };
         
-        // Performs the reverse XOR operation (which is subtraction)
+        // Performs the reverse XOR operation (subtraction)
         const xorD = (byteTable, key) => {
             let decryptedString = "";
             let k = 0;
@@ -137,7 +136,7 @@
         };
         // --- End of Decryption Logic ---
 
-        // --- UI Event Listeners (Original) ---
+        // --- UI Event Listeners ---
         toggleText.addEventListener('click', () => {
             inputMode = 'text';
             textContainer.style.display = 'block';
@@ -204,7 +203,7 @@
                 const byteTable = extractEncryptedBytes(encryptedContent); 
                 
                 if (!byteTable || byteTable.length === 0) {
-                   throw new Error("Could not find or parse the encrypted data table in the script. Is the script format correct?");
+                   throw new Error("Could not find the actual ciphertext array (4th array). Please ensure the entire script is pasted correctly.");
                 }
 
                 const decryptedScript = xorD(byteTable, key);
@@ -214,11 +213,11 @@
                 showStatus("Decryption successful!", false);
 
                 // Attach filename to download button
-                downloadBtn.setAttribute('data-filename', fileName.replace(/^Encrypted_/, 'Decrypted_')); // Suggest a decrypted filename
+                downloadBtn.setAttribute('data-filename', fileName.replace(/^Encrypted_/, 'Decrypted_'));
 
             } catch (error) {
                 showStatus(`Decryption failed: ${error.message}`, true);
-                outputContainer.style.display = 'none'; // Hide output on error
+                outputContainer.style.display = 'none';
             }
         };
         
