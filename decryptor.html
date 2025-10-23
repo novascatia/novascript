@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NovaScript Decryptor</title>
+    <title>NovaScript Decryptor (Updated)</title>
     <style>
         :root {
             --bg-dark: #121212; --bg-medium: #1f2937; --bg-light: #374151;
@@ -39,7 +39,7 @@
 <body>
     <form id="decrypt-form" class="card">
         <div class="card-header">
-            <h1>NovaScript Decryptor</h1>
+            <h1>NovaScript Decryptor (Updated)</h1>
         </div>
         <div class="card-body">
             <div class="form-group">
@@ -49,7 +49,7 @@
                     <div class="toggle-button" id="toggle-file">File Upload</div>
                 </div>
                 <div id="text-input-container">
-                    <textarea id="script-input" class="input-area" placeholder="-- Paste your encrypted script here..."></textarea>
+                    <textarea id="script-input" class="input-area" placeholder="-- Paste your ENTIRE encrypted script here..."></textarea>
                 </div>
                 <div id="file-input-container">
                     <input type="file" id="file-input" accept=".lua,.txt" style="display: none;">
@@ -98,19 +98,28 @@
         let inputMode = 'text';
 
         // --- DECRYPTION LOGIC ---
-        // Extracts the byte array from the encrypted Lua script
+        // MODIFIED: Extracts the SMALLEST byte array, which is the actual encrypted data (not the alibi tables).
         const extractEncryptedBytes = (encryptedScript) => {
-            // Menemukan array angka yang diapit oleh kurung kurawal, yang berisi data terenkripsi.
-            const match = encryptedScript.match(/\{([\d,\s]+)\}/);
-            if (match && match[1]) {
+            const regex = /\{([\d,\s]+)\}/g;
+            let match;
+            let smallestArray = null;
+            let minLength = Infinity;
+
+            // Iterasi melalui semua array angka yang ditemukan
+            while ((match = regex.exec(encryptedScript)) !== null) {
                 try {
-                    return match[1].split(',').map(Number);
+                    const currentArray = match[1].split(',').map(Number);
+                    
+                    // Ambil array terpendek (ini adalah data enkripsi yang sebenarnya, bukan alibi 128 byte)
+                    if (currentArray.length < minLength) {
+                        minLength = currentArray.length;
+                        smallestArray = currentArray;
+                    }
                 } catch (e) {
                     console.error("Error parsing byte array:", e);
-                    return null;
                 }
             }
-            return null;
+            return smallestArray;
         };
         
         // Performs the reverse XOR operation (which is subtraction)
@@ -128,7 +137,7 @@
         };
         // --- End of Decryption Logic ---
 
-        // --- UI Event Listeners ---
+        // --- UI Event Listeners (Original) ---
         toggleText.addEventListener('click', () => {
             inputMode = 'text';
             textContainer.style.display = 'block';
@@ -191,8 +200,10 @@
 
         const processDecryption = (encryptedContent, key, fileName) => {
             try {
-                const byteTable = extractEncryptedBytes(encryptedContent);
-                if (!byteTable) {
+                // Use the modified extraction logic
+                const byteTable = extractEncryptedBytes(encryptedContent); 
+                
+                if (!byteTable || byteTable.length === 0) {
                    throw new Error("Could not find or parse the encrypted data table in the script. Is the script format correct?");
                 }
 
