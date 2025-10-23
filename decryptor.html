@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaScript Decryptor</title>
+    <style>
+        :root {
+            --bg-dark: #121212; --bg-medium: #1f2937; --bg-light: #374151;
+            --text-light: #e5e7eb; --text-muted: #9ca3af; --accent: #f63b3b; /* Accent color changed for decryptor */
+            --accent-hover: #eb2525; --border-color: #4b5563; --border-radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; background-color: var(--bg-dark); color: var(--text-light); padding: 40px 20px; }
+        .card { width: 100%; max-width: 700px; background: var(--bg-medium); border-radius: var(--border-radius); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); }
+        .card-header { text-align: center; padding: 25px; border-bottom: 1px solid var(--border-color); }
+        .card-header h1 { color: var(--text-light); font-weight: 600; }
+        .card-body { padding: 30px; display: flex; flex-direction: column; gap: 25px; }
+        .form-group label { display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 500; }
+        .input-toggle { display: flex; background-color: var(--bg-dark); border-radius: var(--border-radius); padding: 5px; margin-bottom: 15px; }
+        .toggle-button { flex-grow: 1; padding: 10px; text-align: center; font-weight: 600; cursor: pointer; border-radius: var(--border-radius); transition: background-color 0.3s, color 0.3s; color: var(--text-muted); border: 1px solid transparent; }
+        .toggle-button.active { background-color: var(--accent); color: #ffffff; }
+        .input-area, .output-area { width: 100%; min-height: 200px; padding: 15px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
+        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(246, 59, 59, 0.3); } /* Adjusted focus color */
+        #file-input-container { display: none; }
+        .custom-file-input { display: block; width: 100%; padding: 12px; background-color: var(--bg-dark); border: 2px dashed var(--border-color); border-radius: var(--border-radius); text-align: center; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+        .custom-file-input:hover { background-color: #333; border-color: var(--accent); }
+        #file-status { font-size: 0.9em; color: var(--text-muted); margin-top: 10px; text-align: center; }
+        .text-input { width: 100%; padding: 12px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 1em; }
+        .text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(246, 59, 59, 0.3); } /* Adjusted focus color */
+        .submit-btn { padding: 15px; border: none; border-radius: var(--border-radius); background-image: linear-gradient(90deg, var(--accent-hover) 0%, var(--accent) 100%); color: white; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        #output-container { display: none; }
+        .output-controls { display: flex; gap: 15px; margin-top: 15px; }
+        .output-controls button { width: 100%; }
+        .status-message { text-align: center; margin-top: 20px; font-weight: 500; height: 20px; transition: color 0.3s; }
+    </style>
+</head>
+<body>
+    <form id="decrypt-form" class="card">
+        <div class="card-header">
+            <h1>NovaScript Decryptor</h1>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>1. Select Input Method</label>
+                <div class="input-toggle">
+                    <div class="toggle-button active" id="toggle-text">Text Input</div>
+                    <div class="toggle-button" id="toggle-file">File Upload</div>
+                </div>
+                <div id="text-input-container">
+                    <textarea id="script-input" class="input-area" placeholder="-- Paste your encrypted script here..."></textarea>
+                </div>
+                <div id="file-input-container">
+                    <input type="file" id="file-input" accept=".lua,.txt" style="display: none;">
+                    <label for="file-input" class="custom-file-input">Select Encrypted File (.lua or .txt)</label>
+                    <div id="file-status">No file chosen</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="key-input">2. Enter Decryption Key</label>
+                <input type="text" id="key-input" class="text-input" placeholder="The secret key used for encryption" required>
+            </div>
+
+            <button type="submit" class="submit-btn" id="decrypt-btn">Decrypt Script</button>
+            <div id="status" class="status-message"></div>
+
+            <div id="output-container" class="form-group">
+                <label for="script-output">3. Decrypted Result</label>
+                <textarea id="script-output" class="output-area" readonly></textarea>
+                <div class="output-controls">
+                    <button type="button" id="copy-btn" class="submit-btn">Copy</button>
+                    <button type="button" id="download-btn" class="submit-btn">Download</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        // --- Setup UI Elements ---
+        const form = document.getElementById('decrypt-form');
+        const fileInput = document.getElementById('file-input');
+        const scriptInput = document.getElementById('script-input');
+        const fileStatus = document.getElementById('file-status');
+        const keyInput = document.getElementById('key-input');
+        const statusDiv = document.getElementById('status');
+        
+        const outputContainer = document.getElementById('output-container');
+        const scriptOutput = document.getElementById('script-output');
+        const copyBtn = document.getElementById('copy-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        
+        const toggleText = document.getElementById('toggle-text');
+        const toggleFile = document.getElementById('toggle-file');
+        const textContainer = document.getElementById('text-input-container');
+        const fileContainer = document.getElementById('file-input-container');
+        let inputMode = 'text';
+
+        // --- DECRYPTION LOGIC ---
+        // Extracts the byte array from the encrypted Lua script
+        const extractEncryptedBytes = (encryptedScript) => {
+            const match = encryptedScript.match(/\{([\d,\s]+)\}/);
+            if (match && match[1]) {
+                try {
+                    return match[1].split(',').map(Number);
+                } catch (e) {
+                    console.error("Error parsing byte array:", e);
+                    return null;
+                }
+            }
+            return null;
+        };
+        
+        // Performs the reverse XOR operation
+        const xorD = (byteTable, key) => {
+            let decryptedString = "";
+            let k = 0;
+            for (let i = 0; i < byteTable.length; i++) {
+                let originalCharCode = byteTable[i] - key.charCodeAt(k);
+                decryptedString += String.fromCharCode(originalCharCode);
+                k++;
+                if (k >= key.length) k = 0;
+            }
+            return decryptedString;
+        };
+        // --- End of Decryption Logic ---
+
+        // --- UI Event Listeners ---
+        toggleText.addEventListener('click', () => {
+            inputMode = 'text';
+            textContainer.style.display = 'block';
+            fileContainer.style.display = 'none';
+            toggleText.classList.add('active');
+            toggleFile.classList.remove('active');
+        });
+        
+        toggleFile.addEventListener('click', () => {
+            inputMode = 'file';
+            textContainer.style.display = 'none';
+            fileContainer.style.display = 'block';
+            toggleFile.classList.add('active');
+            toggleText.classList.remove('active');
+        });
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.name.endsWith(".lua") || file.name.endsWith(".txt")) {
+                    fileStatus.textContent = `File: ${file.name}`;
+                    fileStatus.style.color = 'var(--text-light)';
+                } else {
+                    fileStatus.textContent = `Error: File format must be .lua or .txt`;
+                    fileStatus.style.color = '#ff6b6b';
+                    fileInput.value = '';
+                }
+            } else {
+                fileStatus.textContent = 'No file chosen';
+            }
+        });
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const key = keyInput.value;
+            if (!key) {
+                showStatus("Please enter the decryption key.", true);
+                return;
+            }
+
+            if (inputMode === 'text') {
+                const encryptedContent = scriptInput.value;
+                if (!encryptedContent.trim()) {
+                    showStatus("Please enter the encrypted script.", true);
+                    return;
+                }
+                processDecryption(encryptedContent, key, "Decrypted_Script.lua");
+            } else {
+                const file = fileInput.files[0];
+                if (!file) {
+                    showStatus("Please select an encrypted file.", true);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = () => processDecryption(reader.result, key, `Decrypted_${file.name}`);
+                reader.onerror = () => showStatus("Failed to read the file.", true);
+            }
+        });
+
+        const processDecryption = (encryptedContent, key, fileName) => {
+            try {
+                const byteTable = extractEncryptedBytes(encryptedContent);
+                if (!byteTable) {
+                   throw new Error("Could not find or parse the encrypted data table in the script. Is the script format correct?");
+                }
+
+                const decryptedScript = xorD(byteTable, key);
+
+                scriptOutput.value = decryptedScript;
+                outputContainer.style.display = 'block';
+                showStatus("Decryption successful!", false);
+
+                // Attach filename to download button
+                downloadBtn.setAttribute('data-filename', fileName.replace(/^Encrypted_/, 'Decrypted_')); // Suggest a decrypted filename
+
+            } catch (error) {
+                showStatus(`Decryption failed: ${error.message}`, true);
+                outputContainer.style.display = 'none'; // Hide output on error
+            }
+        };
+        
+        const showStatus = (message, isError) => {
+            statusDiv.textContent = message;
+            statusDiv.style.color = isError ? '#ff6b6b' : '#2ecc71';
+        };
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(scriptOutput.value).then(() => {
+                showStatus('Result copied to clipboard!', false);
+            });
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([scriptOutput.value], { type: "text/plain;charset=utf-8" });
+            const href = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = href;
+            a.download = downloadBtn.getAttribute('data-filename') || 'Decrypted_by_nov4script.lua';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(href);
+        });
+    </script>
+  </body>
+</html>
