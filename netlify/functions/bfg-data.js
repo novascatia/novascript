@@ -21,12 +21,13 @@ exports.handler = async function(event, context) {
             // Prepare data for upserting (update if exists, insert if not)
             const dataToUpsert = slotsData.map((slot, index) => ({
                 world_name: world,
-                slot_id: index + 1, // Slot numbers are 1-based
-                renter_name: slot.name,
-                renter_userid: slot.userid,
-                end_time: slot.endTime ? new Date(slot.endTime * 1000).toISOString() : null,
-                is_offline: slot.isOffline,
-                remaining_time_on_exit: slot.remainingTimeOnExit,
+                slot_id: slot.slot_id, // Menggunakan slot_id dari payload Lua
+                renter_name: slot.renter_name,
+                renter_userid: slot.renter_userid,
+                // Menggunakan waktu Unix (detik) dari Lua dan mengkonversinya ke format ISO (ms)
+                end_time: slot.end_time ? new Date(slot.end_time * 1000).toISOString() : null,
+                is_offline: slot.is_offline,
+                remaining_time_on_exit: slot.remaining_time_on_exit,
                 updated_at: new Date().toISOString()
             }));
 
