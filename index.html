@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaScript</title>
+    <title>Novascript</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Source+Code+Pro&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #121212; color: #EAEAEA; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; padding: 20px 20px 100px 20px; }
         header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #333; padding-bottom: 20px; }
         header h1 { font-size: 2.8rem; color: #FFFFFF; margin: 0; }
-        /* NEW: Style for the element that will glitch */
+        /* Style for the element that will glitch/scramble */
         #nova-logo {
             display: inline-block;
             transition: color 0.1s;
@@ -41,7 +41,7 @@
     <div class="container">
         <header>
             <h1><span id="nova-logo">NovaScript</span> Library</h1>
-            <p>Growtopia Script Sharing Database</p>
+            <p>@novascatia script database.</p>
         </header>
         <div id="script-list" class="script-list"></div>
     </div>
@@ -67,50 +67,57 @@
     </footer>
 
     <script>
-        // --- NEW: Glitch Effect Logic ---
+        // --- NEW: Smooth Scramble Effect Logic ---
         const logoElement = document.getElementById('nova-logo');
         const originalText = 'NovaScript';
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{};:,.<>/?|';
+        const transitionSpeed = 50; // Milliseconds delay between character updates (smoothness)
+        const minLoopDelay = 5000; // Minimum delay before the next loop (5 seconds)
+        const maxLoopDelay = 10000; // Maximum delay before the next loop (10 seconds)
 
-        function glitchText(text) {
-            let glitchedText = '';
-            for (let i = 0; i < text.length; i++) {
-                // ~30% chance to replace a character with a random one
-                if (Math.random() < 0.3) {
-                    glitchedText += characters.charAt(Math.floor(Math.random() * characters.length));
-                } else {
-                    glitchedText += text[i];
-                }
-            }
-            return glitchedText;
-        }
-
-        let glitchCounter = 0;
-        const maxGlitchCycles = 5; // Number of scramble steps
-        
-        function animateGlitch() {
+        function startScrambleEffect() {
             if (!logoElement) return;
 
-            // Start Glitch
-            const glitchInterval = setInterval(() => {
-                if (glitchCounter < maxGlitchCycles) {
-                    // Short, fast glitch cycle
-                    logoElement.textContent = glitchText(originalText);
+            // Initialize the temporary text array with the first character, or simply empty.
+            let tempText = Array(originalText.length).fill(originalText[0]);
+            let scrambleCount = 0;
+            
+            // 1. SCRAMBLE phase: Gradually replace correct characters with random ones
+            const scrambleTimer = setInterval(() => {
+                if (scrambleCount < originalText.length) {
+                    // Scramble one more character position
+                    tempText[scrambleCount] = characters.charAt(Math.floor(Math.random() * characters.length));
+                    logoElement.textContent = tempText.join('');
                     logoElement.style.color = '#ff4444'; // Glitch color
-                    glitchCounter++;
+                    scrambleCount++;
                 } else {
-                    // Stop Glitch and return to normal
-                    clearInterval(glitchInterval);
-                    logoElement.textContent = originalText;
-                    logoElement.style.color = '#FFFFFF';
-                    glitchCounter = 0;
+                    clearInterval(scrambleTimer);
+                    
+                    // 2. RESOLVE phase: Restore characters one by one.
+                    let resolveCount = 0;
+                    const resolveTimer = setInterval(() => {
+                        if (resolveCount < originalText.length) {
+                            // Restore the correct character
+                            tempText[resolveCount] = originalText[resolveCount];
+                            logoElement.textContent = tempText.join('');
+                            resolveCount++;
+                        } else {
+                            // RESOLVE complete.
+                            clearInterval(resolveTimer);
+                            logoElement.style.color = '#FFFFFF';
+                            
+                            // Start the next scramble after a random delay (5-10 seconds)
+                            const nextDelay = Math.random() * (maxLoopDelay - minLoopDelay) + minLoopDelay;
+                            setTimeout(startScrambleEffect, nextDelay);
+                        }
+                    }, transitionSpeed); // Speed for restoring characters
+
                 }
-            }, 50); // Fast interval for a flicker effect
+            }, transitionSpeed); // Speed for scrambling characters
         }
-        
-        // Run the animation once immediately, then loop every 5 seconds
-        setTimeout(animateGlitch, 100); 
-        setInterval(animateGlitch, 5000);
+
+        // Start the initial effect
+        startScrambleEffect();
         
         // --- Existing Script Logic ---
         window.addEventListener('DOMContentLoaded', async () => {
