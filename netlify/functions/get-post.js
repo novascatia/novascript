@@ -1,6 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
 exports.handler = async function(event, context) {
+    // --- FITUR BARU: BLOCK BROWSER ACCESS ---
+    // Mengambil header User-Agent (browser/client identifier)
+    const userAgent = event.headers['user-agent'] || '';
+
+    // Logika Deteksi:
+    // Browser modern (Chrome, Firefox, Safari, Edge) selalu menggunakan "Mozilla/5.0".
+    // PowerShell (Net.WebClient) biasanya User-Agent-nya kosong atau berbeda.
+    // Kita blokir jika terdeteksi sebagai browser modern.
+    const isBrowser = /Mozilla\/5\.0/i.test(userAgent) && /(Chrome|Safari|Firefox|Edge|Opera)/i.test(userAgent);
+
+    if (isBrowser) {
+        return {
+            statusCode: 403, // 403 Forbidden
+            headers: { 'Content-Type': 'text/plain' },
+            body: 'Access Denied. This script can only be loaded via Lua/PowerShell execution.'
+        };
+    }
+    // -----------------------------------------
+
     // CARA BARU YANG LEBIH ANDAL UNTUK MENDAPATKAN NAMA POST
     // event.path akan berisi sesuatu seperti "/encrypt/bgl-changer"
     const path = event.path;
