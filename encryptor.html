@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NovaScript V2 - Phantom Obfuscator</title>
+    <title>NovaScript V3 - Stable Phantom</title>
     <style>
         :root {
             --bg-dark: #0f172a; --bg-medium: #1e293b; --bg-light: #334155;
-            --text-light: #f1f5f9; --text-muted: #94a3b8; --accent: #6366f1;
-            --accent-hover: #4f46e5; --border-color: #334155; --border-radius: 12px;
+            --text-light: #f1f5f9; --text-muted: #94a3b8; --accent: #10b981; /* Green accent for stable version */
+            --accent-hover: #059669; --border-color: #334155; --border-radius: 12px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; background-color: var(--bg-dark); color: var(--text-light); padding: 40px 20px; }
         .card { width: 100%; max-width: 800px; background: var(--bg-medium); border-radius: var(--border-radius); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); border: 1px solid var(--border-color); }
-        .card-header { text-align: center; padding: 25px; border-bottom: 1px solid var(--border-color); background: linear-gradient(180deg, rgba(99,102,241,0.1) 0%, rgba(0,0,0,0) 100%); }
+        .card-header { text-align: center; padding: 25px; border-bottom: 1px solid var(--border-color); background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(0,0,0,0) 100%); }
         .card-header h1 { color: var(--text-light); font-weight: 700; letter-spacing: 1px; }
         .card-header span { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
         .card-body { padding: 30px; display: flex; flex-direction: column; gap: 25px; }
         .form-group label { display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; }
         .input-toggle { display: flex; background-color: var(--bg-dark); border-radius: var(--border-radius); padding: 5px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .toggle-button { flex-grow: 1; padding: 10px; text-align: center; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s; color: var(--text-muted); }
-        .toggle-button.active { background-color: var(--accent); color: #ffffff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .toggle-button.active { background-color: var(--accent); color: #ffffff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
         .input-area, .output-area { width: 100%; min-height: 200px; padding: 15px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 0.85rem; resize: vertical; font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; }
-        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
         #file-input-container { display: none; }
         .custom-file-input { display: block; width: 100%; padding: 40px; background-color: var(--bg-dark); border: 2px dashed var(--border-color); border-radius: var(--border-radius); text-align: center; cursor: pointer; transition: all 0.3s; }
         .custom-file-input:hover { background-color: #162032; border-color: var(--accent); }
@@ -30,7 +30,7 @@
         .text-input { width: 100%; padding: 12px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 1em; }
         .text-input:focus { outline: none; border-color: var(--accent); }
         .submit-btn { padding: 15px; border: none; border-radius: var(--border-radius); background-image: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); color: white; font-size: 1em; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.5px; }
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); }
         #output-container { display: none; animation: fadeIn 0.5s ease; }
         .output-controls { display: flex; gap: 15px; margin-top: 15px; }
         .output-controls button { width: 100%; background: var(--bg-light); border: 1px solid var(--border-color); background-image: none; }
@@ -42,8 +42,8 @@
 <body>
     <form id="encrypt-form" class="card">
         <div class="card-header">
-            <span>Security Tool</span>
-            <h1>NOVA SCRIPT V2</h1>
+            <span>Code Protector</span>
+            <h1>NOVA SCRIPT V3</h1>
         </div>
         <div class="card-body">
             <div class="form-group">
@@ -102,20 +102,21 @@
         const fileContainer = document.getElementById('file-input-container');
         let inputMode = 'text';
 
-        // --- NEW OBFUSCATION ENGINE (PHANTOM V2) ---
+        // --- NEW OBFUSCATION ENGINE (STABLE PHANTOM V3) ---
         
         // Helper: Generate confusing variable names (Il1l style)
+        // Fixed: Removed Math.random() from loop to ensure consistency when called,
+        // but we will generate static assignments anyway.
         const genVar = (id) => {
             const chars = ['I', 'l', '1'];
             let res = '';
-            // Deterministic but confusing generation based on ID
-            let n = id + 10; 
+            let n = id + 50; 
             while(n > 0) {
                 res += chars[n % 3];
                 n = Math.floor(n / 3);
             }
-            // Add randomness to length
-            return 'l'.repeat(Math.floor(Math.random() * 3) + 1) + res + 'I';
+            // Add a prefix/suffix based on ID to ensure uniqueness but consistency
+            return 'l' + res + 'I' + (id % 2 === 0 ? '1' : 'l');
         };
 
         const strToByte = (str) => {
@@ -125,25 +126,29 @@
         };
 
         const phantomObfuscate = (source, key) => {
-            // 1. Minify / Clean input slightly
             let cleanSource = source.trim(); 
             
-            // 2. Generate Variable Names map
+            // 2. Generate Variable Names map - STATIC ASSIGNMENT (THE FIX)
+            // We define them ONCE here so they don't change later.
             const V = {
                 load: genVar(1),
                 byte: genVar(2),
                 char: genVar(3),
                 table: genVar(4),
                 key: genVar(5),
-                index: genVar(6),
                 res: genVar(7),
                 chunk: genVar(8),
                 temp: genVar(9),
                 xor: genVar(10),
-                env: genVar(11)
+                env: genVar(11),
+                checksum: genVar(20),  // Was causing error before
+                decVal: genVar(30),    // Was causing error before
+                junk1: genVar(99),
+                junk2: genVar(100),
+                junkStr: genVar(101)
             };
 
-            // 3. Advanced Encryption (Rolling XOR + Offset)
+            // 3. Encryption Logic
             let encryptedBytes = [];
             let keyBytes = strToByte(key);
             let keyLen = keyBytes.length;
@@ -154,31 +159,23 @@
             for (let i = 0; i < cleanSource.length; i++) {
                 let charCode = cleanSource.charCodeAt(i);
                 let currentKey = keyBytes[i % keyLen];
-                
-                // Logic: (Char + Index) XOR (Key + Rolling)
                 let enc = (charCode + i) ^ (currentKey + (rollingKey % 255));
-                
-                // Update rolling key to make it dynamic
                 rollingKey = (rollingKey + enc) % 255;
-                
                 encryptedBytes.push(enc);
             }
 
             // 4. Generate Junk/Decoy Code
-            const junkCode = `local ${genVar(99)} = {}; local ${genVar(100)} = function() return "${genVar(101)}" end;`;
+            const junkCode = `local ${V.junk1} = {}; local ${V.junk2} = function() return "${V.junkStr}" end;`;
 
             // 5. Construct the Lua Loader
-            // We use a custom 'Virtual Machine' loop to decode
-            
             const luaTemplate = `
---[[ NovaScript V2 ]]
+--[[ NovaScript V3 ]]
 local ${V.env} = _G or getfenv()
 local ${V.byte} = string.byte
 local ${V.char} = string.char
 local ${V.table} = {${encryptedBytes.join(',')}}
 local ${V.key} = "${key}"
 local ${V.res} = {}
-local ${V.index} = 1
 local ${V.xor} = function(a,b) 
     local p,c=1,0 
     while a>0 and b>0 do 
@@ -195,29 +192,29 @@ local ${V.xor} = function(a,b)
     return c 
 end
 
-local ${genVar(20)} = 0
-for i=1, #${V.key} do ${genVar(20)} = ${genVar(20)} + ${V.byte}(${V.key}, i) end
+local ${V.checksum} = 0
+for i=1, #${V.key} do ${V.checksum} = ${V.checksum} + ${V.byte}(${V.key}, i) end
 
 for i=1, #${V.table} do
     local ${V.chunk} = ${V.table}[i]
     local ${V.temp} = ${V.byte}(${V.key}, (i-1)%#${V.key}+1)
     
-    -- Decryption Logic (Reversed)
-    local ${genVar(30)} = ${V.xor}(${V.chunk}, ${V.temp} + (${genVar(20)}%255))
-    ${genVar(30)} = ${genVar(30)} - (i-1)
+    -- Decryption Logic
+    local ${V.decVal} = ${V.xor}(${V.chunk}, ${V.temp} + (${V.checksum}%255))
+    ${V.decVal} = ${V.decVal} - (i-1)
     
-    -- Loop Integrity Check (Anti-Tamper)
-    if ${genVar(30)} < 0 then ${genVar(30)} = ${genVar(30)} + 65536 end 
+    -- Check negative overflow
+    while ${V.decVal} < 0 do ${V.decVal} = ${V.decVal} + 256 end
     
-    table.insert(${V.res}, ${V.char}(${genVar(30)} % 255))
+    table.insert(${V.res}, ${V.char}(${V.decVal} % 256))
     
-    ${genVar(20)} = (${genVar(20)} + ${V.chunk}) % 255
+    ${V.checksum} = (${V.checksum} + ${V.chunk}) % 255
 end
 
 ${junkCode}
 
 local ${V.load} = (loadstring or load)(table.concat(${V.res}))
-if ${V.load} then ${V.load}() else print("NovaError: Integrity Check Failed") end
+if ${V.load} then ${V.load}() else print("NovaError: Execution Failed") end
 `;
             return luaTemplate;
         };
