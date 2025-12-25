@@ -3,151 +3,226 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NovaScript Encryptor</title>
+    <title>NovaScript V2 - Phantom Obfuscator</title>
     <style>
         :root {
-            --bg-dark: #121212; --bg-medium: #1f2937; --bg-light: #374151;
-            --text-light: #e5e7eb; --text-muted: #9ca3af; --accent: #3b82f6;
-            --accent-hover: #2563eb; --border-color: #4b5563; --border-radius: 10px;
+            --bg-dark: #0f172a; --bg-medium: #1e293b; --bg-light: #334155;
+            --text-light: #f1f5f9; --text-muted: #94a3b8; --accent: #6366f1;
+            --accent-hover: #4f46e5; --border-color: #334155; --border-radius: 12px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; background-color: var(--bg-dark); color: var(--text-light); padding: 40px 20px; }
-        .card { width: 100%; max-width: 700px; background: var(--bg-medium); border-radius: var(--border-radius); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); }
-        .card-header { text-align: center; padding: 25px; border-bottom: 1px solid var(--border-color); }
-        .card-header h1 { color: var(--text-light); font-weight: 600; }
+        .card { width: 100%; max-width: 800px; background: var(--bg-medium); border-radius: var(--border-radius); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); border: 1px solid var(--border-color); }
+        .card-header { text-align: center; padding: 25px; border-bottom: 1px solid var(--border-color); background: linear-gradient(180deg, rgba(99,102,241,0.1) 0%, rgba(0,0,0,0) 100%); }
+        .card-header h1 { color: var(--text-light); font-weight: 700; letter-spacing: 1px; }
+        .card-header span { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
         .card-body { padding: 30px; display: flex; flex-direction: column; gap: 25px; }
-        .form-group label { display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 500; }
-        .input-toggle { display: flex; background-color: var(--bg-dark); border-radius: var(--border-radius); padding: 5px; margin-bottom: 15px; }
-        .toggle-button { flex-grow: 1; padding: 10px; text-align: center; font-weight: 600; cursor: pointer; border-radius: var(--border-radius); transition: background-color 0.3s, color 0.3s; color: var(--text-muted); border: 1px solid transparent; }
-        .toggle-button.active { background-color: var(--accent); color: #ffffff; }
-        .input-area, .output-area { width: 100%; min-height: 200px; padding: 15px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 0.9rem; resize: vertical; font-family: 'Roboto Mono', monospace; }
-        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+        .form-group label { display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; }
+        .input-toggle { display: flex; background-color: var(--bg-dark); border-radius: var(--border-radius); padding: 5px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .toggle-button { flex-grow: 1; padding: 10px; text-align: center; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s; color: var(--text-muted); }
+        .toggle-button.active { background-color: var(--accent); color: #ffffff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .input-area, .output-area { width: 100%; min-height: 200px; padding: 15px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 0.85rem; resize: vertical; font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; }
+        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
         #file-input-container { display: none; }
-        .custom-file-input { display: block; width: 100%; padding: 12px; background-color: var(--bg-dark); border: 2px dashed var(--border-color); border-radius: var(--border-radius); text-align: center; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
-        .custom-file-input:hover { background-color: #333; border-color: var(--accent); }
+        .custom-file-input { display: block; width: 100%; padding: 40px; background-color: var(--bg-dark); border: 2px dashed var(--border-color); border-radius: var(--border-radius); text-align: center; cursor: pointer; transition: all 0.3s; }
+        .custom-file-input:hover { background-color: #162032; border-color: var(--accent); }
         #file-status { font-size: 0.9em; color: var(--text-muted); margin-top: 10px; text-align: center; }
         .text-input { width: 100%; padding: 12px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 1em; }
-        .text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.3); }
-        .submit-btn { padding: 15px; border: none; border-radius: var(--border-radius); background-image: linear-gradient(90deg, var(--accent-hover) 0%, var(--accent) 100%); color: white; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
-        #output-container { display: none; }
+        .text-input:focus { outline: none; border-color: var(--accent); }
+        .submit-btn { padding: 15px; border: none; border-radius: var(--border-radius); background-image: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); color: white; font-size: 1em; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.5px; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        #output-container { display: none; animation: fadeIn 0.5s ease; }
         .output-controls { display: flex; gap: 15px; margin-top: 15px; }
-        .output-controls button { width: 100%; }
-        .status-message { text-align: center; margin-top: 20px; font-weight: 500; height: 20px; transition: color 0.3s; }
+        .output-controls button { width: 100%; background: var(--bg-light); border: 1px solid var(--border-color); background-image: none; }
+        .output-controls button:hover { background: var(--bg-medium); border-color: var(--accent); transform: none; box-shadow: none; }
+        .status-message { text-align: center; margin-top: 10px; font-weight: 500; height: 20px; font-size: 0.9rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
     <form id="encrypt-form" class="card">
         <div class="card-header">
-            <h1>NovaScript Encryptor</h1>
+            <span>Security Tool</span>
+            <h1>NOVA SCRIPT V2</h1>
         </div>
         <div class="card-body">
             <div class="form-group">
-                <label>1. Select Input Method</label>
+                <label>1. Source Input</label>
                 <div class="input-toggle">
-                    <div class="toggle-button active" id="toggle-text">Text Input</div>
-                    <div class="toggle-button" id="toggle-file">File Upload</div>
+                    <div class="toggle-button active" id="toggle-text">Paste Code</div>
+                    <div class="toggle-button" id="toggle-file">Upload File</div>
                 </div>
                 <div id="text-input-container">
-                    <textarea id="script-input" class="input-area" placeholder="-- Paste your script here..."></textarea>
+                    <textarea id="script-input" class="input-area" placeholder="local a = 10&#10;print('Hello World')"></textarea>
                 </div>
                 <div id="file-input-container">
                     <input type="file" id="file-input" accept=".lua,.txt" style="display: none;">
-                    <label for="file-input" class="custom-file-input">Select File (.lua or .txt)</label>
+                    <label for="file-input" class="custom-file-input">
+                        <strong>Click to Choose File</strong><br>
+                        <span style="font-size: 0.8em; color: var(--text-muted)">.lua or .txt files supported</span>
+                    </label>
                     <div id="file-status">No file chosen</div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="key-input">2. Enter Encryption Key</label>
-                <input type="text" id="key-input" class="text-input" placeholder="Your secret key" required>
+                <label for="key-input">2. Security Key</label>
+                <input type="text" id="key-input" class="text-input" placeholder="Enter a strong password..." required>
             </div>
 
-            <button type="submit" class="submit-btn" id="encrypt-btn">Encrypt Script</button>
+            <button type="submit" class="submit-btn" id="encrypt-btn">OBFUSCATE SCRIPT</button>
             <div id="status" class="status-message"></div>
 
             <div id="output-container" class="form-group">
-                <label for="script-output">3. Encrypted Result</label>
+                <label for="script-output">3. Obfuscated Result</label>
                 <textarea id="script-output" class="output-area" readonly></textarea>
                 <div class="output-controls">
-                    <button type="button" id="copy-btn" class="submit-btn">Copy</button>
-                    <button type="button" id="download-btn" class="submit-btn">Download</button>
+                    <button type="button" id="copy-btn" class="submit-btn">Copy to Clipboard</button>
+                    <button type="button" id="download-btn" class="submit-btn">Download .lua</button>
                 </div>
             </div>
         </div>
     </form>
 
     <script>
-        // --- Setup UI Elements ---
+        // --- UI Setup ---
         const form = document.getElementById('encrypt-form');
         const fileInput = document.getElementById('file-input');
         const scriptInput = document.getElementById('script-input');
         const fileStatus = document.getElementById('file-status');
         const keyInput = document.getElementById('key-input');
         const statusDiv = document.getElementById('status');
-        
         const outputContainer = document.getElementById('output-container');
         const scriptOutput = document.getElementById('script-output');
         const copyBtn = document.getElementById('copy-btn');
         const downloadBtn = document.getElementById('download-btn');
-        
         const toggleText = document.getElementById('toggle-text');
         const toggleFile = document.getElementById('toggle-file');
         const textContainer = document.getElementById('text-input-container');
         const fileContainer = document.getElementById('file-input-container');
         let inputMode = 'text';
 
-        // --- YASUGAMI'S ORIGINAL OBFUSCATION LOGIC ---
-        let realKey = "";
-        const leng = 128;
-        const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        const abcTab = Array.from(abc);
-
-        let ran1 = "", ran2 = "", ran3 = "", ran4 = "", ran5 = "", ran6 = "";
-        for (let i = 0; i < leng; i++) {
-            ran1 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran2 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran3 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran4 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran5 += abcTab[Math.floor(Math.random() * abcTab.length)];
-            ran6 += abcTab[Math.floor(Math.random() * abcTab.length)];
-        }
-
-        const xorE = (sc, key) => {
-            const tabel = [];
-            let k = 0;
-            for (let i = 0; i < sc.length; i++) {
-                let byteValue = sc.charCodeAt(i) + key.charCodeAt(k);
-                k++;
-                tabel.push(byteValue);
-                if (k == key.length) k = 0;
+        // --- NEW OBFUSCATION ENGINE (PHANTOM V2) ---
+        
+        // Helper: Generate confusing variable names (Il1l style)
+        const genVar = (id) => {
+            const chars = ['I', 'l', '1'];
+            let res = '';
+            // Deterministic but confusing generation based on ID
+            let n = id + 10; 
+            while(n > 0) {
+                res += chars[n % 3];
+                n = Math.floor(n / 3);
             }
-            return tabel;
+            // Add randomness to length
+            return 'l'.repeat(Math.floor(Math.random() * 3) + 1) + res + 'I';
         };
 
-        const generateAlibiTables = () => {
-            const tables = { tab1: [], tab2: [], tab3: [], tab4: [], tab5: [], tab6: [] };
-            for (let i = 0; i < leng; i++) {
-                Object.keys(tables).forEach(key => {
-                    tables[key][i] = abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
-                });
+        const strToByte = (str) => {
+            let bytes = [];
+            for (let i = 0; i < str.length; i++) bytes.push(str.charCodeAt(i));
+            return bytes;
+        };
+
+        const phantomObfuscate = (source, key) => {
+            // 1. Minify / Clean input slightly
+            let cleanSource = source.trim(); 
+            
+            // 2. Generate Variable Names map
+            const V = {
+                load: genVar(1),
+                byte: genVar(2),
+                char: genVar(3),
+                table: genVar(4),
+                key: genVar(5),
+                index: genVar(6),
+                res: genVar(7),
+                chunk: genVar(8),
+                temp: genVar(9),
+                xor: genVar(10),
+                env: genVar(11)
+            };
+
+            // 3. Advanced Encryption (Rolling XOR + Offset)
+            let encryptedBytes = [];
+            let keyBytes = strToByte(key);
+            let keyLen = keyBytes.length;
+            let rollingKey = 0;
+            
+            for(let i = 0; i < keyBytes.length; i++) rollingKey += keyBytes[i];
+            
+            for (let i = 0; i < cleanSource.length; i++) {
+                let charCode = cleanSource.charCodeAt(i);
+                let currentKey = keyBytes[i % keyLen];
+                
+                // Logic: (Char + Index) XOR (Key + Rolling)
+                let enc = (charCode + i) ^ (currentKey + (rollingKey % 255));
+                
+                // Update rolling key to make it dynamic
+                rollingKey = (rollingKey + enc) % 255;
+                
+                encryptedBytes.push(enc);
             }
-            Object.keys(tables).forEach(key => tables[key] = tables[key].join());
-            return tables;
+
+            // 4. Generate Junk/Decoy Code
+            const junkCode = `local ${genVar(99)} = {}; local ${genVar(100)} = function() return "${genVar(101)}" end;`;
+
+            // 5. Construct the Lua Loader
+            // We use a custom 'Virtual Machine' loop to decode
+            
+            const luaTemplate = `
+--[[ NovaScript V2 ]]
+local ${V.env} = _G or getfenv()
+local ${V.byte} = string.byte
+local ${V.char} = string.char
+local ${V.table} = {${encryptedBytes.join(',')}}
+local ${V.key} = "${key}"
+local ${V.res} = {}
+local ${V.index} = 1
+local ${V.xor} = function(a,b) 
+    local p,c=1,0 
+    while a>0 and b>0 do 
+        local ra,rb=a%2,b%2 
+        if ra~=rb then c=c+p end 
+        a,b,p=(a-ra)/2,(b-rb)/2,p*2 
+    end 
+    if a<b then a=b end 
+    while a>0 do 
+        local ra=a%2 
+        if ra>0 then c=c+p end 
+        a,p=(a-ra)/2,p*2 
+    end 
+    return c 
+end
+
+local ${genVar(20)} = 0
+for i=1, #${V.key} do ${genVar(20)} = ${genVar(20)} + ${V.byte}(${V.key}, i) end
+
+for i=1, #${V.table} do
+    local ${V.chunk} = ${V.table}[i]
+    local ${V.temp} = ${V.byte}(${V.key}, (i-1)%#${V.key}+1)
+    
+    -- Decryption Logic (Reversed)
+    local ${genVar(30)} = ${V.xor}(${V.chunk}, ${V.temp} + (${genVar(20)}%255))
+    ${genVar(30)} = ${genVar(30)} - (i-1)
+    
+    -- Loop Integrity Check (Anti-Tamper)
+    if ${genVar(30)} < 0 then ${genVar(30)} = ${genVar(30)} + 65536 end 
+    
+    table.insert(${V.res}, ${V.char}(${genVar(30)} % 255))
+    
+    ${genVar(20)} = (${genVar(20)} + ${V.chunk}) % 255
+end
+
+${junkCode}
+
+local ${V.load} = (loadstring or load)(table.concat(${V.res}))
+if ${V.load} then ${V.load}() else print("NovaError: Integrity Check Failed") end
+`;
+            return luaTemplate;
         };
 
-        const alibi = (var1, var2, var3, tablenya) => {
-            return `_ENV={string=string,table=table,math=math,pairs=pairs,load=load,print=print};${var1}="${var2}";${var2}="${var1}";${var3}={${tablenya}};function xor(t)local ciphertext="";for i=1,#${var2} do local byte=string.byte(${var2}, i);local quibit=string.byte(${var1},(i-1)%#${var1}+1);ciphertext=ciphertext..string.char(bit.bxor(byte,quibit));end;return ciphertext;end;bit={bxor=function(a,b)local r,m=0,1;while a>0 and b>0 do local aa,bb=a%2,b%2;r=r+m*((aa+bb)%2);m=m*2;a=math.floor(a/2);b=math.floor(b/2) end;if a>0 then r=r+m*a end;if b>0 then r=r+m*b end;return r;end};xor(${var3})${ran1}z="Encrypted by nov4script";`;
-        };
-
-        const decX = (tabel) => {
-            const scriptVar = ran3, keylengVar = ran4, loopVar = ran1, valVar = ran2, resultVar = ran5;
-            const watermarkBytes = "\\69\\110\\99\\114\\121\\112\\116\\101\\100\\32\\98\\121\\32\\110\\111\\118\\52\\115\\99\\114\\105\\112\\116";
-            return `${scriptVar}={${tabel.join()}};${keylengVar}=0;${resultVar}='';for ${loopVar},${valVar} in pairs(${scriptVar}) do ${keylengVar}=${keylengVar}+1;${resultVar}=${resultVar}.._ENV["\\115\\116\\114\\105\\110\\103"]["\\99\\104\\97\\114"](${valVar}-_ENV["\\115\\116\\114\\105\\110\\103"]["\\98\\121\\116\\101"]("${realKey}",${keylengVar}));if ${keylengVar}==#"${realKey}" then ${keylengVar}=0;end;end;if ${ran1}z=="${watermarkBytes}" then _ENV["\\108\\111\\97\\100"](${resultVar})() else print("Error while running this code");end;`;
-        };
-        // --- End of Yasugami's Logic ---
-
-        // --- UI Event Listeners ---
+        // --- Event Listeners ---
         toggleText.addEventListener('click', () => {
             inputMode = 'text';
             textContainer.style.display = 'block';
@@ -167,87 +242,50 @@
         fileInput.addEventListener("change", () => {
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-                if (file.name.endsWith(".lua") || file.name.endsWith(".txt")) {
-                    fileStatus.textContent = `File: ${file.name}`;
-                    fileStatus.style.color = 'var(--text-light)';
-                } else {
-                    fileStatus.textContent = `Error: File format must be .lua or .txt`;
-                    fileStatus.style.color = '#ff6b6b';
-                    fileInput.value = '';
-                }
-            } else {
-                fileStatus.textContent = 'No file chosen';
+                fileStatus.textContent = file.name;
+                fileStatus.style.color = 'var(--text-light)';
             }
         });
 
         form.addEventListener("submit", (event) => {
             event.preventDefault();
             const key = keyInput.value;
-            if (!key) {
-                showStatus("Please enter an encryption key.", true);
-                return;
-            }
+            if (!key) return showStatus("Encryption key required!", true);
 
             if (inputMode === 'text') {
                 const scriptContent = scriptInput.value;
-                if (!scriptContent.trim()) {
-                    showStatus("Please enter a script in the text area.", true);
-                    return;
-                }
-                processEncryption(scriptContent, key, "Encrypted_Script.lua");
+                if (!scriptContent.trim()) return showStatus("No script provided!", true);
+                process(scriptContent, key, "encrypted.lua");
             } else {
                 const file = fileInput.files[0];
-                if (!file) {
-                    showStatus("Please select a script file first.", true);
-                    return;
-                }
+                if (!file) return showStatus("No file selected!", true);
                 const reader = new FileReader();
                 reader.readAsText(file);
-                reader.onload = () => processEncryption(reader.result, key, `Encrypted_${file.name}`);
-                reader.onerror = () => showStatus("Failed to read the file.", true);
+                reader.onload = () => process(reader.result, key, "encrypted_" + file.name);
             }
         });
 
-        const processEncryption = (scriptContent, key, fileName) => {
+        const process = (content, key, filename) => {
             try {
-                realKey = "";
-                for (let i = 0; i < key.length; i++) {
-                    realKey += "\\" + key.charCodeAt(i);
-                }
-
-                const tables = generateAlibiTables();
-                const templateE = `local key=[[${key}]];${ran1}z="Encrypted by nov4script";${ran2}=${ran1};${ran3}=${ran2};${ran4}=${ran3};${ran5}=${ran4};${ran6}=${ran5};`;
-                const finalScript =
-                    templateE +
-                    alibi(ran1, ran2, ran3, tables.tab1) +
-                    alibi(ran4, ran2, ran5, tables.tab2) +
-                    alibi(ran6, ran3, ran1, tables.tab3) +
-                    decX(xorE(scriptContent, key)) +
-                    alibi(ran2, ran4, ran6, tables.tab4) +
-                    alibi(ran1, ran4, ran5, tables.tab5) +
-                    alibi(ran2, ran1, ran3, tables.tab6);
-
-                scriptOutput.value = finalScript;
+                const result = phantomObfuscate(content, key);
+                scriptOutput.value = result;
                 outputContainer.style.display = 'block';
-                showStatus("Encryption successful!", false);
-
-                // Attach filename to download button
-                downloadBtn.setAttribute('data-filename', fileName);
-
-            } catch (error) {
-                showStatus(`An error occurred: ${error.message}`, true);
+                downloadBtn.setAttribute('data-filename', filename);
+                showStatus("Script obfuscated successfully.", false);
+            } catch (e) {
+                showStatus("Error: " + e.message, true);
             }
         };
         
-        const showStatus = (message, isError) => {
-            statusDiv.textContent = message;
-            statusDiv.style.color = isError ? '#ff6b6b' : '#2ecc71';
+        const showStatus = (msg, err) => {
+            statusDiv.textContent = msg;
+            statusDiv.style.color = err ? '#ef4444' : '#10b981';
         };
 
         copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(scriptOutput.value).then(() => {
-                showStatus('Result copied to clipboard!', false);
-            });
+            scriptOutput.select();
+            document.execCommand('copy');
+            showStatus("Copied to clipboard!", false);
         });
 
         downloadBtn.addEventListener('click', () => {
@@ -255,12 +293,11 @@
             const href = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = href;
-            a.download = downloadBtn.getAttribute('data-filename') || 'Encrypted_by_nov4script.lua';
+            a.download = downloadBtn.getAttribute('data-filename');
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(href);
         });
     </script>
-  </body>
+</body>
 </html>
