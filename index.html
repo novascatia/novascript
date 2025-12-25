@@ -4,16 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Novascript Library</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Source+Code+Pro&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #0a0a0a;
-            --bg-card: #161616;
-            --border-color: #333;
-            --text-main: #ededed;
+            --bg-body: #050505;
+            --bg-card: rgba(20, 20, 20, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
             --text-muted: #888;
-            --accent-hover: #ffffff;
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --accent-glow: rgba(255, 255, 255, 0.15);
         }
 
         body { 
@@ -23,236 +22,262 @@
             margin: 0; 
             padding: 0;
             line-height: 1.6;
+            min-height: 100vh;
+            /* Dot Grid Background Pattern */
+            background-image: radial-gradient(#222 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Vignette / Spotlight Effect di atas */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 500px;
+            background: radial-gradient(circle at 50% 0%, rgba(50, 50, 50, 0.2), transparent 70%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         .container { 
             max-width: 900px; 
             margin: 0 auto; 
-            padding: 60px 20px 100px 20px; 
+            padding: 80px 20px 120px 20px; 
         }
 
-        /* HEADER MODERN */
-        header { 
-            text-align: center; 
-            margin-bottom: 60px; 
-            /* Menghapus garis bawah kasar, mengganti dengan spacing */
-        }
+        /* HEADER */
+        header { text-align: center; margin-bottom: 70px; }
 
         header h1 { 
-            font-size: 3.5rem; 
+            font-size: clamp(2.5rem, 5vw, 4rem); /* Responsif otomatis */
             font-weight: 800; 
-            letter-spacing: -2px; /* Gaya typography modern (tight tracking) */
+            letter-spacing: -2px; 
             margin: 0; 
             color: #ffffff;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
         }
 
         #nova-logo {
             display: inline-block;
-            /* Efek gradient subtle pada text agar tidak flat */
-            background: linear-gradient(to right, #fff, #aaa);
+            background: linear-gradient(135deg, #fff 30%, #666 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            transition: color 0.1s;
         }
         
-        /* Saat glitch, override warna text fill */
-        #nova-logo.glitching {
-            -webkit-text-fill-color: initial; 
-        }
+        #nova-logo.glitching { -webkit-text-fill-color: initial; }
 
         header p { 
-            font-size: 1rem; 
+            font-size: 1.1rem; 
             color: var(--text-muted); 
             margin-top: 15px; 
             font-weight: 300;
         }
 
-        /* LIST SCRIPT (GRID) */
+        /* GRID SYSTEM */
         .script-list { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Responsif otomatis */
-            gap: 20px; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 25px; 
         }
 
+        /* CARD DESIGN */
         .script-item { 
             background-color: var(--bg-card); 
+            backdrop-filter: blur(10px); /* Glass effect */
             padding: 30px; 
-            border-radius: 16px; /* Sudut lebih membulat */
+            border-radius: 20px; 
             border: 1px solid var(--border-color); 
             cursor: pointer; 
-            transition: var(--transition);
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
 
-        /* Efek Hover: Naik sedikit + Border jadi terang */
-        .script-item:hover { 
-            transform: translateY(-5px); 
-            border-color: #666;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* Subtle Inner Border Glow on Hover */
+        .script-item::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0.5;
+            transition: opacity 0.4s;
         }
+
+        .script-item:hover { 
+            transform: translateY(-8px); 
+            background-color: rgba(30, 30, 30, 0.8);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .script-item:hover::after { opacity: 1; }
 
         .script-item h2 { 
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-top: 0; 
-            margin-bottom: 10px; 
+            margin: 0 0 12px 0; 
             color: #fff; 
             letter-spacing: -0.5px;
         }
 
         .script-item p { 
             font-size: 0.95rem;
-            margin: 0 0 20px 0; 
-            color: var(--text-muted); 
-            line-height: 1.5; 
+            margin: 0 0 25px 0; 
+            color: #999; 
+            line-height: 1.6; 
         }
 
-        .script-info { 
-            display: inline-block;
+        .script-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .script-version { 
+            font-family: 'JetBrains Mono', monospace; /* Font coding */
             font-size: 0.75rem; 
-            color: #666; 
-            background: #222;
-            padding: 5px 10px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: #555; 
+            background: rgba(255,255,255,0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
         }
 
-        /* MODAL (POPUP) */
+        .arrow-icon {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+
+        .script-item:hover .arrow-icon {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* SKELETON LOADING ANIMATION */
+        .skeleton {
+            background: #111;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            height: 180px;
+            position: relative;
+            overflow: hidden;
+        }
+        .skeleton::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            100% { left: 100%; }
+        }
+
+        /* MODAL */
         .code-modal-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background-color: rgba(0, 0, 0, 0.6); /* Lebih transparan */
-            backdrop-filter: blur(10px); /* Efek Glassmorphism (blur background) */
+            position: fixed; inset: 0;
+            background-color: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(15px);
             display: none; justify-content: center; align-items: center; 
             z-index: 2000; 
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            opacity: 0; transition: opacity 0.3s ease;
         }
         
-        .code-modal-overlay.active {
-            opacity: 1;
-        }
+        .code-modal-overlay.active { opacity: 1; }
 
         .code-modal-content { 
-            background: #111; 
+            background: #0f0f0f; 
             border: 1px solid #333; 
-            border-radius: 20px; 
-            width: 90%; max-width: 650px; max-height: 85vh; 
+            border-radius: 24px; 
+            width: 90%; max-width: 700px; max-height: 85vh; 
             display: flex; flex-direction: column; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
-            transform: scale(0.95);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8); 
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
-        .code-modal-overlay.active .code-modal-content {
-            transform: scale(1);
-        }
+        .code-modal-overlay.active .code-modal-content { transform: scale(1); }
 
         .code-modal-header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 20px 25px; 
+            padding: 25px 30px; 
             border-bottom: 1px solid #222; 
         }
 
-        .code-modal-header h3 { 
-            margin: 0; 
-            font-weight: 600;
-            font-size: 1.2rem;
-            color: #fff; 
-        }
-
-        .code-modal-header .close-btn { 
-            font-size: 1.5rem; color: #666; cursor: pointer; border: none; background: none; transition: color 0.2s;
-        }
-        .code-modal-header .close-btn:hover { color: #fff; }
+        .code-modal-header h3 { margin: 0; color: #fff; font-weight: 600; }
+        .close-btn { color: #666; background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+        .close-btn:hover { color: #fff; transform: rotate(90deg); }
 
         .code-modal-body { 
             flex-grow: 1; overflow-y: auto; 
-            background-color: #0d0d0d; 
-            padding: 20px; 
+            background-color: #0a0a0a; 
+            padding: 25px; 
         }
 
         .code-modal-body code { 
-            font-family: 'Source Code Pro', monospace; 
-            font-size: 0.85rem; 
-            color: #ccc; 
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.85rem; color: #d4d4d4; 
         }
 
         .code-modal-footer { 
-            padding: 20px 25px; 
-            background-color: #111; 
+            padding: 20px 30px; 
             border-top: 1px solid #222; 
-            border-bottom-left-radius: 20px; 
-            border-bottom-right-radius: 20px; 
             text-align: right; 
         }
 
-        /* TOMBOL COPY (Gaya Minimalis) */
         .copy-btn { 
-            background-color: #fff; /* Tombol putih */
-            color: #000; /* Teks hitam */
-            border: none; 
-            padding: 12px 24px; 
-            border-radius: 50px; /* Pill shape */
-            cursor: pointer; 
-            font-weight: 600; 
-            font-size: 0.9rem;
-            transition: transform 0.2s, background-color 0.2s;
+            background: #fff; color: #000; border: none; 
+            padding: 12px 28px; border-radius: 50px; 
+            font-weight: 600; cursor: pointer; 
+            transition: all 0.2s;
         }
-
-        .copy-btn:hover { 
-            background-color: #ddd; 
-            transform: scale(1.02);
-        }
-        
-        .copy-btn:active {
-            transform: scale(0.95);
-        }
+        .copy-btn:hover { background: #e0e0e0; transform: scale(1.05); }
 
         /* FOOTER */
         .footer { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
-            background-color: rgba(10, 10, 10, 0.8); /* Semi transparan */
-            backdrop-filter: blur(5px);
-            color: #555; 
-            text-align: center; 
-            padding: 20px 0; 
-            font-size: 0.85rem; 
-            border-top: 1px solid #222; 
+            background: rgba(5, 5, 5, 0.85); 
+            backdrop-filter: blur(10px);
+            color: #444; text-align: center; 
+            padding: 20px 0; font-size: 0.85rem; 
+            border-top: 1px solid rgba(255,255,255,0.05);
         }
+        .footer a { color: #fff; text-decoration: none; font-weight: 600; transition: color 0.2s; }
+        .footer a:hover { color: #ccc; }
 
-        .footer a { color: #fff; text-decoration: none; font-weight: 600; }
-        .footer a:hover { text-decoration: underline; }
-
-        /* Scrollbar kustom agar menyatu */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0a0a0a; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-        
-        @media (max-width: 600px) {
-            header h1 { font-size: 2.5rem; }
-            .container { padding-top: 40px; }
-        }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1><span id="nova-logo">NovaScript</span> Library</h1>
-            <p>@novascatia private script database</p>
+            <p>@novascatia private script collection</p>
         </header>
-        <div id="script-list" class="script-list"></div>
+        
+        <div id="script-list" class="script-list">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+        </div>
     </div>
 
     <div id="code-modal" class="code-modal-overlay">
         <div class="code-modal-content">
             <div class="code-modal-header">
-                <h3 id="modal-title">Script Loader</h3>
+                <h3 id="modal-title">Loader Script</h3>
                 <button id="modal-close-btn" class="close-btn">&times;</button>
             </div>
             <div class="code-modal-body">
@@ -270,33 +295,25 @@
     </footer>
 
     <script>
-        // --- Glitch Effect Logic (Dipertahankan tapi disesuaikan dikit warnanya) ---
+        // --- Glitch Effect (Logo) ---
         const logoElement = document.getElementById('nova-logo');
         const originalText = 'NovaScript';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const transitionSpeed = 50; 
-        const minLoopDelay = 5000; 
-        const maxLoopDelay = 10000; 
-
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/[]*'; // Karakter lebih teknikal
+        
         function startScrambleEffect() {
             if (!logoElement) return;
-
             let tempText = Array(originalText.length).fill(originalText[0]);
             let scrambleCount = 0;
-            
-            // Tambahkan class glitching biar gradient text hilang sementara
             logoElement.classList.add('glitching');
 
             const scrambleTimer = setInterval(() => {
                 if (scrambleCount < originalText.length) {
                     tempText[scrambleCount] = characters.charAt(Math.floor(Math.random() * characters.length));
                     logoElement.textContent = tempText.join('');
-                    // Warna glitch diubah jadi merah pudar, bukan merah terang
-                    logoElement.style.color = '#ff6b6b'; 
+                    logoElement.style.color = '#fff'; // Flash white
                     scrambleCount++;
                 } else {
                     clearInterval(scrambleTimer);
-                    
                     let resolveCount = 0;
                     const resolveTimer = setInterval(() => {
                         if (resolveCount < originalText.length) {
@@ -305,21 +322,17 @@
                             resolveCount++;
                         } else {
                             clearInterval(resolveTimer);
-                            // Kembalikan ke style gradient awal
                             logoElement.style.color = ''; 
                             logoElement.classList.remove('glitching');
-                            
-                            const nextDelay = Math.random() * (maxLoopDelay - minLoopDelay) + minLoopDelay;
-                            setTimeout(startScrambleEffect, nextDelay);
+                            setTimeout(startScrambleEffect, Math.random() * 5000 + 4000);
                         }
-                    }, transitionSpeed); 
+                    }, 50); 
                 }
-            }, transitionSpeed); 
+            }, 40); 
         }
-
         startScrambleEffect();
         
-        // --- Fetch Script Logic (Tidak ada yang dirubah, hanya animasi modal) ---
+        // --- Fetch & UI Logic ---
         window.addEventListener('DOMContentLoaded', async () => {
             const scriptListContainer = document.getElementById('script-list');
             const codeModal = document.getElementById('code-modal');
@@ -329,56 +342,55 @@
             const modalCopyBtn = document.getElementById('modal-copy-btn');
             let scriptsData = [];
 
-            scriptListContainer.innerHTML = '<p class="loading-message" style="text-align:center; color:#555;">Initializing database...</p>';
+            // Fetch Data
             try {
+                // Simulasi delay sedikit agar skeleton loading terlihat keren (opsional, bisa dihapus)
+                // await new Promise(r => setTimeout(r, 800)); 
+
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
-                if (!result.success) throw new Error(result.message);
+                
+                scriptListContainer.innerHTML = ''; // Hapus skeleton loader
 
-                scriptListContainer.innerHTML = '';
-                if (result.scripts.length > 0) {
+                if (result.success && result.scripts.length > 0) {
                     scriptsData = result.scripts;
                     scriptsData.forEach((script, index) => {
                         const item = document.createElement('div');
                         item.className = 'script-item';
                         item.setAttribute('data-index', index);
+                        // Struktur Card Baru dengan Icon Panah
                         item.innerHTML = `
                             <h2>${script.title}</h2>
                             <p>${script.description}</p>
-                            <div class="script-info">v${script.version || '1.0'}</div>
+                            <div class="script-footer">
+                                <span class="script-version">v${script.version || '1.0'}</span>
+                                <span class="arrow-icon">➔</span>
+                            </div>
                         `;
                         scriptListContainer.appendChild(item);
                     });
                 } else {
-                    scriptListContainer.innerHTML = '<p style="text-align:center; color:#555;">No scripts available yet.</p>';
+                    scriptListContainer.innerHTML = '<p style="text-align:center; color:#555;">No scripts available.</p>';
                 }
             } catch (error) {
-                scriptListContainer.innerHTML = `<p style="color:#ff6b6b; text-align:center;">Error: ${error.message}</p>`;
+                scriptListContainer.innerHTML = `<p style="color:#ff4444; text-align:center;">Failed to load database.</p>`;
             }
 
-            // Membuka Modal
+            // Modal Logic
             scriptListContainer.addEventListener('click', (e) => {
                 const scriptItem = e.target.closest('.script-item');
                 if (scriptItem) {
                     const index = scriptItem.dataset.index;
-                    const script = scriptsData[index];
-                    modalTitle.textContent = script.title;
-                    modalLoaderCode.textContent = script.loader_script;
-                    
+                    modalTitle.textContent = scriptsData[index].title;
+                    modalLoaderCode.textContent = scriptsData[index].loader_script;
                     codeModal.style.display = 'flex';
-                    // Sedikit delay biar transisi opacity jalan
-                    setTimeout(() => {
-                        codeModal.classList.add('active');
-                    }, 10);
+                    setTimeout(() => codeModal.classList.add('active'), 10);
                 }
             });
 
-            // Menutup Modal
             const closeModal = () => { 
                 codeModal.classList.remove('active');
-                setTimeout(() => {
-                    codeModal.style.display = 'none'; 
-                }, 300); // Sesuaikan dengan durasi transition CSS
+                setTimeout(() => codeModal.style.display = 'none', 300);
             };
             
             modalCloseBtn.addEventListener('click', closeModal);
@@ -388,10 +400,10 @@
                 navigator.clipboard.writeText(modalLoaderCode.textContent).then(() => {
                     const originalText = modalCopyBtn.textContent;
                     modalCopyBtn.textContent = 'Copied!';
-                    modalCopyBtn.style.backgroundColor = '#4ade80'; // Hijau soft
+                    modalCopyBtn.style.background = '#4ade80';
                     setTimeout(() => { 
                         modalCopyBtn.textContent = originalText; 
-                        modalCopyBtn.style.backgroundColor = ''; 
+                        modalCopyBtn.style.background = '#fff'; 
                     }, 2000);
                 });
             });
