@@ -4,36 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Novascript Library</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-body: #050505;
-            --bg-card: rgba(20, 20, 20, 0.6);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --text-main: #ffffff;
-            --text-muted: #888;
-            --accent-glow: rgba(255, 255, 255, 0.15);
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-main: #ededed;
+            --text-muted: #888888;
+            --primary-glow: rgba(255, 255, 255, 0.15);
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
+        /* --- GLOBAL & TEXTURE --- */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-body); 
             color: var(--text-main); 
-            margin: 0; 
-            padding: 0;
-            line-height: 1.6;
+            margin: 0; padding: 0;
             min-height: 100vh;
-            /* Dot Grid Background Pattern */
-            background-image: radial-gradient(#222 1px, transparent 1px);
-            background-size: 30px 30px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Vignette / Spotlight Effect di atas */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 500px;
-            background: radial-gradient(circle at 50% 0%, rgba(50, 50, 50, 0.2), transparent 70%);
+        /* Noise Overlay for Texture (Efek Mahal) */
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Spotlight Gradient at Top */
+        .spotlight {
+            position: fixed; top: -20%; left: 50%;
+            transform: translateX(-50%);
+            width: 100%; max-width: 1000px; height: 600px;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%);
             pointer-events: none;
             z-index: -1;
         }
@@ -41,230 +49,214 @@
         .container { 
             max-width: 900px; 
             margin: 0 auto; 
-            padding: 80px 20px 120px 20px; 
+            padding: 100px 24px 140px 24px; 
+            position: relative;
+            z-index: 1;
         }
 
-        /* HEADER */
-        header { text-align: center; margin-bottom: 70px; }
+        /* --- HEADER --- */
+        header { 
+            text-align: center; 
+            margin-bottom: 80px; 
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .status-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #4ade80; /* Green */
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .status-badge::before {
+            content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%;
+            box-shadow: 0 0 8px #4ade80;
+        }
 
         header h1 { 
-            font-size: clamp(2.5rem, 5vw, 4rem); /* Responsif otomatis */
+            font-size: clamp(3rem, 6vw, 4.5rem); 
             font-weight: 800; 
-            letter-spacing: -2px; 
+            letter-spacing: -0.04em; 
             margin: 0; 
-            color: #ffffff;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-        }
-
-        #nova-logo {
-            display: inline-block;
-            background: linear-gradient(135deg, #fff 30%, #666 100%);
+            background: linear-gradient(180deg, #fff 0%, #888 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1;
         }
-        
-        #nova-logo.glitching { -webkit-text-fill-color: initial; }
+
+        #nova-logo.glitching { -webkit-text-fill-color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
         header p { 
             font-size: 1.1rem; 
             color: var(--text-muted); 
-            margin-top: 15px; 
-            font-weight: 300;
+            margin-top: 20px; 
+            font-weight: 400;
+            max-width: 500px;
+            line-height: 1.6;
         }
 
-        /* GRID SYSTEM */
+        /* --- GRID & CARDS --- */
         .script-list { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 25px; 
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
+            gap: 24px; 
         }
 
-        /* CARD DESIGN */
         .script-item { 
             background-color: var(--bg-card); 
-            backdrop-filter: blur(10px); /* Glass effect */
-            padding: 30px; 
-            border-radius: 20px; 
-            border: 1px solid var(--border-color); 
+            backdrop-filter: blur(10px);
+            padding: 32px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border-subtle); 
             cursor: pointer; 
-            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            transition: all 0.4s var(--ease-out);
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            opacity: 0; /* Hidden for animation */
+            transform: translateY(20px);
+            display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        /* Subtle Inner Border Glow on Hover */
-        .script-item::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 20px;
-            padding: 1px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-            opacity: 0.5;
-            transition: opacity 0.4s;
+        /* Animation class added by JS */
+        .script-item.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .script-item:hover { 
-            transform: translateY(-8px); 
-            background-color: rgba(30, 30, 30, 0.8);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px) scale(1.01); 
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-hover);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
         }
 
-        .script-item:hover::after { opacity: 1; }
-
         .script-item h2 { 
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin: 0 0 12px 0; 
-            color: #fff; 
-            letter-spacing: -0.5px;
+            font-size: 1.25rem; font-weight: 600; margin: 0 0 12px 0; color: #fff; letter-spacing: -0.02em;
         }
 
         .script-item p { 
-            font-size: 0.95rem;
-            margin: 0 0 25px 0; 
-            color: #999; 
-            line-height: 1.6; 
+            font-size: 0.95rem; color: #999; margin: 0 0 24px 0; line-height: 1.6;
+            flex-grow: 1;
         }
 
-        .script-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .card-footer {
+            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;
         }
 
-        .script-version { 
-            font-family: 'JetBrains Mono', monospace; /* Font coding */
-            font-size: 0.75rem; 
-            color: #555; 
-            background: rgba(255,255,255,0.05);
-            padding: 4px 10px;
-            border-radius: 6px;
+        .version-tag { 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #666; 
         }
 
-        .arrow-icon {
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
-            color: #fff;
+        .action-text {
+            font-size: 0.8rem; font-weight: 600; color: #fff; opacity: 0; transform: translateX(-10px); transition: all 0.3s;
         }
+        .script-item:hover .action-text { opacity: 1; transform: translateX(0); }
 
-        .script-item:hover .arrow-icon {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        /* SKELETON LOADING ANIMATION */
+        /* --- SKELETON LOADER --- */
         .skeleton {
-            background: #111;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 30px;
-            height: 180px;
-            position: relative;
-            overflow: hidden;
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+            border-radius: 16px; height: 200px; width: 100%; position: relative; overflow: hidden;
         }
-        .skeleton::before {
-            content: "";
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
-            animation: loading 1.5s infinite;
+        .skeleton::after {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+            animation: shimmy 1.5s infinite;
         }
-        @keyframes loading {
-            100% { left: 100%; }
-        }
+        @keyframes shimmy { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-        /* MODAL */
+        /* --- MODAL --- */
         .code-modal-overlay { 
-            position: fixed; inset: 0;
-            background-color: rgba(0, 0, 0, 0.7); 
-            backdrop-filter: blur(15px);
+            position: fixed; inset: 0; 
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(12px); /* High end blur */
             display: none; justify-content: center; align-items: center; 
-            z-index: 2000; 
-            opacity: 0; transition: opacity 0.3s ease;
+            z-index: 100; opacity: 0; transition: opacity 0.3s;
         }
-        
         .code-modal-overlay.active { opacity: 1; }
 
         .code-modal-content { 
-            background: #0f0f0f; 
-            border: 1px solid #333; 
-            border-radius: 24px; 
-            width: 90%; max-width: 700px; max-height: 85vh; 
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 20px; 
+            width: 90%; max-width: 680px; max-height: 85vh; 
             display: flex; flex-direction: column; 
-            box-shadow: 0 40px 80px rgba(0,0,0,0.8); 
-            transform: scale(0.9);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 50px 100px -20px rgba(0,0,0,0.8);
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.4s var(--ease-out);
         }
-        
-        .code-modal-overlay.active .code-modal-content { transform: scale(1); }
+        .code-modal-overlay.active .code-modal-content { transform: scale(1) translateY(0); }
 
         .code-modal-header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 25px 30px; 
-            border-bottom: 1px solid #222; 
+            padding: 24px; border-bottom: 1px solid #1a1a1a;
         }
+        .code-modal-header h3 { margin: 0; color: #fff; font-weight: 500; font-size: 1.1rem; }
 
-        .code-modal-header h3 { margin: 0; color: #fff; font-weight: 600; }
-        .close-btn { color: #666; background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
-        .close-btn:hover { color: #fff; transform: rotate(90deg); }
+        .close-btn { color: #555; background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+        .close-btn:hover { color: #fff; }
 
         .code-modal-body { 
-            flex-grow: 1; overflow-y: auto; 
-            background-color: #0a0a0a; 
-            padding: 25px; 
+            padding: 0; overflow-y: auto; background: #080808; 
+            /* Custom Scrollbar Inside */
+            scrollbar-width: thin; scrollbar-color: #333 transparent;
+        }
+        
+        .code-block-wrapper {
+            padding: 24px;
         }
 
         .code-modal-body code { 
-            font-family: 'JetBrains Mono', monospace; 
-            font-size: 0.85rem; color: #d4d4d4; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #ccc; line-height: 1.7;
         }
 
         .code-modal-footer { 
-            padding: 20px 30px; 
-            border-top: 1px solid #222; 
-            text-align: right; 
+            padding: 20px 24px; border-top: 1px solid #1a1a1a; background: #0a0a0a; text-align: right;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
         }
 
         .copy-btn { 
             background: #fff; color: #000; border: none; 
-            padding: 12px 28px; border-radius: 50px; 
-            font-weight: 600; cursor: pointer; 
+            padding: 10px 24px; border-radius: 8px; 
+            font-weight: 600; font-size: 0.9rem; cursor: pointer; 
             transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
         }
-        .copy-btn:hover { background: #e0e0e0; transform: scale(1.05); }
+        .copy-btn:hover { background: #eee; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.2); }
+        .copy-btn:active { transform: translateY(1px); }
 
-        /* FOOTER */
+        /* --- FOOTER --- */
         .footer { 
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            background: rgba(5, 5, 5, 0.85); 
-            backdrop-filter: blur(10px);
-            color: #444; text-align: center; 
-            padding: 20px 0; font-size: 0.85rem; 
-            border-top: 1px solid rgba(255,255,255,0.05);
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 24px; border-radius: 50px;
+            font-size: 0.8rem; color: #666;
+            display: flex; gap: 15px; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 50;
         }
-        .footer a { color: #fff; text-decoration: none; font-weight: 600; transition: color 0.2s; }
-        .footer a:hover { color: #ccc; }
+        .footer a { color: #fff; text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
+        .footer a:hover { opacity: 0.7; }
 
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        @media (max-width: 600px) {
+            .container { padding-top: 60px; }
+            header h1 { font-size: 2.8rem; }
+            .footer { width: 80%; justify-content: center; bottom: 20px; }
+        }
     </style>
 </head>
 <body>
+    <div class="noise-overlay"></div>
+    <div class="spotlight"></div>
+
     <div class="container">
         <header>
-            <h1><span id="nova-logo">NovaScript</span> Library</h1>
-            <p>@novascatia private script collection</p>
+            <div class="status-badge">All Systems Operational</div>
+            <h1><span id="nova-logo">NovaScript</span></h1>
+            <p>A curated collection of high-performance automation scripts.</p>
         </header>
         
         <div id="script-list" class="script-list">
@@ -277,28 +269,31 @@
     <div id="code-modal" class="code-modal-overlay">
         <div class="code-modal-content">
             <div class="code-modal-header">
-                <h3 id="modal-title">Loader Script</h3>
+                <h3 id="modal-title">Script Source</h3>
                 <button id="modal-close-btn" class="close-btn">&times;</button>
             </div>
             <div class="code-modal-body">
-                <pre><code id="modal-loader-code"></code></pre>
+                <div class="code-block-wrapper">
+                    <pre><code id="modal-loader-code"></code></pre>
+                </div>
             </div>
             <div class="code-modal-footer">
-                <button id="modal-copy-btn" class="copy-btn">Copy Script</button>
+                <button id="modal-copy-btn" class="copy-btn">Copy to Clipboard</button>
             </div>
         </div>
     </div>
     
     <footer class="footer">
-        Design by nov4. &nbsp;|&nbsp;
-        <a href="https://discord.gg/86F7hMVRxp" target="_blank">Join Discord</a>
+        <span>© 2024 nov4</span>
+        <span style="opacity:0.2">|</span>
+        <a href="https://discord.gg/86F7hMVRxp" target="_blank">Discord Community ➔</a>
     </footer>
 
     <script>
-        // --- Glitch Effect (Logo) ---
+        // --- Glitch Logic ---
         const logoElement = document.getElementById('nova-logo');
         const originalText = 'NovaScript';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/[]*'; // Karakter lebih teknikal
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/{}[]-_+';
         
         function startScrambleEffect() {
             if (!logoElement) return;
@@ -310,7 +305,6 @@
                 if (scrambleCount < originalText.length) {
                     tempText[scrambleCount] = characters.charAt(Math.floor(Math.random() * characters.length));
                     logoElement.textContent = tempText.join('');
-                    logoElement.style.color = '#fff'; // Flash white
                     scrambleCount++;
                 } else {
                     clearInterval(scrambleTimer);
@@ -322,17 +316,16 @@
                             resolveCount++;
                         } else {
                             clearInterval(resolveTimer);
-                            logoElement.style.color = ''; 
                             logoElement.classList.remove('glitching');
-                            setTimeout(startScrambleEffect, Math.random() * 5000 + 4000);
+                            setTimeout(startScrambleEffect, 6000); // 6s Delay
                         }
-                    }, 50); 
+                    }, 60); 
                 }
-            }, 40); 
+            }, 50); 
         }
         startScrambleEffect();
         
-        // --- Fetch & UI Logic ---
+        // --- Main Logic ---
         window.addEventListener('DOMContentLoaded', async () => {
             const scriptListContainer = document.getElementById('script-list');
             const codeModal = document.getElementById('code-modal');
@@ -342,15 +335,12 @@
             const modalCopyBtn = document.getElementById('modal-copy-btn');
             let scriptsData = [];
 
-            // Fetch Data
             try {
-                // Simulasi delay sedikit agar skeleton loading terlihat keren (opsional, bisa dihapus)
-                // await new Promise(r => setTimeout(r, 800)); 
-
+                // Fetch
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
                 
-                scriptListContainer.innerHTML = ''; // Hapus skeleton loader
+                scriptListContainer.innerHTML = ''; 
 
                 if (result.success && result.scripts.length > 0) {
                     scriptsData = result.scripts;
@@ -358,25 +348,33 @@
                         const item = document.createElement('div');
                         item.className = 'script-item';
                         item.setAttribute('data-index', index);
-                        // Struktur Card Baru dengan Icon Panah
+                        
                         item.innerHTML = `
-                            <h2>${script.title}</h2>
-                            <p>${script.description}</p>
-                            <div class="script-footer">
-                                <span class="script-version">v${script.version || '1.0'}</span>
-                                <span class="arrow-icon">➔</span>
+                            <div>
+                                <h2>${script.title}</h2>
+                                <p>${script.description}</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="version-tag">v${script.version || '1.0.0'}</span>
+                                <span class="action-text">Get Script →</span>
                             </div>
                         `;
+                        
                         scriptListContainer.appendChild(item);
+                        
+                        // Staggered Animation Entry
+                        setTimeout(() => {
+                            item.classList.add('visible');
+                        }, index * 100); // Delay tiap item 100ms
                     });
                 } else {
-                    scriptListContainer.innerHTML = '<p style="text-align:center; color:#555;">No scripts available.</p>';
+                    scriptListContainer.innerHTML = '<p style="text-align:center; color:#555;">Library empty.</p>';
                 }
             } catch (error) {
-                scriptListContainer.innerHTML = `<p style="color:#ff4444; text-align:center;">Failed to load database.</p>`;
+                scriptListContainer.innerHTML = `<p style="color:#ff5555; text-align:center;">Failed to connect.</p>`;
             }
 
-            // Modal Logic
+            // UI Interactions
             scriptListContainer.addEventListener('click', (e) => {
                 const scriptItem = e.target.closest('.script-item');
                 if (scriptItem) {
@@ -384,7 +382,9 @@
                     modalTitle.textContent = scriptsData[index].title;
                     modalLoaderCode.textContent = scriptsData[index].loader_script;
                     codeModal.style.display = 'flex';
-                    setTimeout(() => codeModal.classList.add('active'), 10);
+                    // Force reflow
+                    void codeModal.offsetWidth; 
+                    codeModal.classList.add('active');
                 }
             });
 
@@ -399,7 +399,7 @@
             modalCopyBtn.addEventListener('click', () => {
                 navigator.clipboard.writeText(modalLoaderCode.textContent).then(() => {
                     const originalText = modalCopyBtn.textContent;
-                    modalCopyBtn.textContent = 'Copied!';
+                    modalCopyBtn.textContent = 'Copied to Clipboard!';
                     modalCopyBtn.style.background = '#4ade80';
                     setTimeout(() => { 
                         modalCopyBtn.textContent = originalText; 
