@@ -94,6 +94,7 @@ exports.handler = async function(event, context) {
                 This script source is encrypted and cannot be viewed.
                 <br><br>
                 Execute this script via :
+                <br><br>
                 <span class="lua-tag">Lua Environment</span>
             </p>
         </div>
