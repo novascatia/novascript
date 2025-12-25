@@ -1,110 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NovaScript Obfuscator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaScript Encryptor V4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0f172a; --bg-medium: #1e293b; --bg-light: #334155;
-            --text-light: #f1f5f9; --text-muted: #94a3b8; --accent: #f43f5e; /* Red accent for aggressive look */
-            --accent-hover: #e11d48; --border-color: #334155; --border-radius: 12px;
+            --bg-body: #050505;
+            --bg-card: #0a0a0a;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(244, 63, 94, 0.3); /* Red Hover */
+            --text-main: #ededed;
+            --text-muted: #888888;
+            --accent: #f43f5e; /* Rose/Red 500 */
+            --accent-glow: rgba(244, 63, 94, 0.2);
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; background-color: var(--bg-dark); color: var(--text-light); padding: 40px 20px; }
-        .card { width: 100%; max-width: 800px; background: var(--bg-medium); border-radius: var(--border-radius); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); border: 1px solid var(--border-color); }
-        .card-header { text-align: center; padding: 25px; border-bottom: 1px solid var(--border-color); background: linear-gradient(180deg, rgba(244, 63, 94, 0.1) 0%, rgba(0,0,0,0) 100%); }
-        .card-header h1 { color: var(--text-light); font-weight: 700; letter-spacing: 1px; }
-        .card-header span { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
-        .card-body { padding: 30px; display: flex; flex-direction: column; gap: 25px; }
-        .form-group label { display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; }
-        .input-toggle { display: flex; background-color: var(--bg-dark); border-radius: var(--border-radius); padding: 5px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .toggle-button { flex-grow: 1; padding: 10px; text-align: center; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s; color: var(--text-muted); }
-        .toggle-button.active { background-color: var(--accent); color: #ffffff; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); }
-        .input-area, .output-area { width: 100%; min-height: 200px; padding: 15px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 0.85rem; resize: vertical; font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; }
-        .input-area:focus, .output-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.2); }
-        #file-input-container { display: none; }
-        .custom-file-input { display: block; width: 100%; padding: 40px; background-color: var(--bg-dark); border: 2px dashed var(--border-color); border-radius: var(--border-radius); text-align: center; cursor: pointer; transition: all 0.3s; }
-        .custom-file-input:hover { background-color: #162032; border-color: var(--accent); }
-        #file-status { font-size: 0.9em; color: var(--text-muted); margin-top: 10px; text-align: center; }
-        .text-input { width: 100%; padding: 12px; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--border-radius); color: var(--text-light); font-size: 1em; }
-        .text-input:focus { outline: none; border-color: var(--accent); }
-        .submit-btn { padding: 15px; border: none; border-radius: var(--border-radius); background-image: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); color: white; font-size: 1em; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.5px; }
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(244, 63, 94, 0.3); }
-        #output-container { display: none; animation: fadeIn 0.5s ease; }
-        .output-controls { display: flex; gap: 15px; margin-top: 15px; }
-        .output-controls button { width: 100%; background: var(--bg-light); border: 1px solid var(--border-color); background-image: none; }
-        .output-controls button:hover { background: var(--bg-medium); border-color: var(--accent); transform: none; box-shadow: none; }
-        .status-message { text-align: center; margin-top: 10px; font-weight: 500; height: 20px; font-size: 0.9rem; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- GLOBAL & TEXTURE --- */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex; justify-content: center;
+        }
+
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 10;
+        }
+
+        .spotlight {
+            position: fixed; top: -20%; left: 50%;
+            transform: translateX(-50%);
+            width: 100%; max-width: 1000px; height: 600px;
+            background: radial-gradient(ellipse at center, rgba(244, 63, 94, 0.08) 0%, transparent 70%);
+            pointer-events: none; z-index: -1;
+        }
+
+        .container { 
+            width: 100%; max-width: 800px; 
+            padding: 80px 24px 100px 24px; 
+            position: relative; z-index: 1;
+        }
+
+        /* --- HEADER --- */
+        header { text-align: center; margin-bottom: 50px; }
+
+        .status-badge {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--accent); background: var(--accent-glow);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            padding: 4px 12px; border-radius: 20px;
+            display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px;
+        }
+        .status-badge::before {
+            content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        header h1 { 
+            font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; letter-spacing: -0.04em; margin: 0;
+            background: linear-gradient(180deg, #fff 0%, #999 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .glitch-text.active { -webkit-text-fill-color: #fff; text-shadow: 0 0 15px rgba(244, 63, 94, 0.8); }
+
+        header p { color: var(--text-muted); margin-top: 15px; font-weight: 400; max-width: 500px; margin-left: auto; margin-right: auto;}
+
+        /* --- FORM ELEMENTS --- */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px; padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+            transition: border-color 0.3s;
+        }
+        .card:hover { border-color: var(--border-hover); }
+
+        .label-row { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center; }
+        .label-row label { font-size: 0.9rem; font-weight: 600; color: #fff; }
+        .label-row span { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono'; }
+
+        .input-area {
+            width: 100%; height: 180px;
+            background: #050505; border: 1px solid #333; border-radius: 12px;
+            padding: 16px; color: var(--text-main); font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem; resize: vertical; outline: none; transition: 0.2s;
+        }
+        .input-area:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+        .text-input {
+            width: 100%; padding: 14px 16px;
+            background: #050505; border: 1px solid #333; border-radius: 12px;
+            color: var(--text-main); font-family: 'JetBrains Mono'; outline: none; transition: 0.2s;
+        }
+        .text-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+        /* --- TABS & FILE UPLOAD --- */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; background: #050505; padding: 4px; border-radius: 10px; border: 1px solid #222; width: fit-content;}
+        .tab-btn {
+            background: transparent; border: none; color: #666; padding: 8px 16px;
+            border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .tab-btn.active { background: #222; color: #fff; }
+
+        .file-drop-area {
+            border: 2px dashed #333; border-radius: 12px; height: 180px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; background: #050505;
+        }
+        .file-drop-area:hover { border-color: var(--accent); background: rgba(244, 63, 94, 0.02); }
+        .file-drop-area p { color: #666; font-size: 0.9rem; margin-top: 10px; }
+        .file-drop-area strong { color: #fff; }
+
+        /* --- BUTTONS --- */
+        .btn-main {
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+            color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            letter-spacing: 0.5px;
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(244, 63, 94, 0.4); }
+
+        /* --- OUTPUT SECTION --- */
+        #output-card { 
+            display: none; opacity: 0; transform: translateY(20px); 
+            animation: slideUp 0.5s var(--ease-out) forwards;
+        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        .action-row { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-secondary {
+            flex: 1; background: #1a1a1a; border: 1px solid #333; color: #fff;
+            padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s;
+        }
+        .btn-secondary:hover { background: #262626; border-color: var(--accent); }
+
+        .footer {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle); padding: 10px 24px; border-radius: 50px;
+            font-size: 0.8rem; color: #666; display: flex; gap: 15px; align-items: center; z-index: 50;
+        }
+        .footer a { color: #fff; text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
+        .footer a:hover { opacity: 0.7; }
+        
+        .error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 10px; display: none; text-align: center;}
+
     </style>
 </head>
 <body>
-    <form id="encrypt-form" class="card">
-        <div class="card-header">
-            <span>Aggressive Obfuscation</span>
-            <h1>NOVASCRIPT V4</h1>
-        </div>
-        <div class="card-body">
-            <div class="form-group">
-                <label>1. Source Input</label>
-                <div class="input-toggle">
-                    <div class="toggle-button active" id="toggle-text">Paste Code</div>
-                    <div class="toggle-button" id="toggle-file">Upload File</div>
+    <div class="noise-overlay"></div>
+    <div class="spotlight"></div>
+
+    <div class="container">
+        <header>
+            <div class="status-badge">Phantom Engine V4 Active</div>
+            <h1><span id="logo-text" class="glitch-text">NOVASCRIPT</span></h1>
+            <p>Aggressive Obfuscator with Watermarking & Anti-Tamper Logic.</p>
+        </header>
+
+        <form id="encrypt-form">
+            <div class="card">
+                <div class="label-row">
+                    <label>1. Input Source</label>
+                    <div class="tabs">
+                        <button type="button" class="tab-btn active" id="tab-text">Text</button>
+                        <button type="button" class="tab-btn" id="tab-file">File</button>
+                    </div>
                 </div>
-                <div id="text-input-container">
-                    <textarea id="script-input" class="input-area" placeholder="local a = 10&#10;print('Hello World')"></textarea>
+
+                <div id="container-text">
+                    <textarea id="script-input" class="input-area" placeholder="-- Paste your Lua script here..."></textarea>
                 </div>
-                <div id="file-input-container">
+
+                <div id="container-file" style="display: none;">
                     <input type="file" id="file-input" accept=".lua,.txt" style="display: none;">
-                    <label for="file-input" class="custom-file-input">
-                        <strong>Click to Choose File</strong><br>
-                        <span style="font-size: 0.8em; color: var(--text-muted)">.lua or .txt files supported</span>
-                    </label>
-                    <div id="file-status">No file chosen</div>
+                    <div class="file-drop-area" onclick="document.getElementById('file-input').click()">
+                        <strong>Click to Upload Script</strong>
+                        <p id="file-name">Supported: .lua, .txt</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="key-input">2. Security Key</label>
-                <input type="text" id="key-input" class="text-input" placeholder="Enter a strong password..." required>
+            <div class="card">
+                <div class="label-row">
+                    <label>2. Security Configuration</label>
+                    <span>Encryption Key</span>
+                </div>
+                <input type="text" id="key-input" class="text-input" placeholder="Enter a secure password..." required>
             </div>
 
-            <button type="submit" class="submit-btn" id="encrypt-btn">OBFUSCATE & WATERMARK</button>
-            <div id="status" class="status-message"></div>
+            <button type="submit" class="btn-main" id="encrypt-btn">
+                <span id="btn-text">OBFUSCATE & WATERMARK</span>
+            </button>
+            <div id="status-msg" class="error-msg"></div>
+        </form>
 
-            <div id="output-container" class="form-group">
-                <label for="script-output">3. Obfuscated Result</label>
-                <textarea id="script-output" class="output-area" readonly></textarea>
-                <div class="output-controls">
-                    <button type="button" id="copy-btn" class="submit-btn">Copy to Clipboard</button>
-                    <button type="button" id="download-btn" class="submit-btn">Download .lua</button>
-                </div>
+        <div id="output-card" class="card" style="margin-top: 24px;">
+            <div class="label-row">
+                <label>Obfuscated Result</label>
+                <span style="color: var(--accent);">Ready</span>
+            </div>
+            <textarea id="script-output" class="input-area" readonly style="color: #fca5a5;"></textarea>
+            <div class="action-row">
+                <button type="button" class="btn-secondary" id="copy-btn">Copy Code</button>
+                <button type="button" class="btn-secondary" id="download-btn">Download .lua</button>
             </div>
         </div>
-    </form>
+    </div>
+
+    <footer class="footer">
+        <span>© 2024 nov4</span>
+        <span style="opacity:0.2">|</span>
+        <a href="#">NovaScript Tools</a>
+    </footer>
 
     <script>
-        // --- UI Setup ---
-        const form = document.getElementById('encrypt-form');
+        // --- UI EFFECTS ---
+        const logo = document.getElementById('logo-text');
+        const originalText = "NOVASCRIPT";
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$";
+        
+        const glitchEffect = () => {
+            logo.classList.add('active');
+            let iterations = 0;
+            const interval = setInterval(() => {
+                logo.innerText = logo.innerText.split("").map((letter, index) => {
+                    if(index < iterations) return originalText[index];
+                    return chars[Math.floor(Math.random() * chars.length)];
+                }).join("");
+                
+                if(iterations >= originalText.length) {
+                    clearInterval(interval);
+                    logo.classList.remove('active');
+                }
+                iterations += 1/3;
+            }, 30);
+        };
+        setTimeout(glitchEffect, 1000);
+
+        // --- TABS & FILE HANDLING ---
+        const tabText = document.getElementById('tab-text');
+        const tabFile = document.getElementById('tab-file');
+        const containerText = document.getElementById('container-text');
+        const containerFile = document.getElementById('container-file');
         const fileInput = document.getElementById('file-input');
-        const scriptInput = document.getElementById('script-input');
-        const fileStatus = document.getElementById('file-status');
-        const keyInput = document.getElementById('key-input');
-        const statusDiv = document.getElementById('status');
-        const outputContainer = document.getElementById('output-container');
-        const scriptOutput = document.getElementById('script-output');
-        const copyBtn = document.getElementById('copy-btn');
-        const downloadBtn = document.getElementById('download-btn');
-        const toggleText = document.getElementById('toggle-text');
-        const toggleFile = document.getElementById('toggle-file');
-        const textContainer = document.getElementById('text-input-container');
-        const fileContainer = document.getElementById('file-input-container');
+        const fileNameDisplay = document.getElementById('file-name');
         let inputMode = 'text';
 
-        // --- NOVA SCRIPT ENGINE V4 (FINAL) ---
-        
-        // Helper: Generate confusing variable names (Il1l style)
+        tabText.addEventListener('click', () => {
+            inputMode = 'text';
+            tabText.classList.add('active'); tabFile.classList.remove('active');
+            containerText.style.display = 'block'; containerFile.style.display = 'none';
+        });
+
+        tabFile.addEventListener('click', () => {
+            inputMode = 'file';
+            tabFile.classList.add('active'); tabText.classList.remove('active');
+            containerFile.style.display = 'block'; containerText.style.display = 'none';
+        });
+
+        fileInput.addEventListener('change', () => {
+            if(fileInput.files.length > 0) {
+                fileNameDisplay.innerHTML = `<span style="color:var(--accent)">${fileInput.files[0].name}</span>`;
+            }
+        });
+
+        // --- PHANTOM V4 CORE ENGINE ---
         const genVar = (id) => {
             const chars = ['I', 'l', '1'];
             let res = '';
@@ -125,7 +298,7 @@
         const phantomObfuscate = (source, key) => {
             let cleanSource = source.trim(); 
             
-            // 2. Variable Map
+            // Variable Mapping
             const V = {
                 load: genVar(1), byte: genVar(2), char: genVar(3),
                 table: genVar(4), key: genVar(5), res: genVar(7),
@@ -135,7 +308,7 @@
                 junk1: genVar(99), junk2: genVar(100), junkStr: genVar(101)
             };
 
-            // 3. Encryption Logic
+            // Encryption Logic
             let encryptedBytes = [];
             let keyBytes = strToByte(key);
             let keyLen = keyBytes.length;
@@ -151,12 +324,10 @@
                 encryptedBytes.push(enc);
             }
 
-            // 4. Junk Code
+            // Junk Code
             const junkCode = `local ${V.junk1}={};local ${V.junk2}=function()return"${V.junkStr}"end;`;
 
-            // 5. Minified Lua Template (Comments Removed, Watermarks Added)
-            // Note: I'm using string concatenation to keep the JS readable, but the output Lua will be minified.
-            
+            // Minified Lua Template
             const luaTemplate = `local ${V.wm1}="NovascatiaOBF";local ${V.wm2}="WhYaReYoUtRYnnADeoBfuSCatEE";` +
             `local ${V.env}=_G or getfenv();` +
             `local ${V.byte}=string.byte;local ${V.char}=string.char;` +
@@ -173,82 +344,84 @@
             return luaTemplate;
         };
 
-        // --- Event Listeners ---
-        toggleText.addEventListener('click', () => {
-            inputMode = 'text';
-            textContainer.style.display = 'block';
-            fileContainer.style.display = 'none';
-            toggleText.classList.add('active');
-            toggleFile.classList.remove('active');
-        });
-        
-        toggleFile.addEventListener('click', () => {
-            inputMode = 'file';
-            textContainer.style.display = 'none';
-            fileContainer.style.display = 'block';
-            toggleFile.classList.add('active');
-            toggleText.classList.remove('active');
-        });
+        // --- SUBMIT HANDLER ---
+        const form = document.getElementById('encrypt-form');
+        const keyInput = document.getElementById('key-input');
+        const scriptInput = document.getElementById('script-input');
+        const outputCard = document.getElementById('output-card');
+        const scriptOutput = document.getElementById('script-output');
+        const statusMsg = document.getElementById('status-msg');
+        const downloadBtn = document.getElementById('download-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnMain = document.getElementById('encrypt-btn');
 
-        fileInput.addEventListener("change", () => {
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileStatus.textContent = file.name;
-                fileStatus.style.color = 'var(--text-light)';
-            }
-        });
-
-        form.addEventListener("submit", (event) => {
-            event.preventDefault();
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
             const key = keyInput.value;
-            if (!key) return showStatus("Encryption key required!", true);
+            statusMsg.style.display = 'none';
+
+            const processResult = (content, filename) => {
+                try {
+                    // Visual Loading
+                    btnText.textContent = "ENCRYPTING...";
+                    btnMain.style.opacity = "0.7";
+
+                    setTimeout(() => {
+                        const result = phantomObfuscate(content, key);
+                        scriptOutput.value = result;
+                        outputCard.style.display = 'block';
+                        downloadBtn.setAttribute('data-filename', filename);
+                        
+                        btnText.textContent = "DONE";
+                        setTimeout(() => { 
+                            btnText.textContent = "OBFUSCATE & WATERMARK"; 
+                            btnMain.style.opacity = "1";
+                        }, 2000);
+
+                    }, 600); // Artificial delay
+                } catch (err) {
+                    statusMsg.textContent = "Error: " + err.message;
+                    statusMsg.style.display = 'block';
+                }
+            };
 
             if (inputMode === 'text') {
-                const scriptContent = scriptInput.value;
-                if (!scriptContent.trim()) return showStatus("No script provided!", true);
-                process(scriptContent, key, "encrypted.lua");
+                if (!scriptInput.value.trim()) {
+                    statusMsg.textContent = "Please paste a script first.";
+                    statusMsg.style.display = 'block';
+                    return;
+                }
+                processResult(scriptInput.value, "encrypted.lua");
             } else {
-                const file = fileInput.files[0];
-                if (!file) return showStatus("No file selected!", true);
+                if (!fileInput.files[0]) {
+                    statusMsg.textContent = "Please select a file first.";
+                    statusMsg.style.display = 'block';
+                    return;
+                }
                 const reader = new FileReader();
-                reader.readAsText(file);
-                reader.onload = () => process(reader.result, key, "encrypted_" + file.name);
+                reader.readAsText(fileInput.files[0]);
+                reader.onload = () => processResult(reader.result, "encrypted_" + fileInput.files[0].name);
             }
         });
 
-        const process = (content, key, filename) => {
-            try {
-                const result = phantomObfuscate(content, key);
-                scriptOutput.value = result;
-                outputContainer.style.display = 'block';
-                downloadBtn.setAttribute('data-filename', filename);
-                showStatus("Script obfuscated successfully.", false);
-            } catch (e) {
-                showStatus("Error: " + e.message, true);
-            }
-        };
-        
-        const showStatus = (msg, err) => {
-            statusDiv.textContent = msg;
-            statusDiv.style.color = err ? '#ef4444' : '#10b981';
-        };
-
-        copyBtn.addEventListener('click', () => {
+        // --- OUTPUT ACTIONS ---
+        document.getElementById('copy-btn').addEventListener('click', function() {
             scriptOutput.select();
             document.execCommand('copy');
-            showStatus("Copied to clipboard!", false);
+            this.innerText = "Copied!";
+            setTimeout(() => { this.innerText = "Copy Code"; }, 1500);
         });
 
-        downloadBtn.addEventListener('click', () => {
-            const blob = new Blob([scriptOutput.value], { type: "text/plain;charset=utf-8" });
-            const href = URL.createObjectURL(blob);
+        downloadBtn.addEventListener('click', function() {
+            const blob = new Blob([scriptOutput.value], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = href;
-            a.download = downloadBtn.getAttribute('data-filename');
-            document.body.appendChild(a);
+            a.href = url;
+            a.download = this.getAttribute('data-filename');
             a.click();
-            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
+
     </script>
 </body>
 </html>
