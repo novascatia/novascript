@@ -93,13 +93,13 @@ exports.handler = async function(event, context) {
             <p>
                 This script source is encrypted and cannot be viewed in a web browser.
                 <br><br>
-                Please execute this content directly via 
+                Execute this script via :
                 <span class="lua-tag">Lua Environment</span>
             </p>
         </div>
 
         <div class="footer">
-            © 2024 nov4 | <a href="https://discord.gg/86F7hMVRxp">Discord Community</a>
+            © 2025 nov4 | <a href="https://discord.gg/86F7hMVRxp">Discord Community</a>
         </div>
     </div>
 </body>
