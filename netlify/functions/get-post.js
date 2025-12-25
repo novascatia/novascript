@@ -91,7 +91,7 @@ exports.handler = async function(event, context) {
             <div style="font-size: 3rem; margin-bottom: 15px;">🔒</div>
             <h2 style="margin: 0 0 10px 0; font-size: 1.2rem; color: #fff;">Content Protected</h2>
             <p>
-                This script source is encrypted and cannot be viewed in a web browser.
+                This script source is encrypted and cannot be viewed.
                 <br><br>
                 Execute this script via :
                 <span class="lua-tag">Lua Environment</span>
@@ -99,7 +99,7 @@ exports.handler = async function(event, context) {
         </div>
 
         <div class="footer">
-            © 2025 nov4 | <a href="https://discord.gg/86F7hMVRxp">Discord Community</a>
+            © 2025 nov4 | <a href="https://discord.gg/B6F7hMVRxp">Join Discord Server</a>
         </div>
     </div>
 </body>
