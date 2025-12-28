@@ -28,7 +28,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Noise Overlay for Texture (Efek Mahal) */
+        /* Noise Overlay */
         .noise-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
@@ -36,7 +36,7 @@
             z-index: 10;
         }
 
-        /* Spotlight Gradient at Top */
+        /* Spotlight Gradient */
         .spotlight {
             position: fixed; top: -20%; left: 50%;
             transform: translateX(-50%);
@@ -120,7 +120,6 @@
             display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        /* Animation class added by JS */
         .script-item.visible {
             opacity: 1;
             transform: translateY(0);
@@ -167,11 +166,11 @@
         }
         @keyframes shimmy { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-        /* --- MODAL --- */
+        /* --- CODE MODAL --- */
         .code-modal-overlay { 
             position: fixed; inset: 0; 
             background: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(12px); /* High end blur */
+            backdrop-filter: blur(12px); 
             display: none; justify-content: center; align-items: center; 
             z-index: 100; opacity: 0; transition: opacity 0.3s;
         }
@@ -200,13 +199,10 @@
 
         .code-modal-body { 
             padding: 0; overflow-y: auto; background: #080808; 
-            /* Custom Scrollbar Inside */
             scrollbar-width: thin; scrollbar-color: #333 transparent;
         }
         
-        .code-block-wrapper {
-            padding: 24px;
-        }
+        .code-block-wrapper { padding: 24px; }
 
         .code-modal-body code { 
             font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #ccc; line-height: 1.7;
@@ -226,6 +222,58 @@
         }
         .copy-btn:hover { background: #eee; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.2); }
         .copy-btn:active { transform: translateY(1px); }
+
+        /* --- PROMO MODAL (POPUP STORE) --- */
+        .promo-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 200; /* Higher than regular modal */
+            display: none; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        .promo-overlay.active { opacity: 1; }
+
+        .promo-card {
+            background: linear-gradient(145deg, #111, #0a0a0a);
+            border: 1px solid var(--border-subtle);
+            width: 90%; max-width: 400px;
+            padding: 30px; border-radius: 24px;
+            text-align: center;
+            position: relative;
+            transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.7);
+        }
+        .promo-overlay.active .promo-card { transform: scale(1); }
+
+        .promo-title {
+            font-size: 1.5rem; color: #fff; margin: 0 0 10px 0;
+            background: linear-gradient(90deg, #fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .promo-desc { color: #888; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; }
+
+        .btn-store {
+            display: inline-block; width: 100%; box-sizing: border-box;
+            background: #fff; color: #000; text-decoration: none;
+            padding: 12px; border-radius: 12px; font-weight: 600;
+            margin-bottom: 20px; transition: 0.2s;
+            box-shadow: 0 5px 15px rgba(255,255,255,0.15);
+        }
+        .btn-store:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,255,255,0.25); background: #f0f0f0; }
+
+        .dont-show-wrap {
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            font-size: 0.8rem; color: #666; cursor: pointer;
+            user-select: none;
+        }
+        .dont-show-wrap:hover { color: #999; }
+        
+        .promo-close-abs {
+            position: absolute; top: 15px; right: 20px;
+            background: none; border: none; color: #444; font-size: 1.5rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .promo-close-abs:hover { color: #fff; }
 
         /* --- FOOTER --- */
         .footer { 
@@ -282,6 +330,24 @@
             </div>
         </div>
     </div>
+
+    <div id="promo-popup" class="promo-overlay">
+        <div class="promo-card">
+            <button id="close-promo-btn" class="promo-close-abs">&times;</button>
+            
+            <h2 class="promo-title">✨ Premium Store Open</h2>
+            <p class="promo-desc">
+                Looking for exclusive scripts? Visit our new store to get premium automation tools.
+            </p>
+            
+            <a href="store.html" class="btn-store">Visit Store →</a>
+
+            <div class="dont-show-wrap">
+                <input type="checkbox" id="dont-show-check" style="accent-color: #fff; cursor: pointer;">
+                <label for="dont-show-check" style="cursor: pointer;">Do not show this again</label>
+            </div>
+        </div>
+    </div>
     
     <footer class="footer">
         <span>© 2025 nov4</span>
@@ -333,10 +399,17 @@
             const modalLoaderCode = document.getElementById('modal-loader-code');
             const modalCloseBtn = document.getElementById('modal-close-btn');
             const modalCopyBtn = document.getElementById('modal-copy-btn');
+            
+            // Promo Popup Elements
+            const promoPopup = document.getElementById('promo-popup');
+            const promoCloseBtn = document.getElementById('close-promo-btn');
+            const dontShowCheck = document.getElementById('dont-show-check');
+            const promoKey = 'nova_hide_store_popup_v1';
+
             let scriptsData = [];
 
             try {
-                // Fetch
+                // Fetch Scripts
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
                 
@@ -362,10 +435,10 @@
                         
                         scriptListContainer.appendChild(item);
                         
-                        // Staggered Animation Entry
+                        // Staggered Animation
                         setTimeout(() => {
                             item.classList.add('visible');
-                        }, index * 100); // Delay tiap item 100ms
+                        }, index * 100);
                     });
                 } else {
                     scriptListContainer.innerHTML = '<p style="text-align:center; color:#555;">Library empty.</p>';
@@ -374,7 +447,7 @@
                 scriptListContainer.innerHTML = `<p style="color:#ff5555; text-align:center;">Failed to connect.</p>`;
             }
 
-            // UI Interactions
+            // Script UI Interactions
             scriptListContainer.addEventListener('click', (e) => {
                 const scriptItem = e.target.closest('.script-item');
                 if (scriptItem) {
@@ -406,6 +479,33 @@
                         modalCopyBtn.style.background = '#fff'; 
                     }, 2000);
                 });
+            });
+
+            // --- PROMO POPUP LOGIC ---
+            // Cek localStorage
+            const isHidden = localStorage.getItem(promoKey);
+
+            if (!isHidden) {
+                setTimeout(() => {
+                    promoPopup.style.display = 'flex';
+                    void promoPopup.offsetWidth; 
+                    promoPopup.classList.add('active');
+                }, 1500); // 1.5s delay
+            }
+
+            function closePromo() {
+                if (dontShowCheck.checked) {
+                    localStorage.setItem(promoKey, 'true');
+                }
+                promoPopup.classList.remove('active');
+                setTimeout(() => {
+                    promoPopup.style.display = 'none';
+                }, 400);
+            }
+
+            promoCloseBtn.addEventListener('click', closePromo);
+            promoPopup.addEventListener('click', (e) => {
+                if (e.target === promoPopup) closePromo();
             });
         });
     </script>
