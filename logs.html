@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novascript Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #050505;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-main: #ededed;
+            --text-muted: #888888;
+            --accent-blue: #3b82f6;
+            --accent-green: #4ade80;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Noise & Spotlight */
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 10;
+        }
+
+        .container { 
+            max-width: 500px; width: 100%; padding: 24px; position: relative; z-index: 1; text-align: center;
+        }
+
+        header h1 { 
+            font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; margin: 0; 
+            background: linear-gradient(180deg, #fff 0%, #444 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .cta-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            padding: 40px 30px; border-radius: 24px;
+            backdrop-filter: blur(10px); margin: 20px 0;
+        }
+
+        .discord-btn {
+            display: inline-block; background: #fff; color: #000;
+            text-decoration: none; padding: 14px 28px; border-radius: 12px;
+            font-weight: 700; transition: 0.3s ease;
+        }
+
+        .discord-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+
+        /* TERMINAL STYLE FEED */
+        .terminal-window {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: left;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .terminal-header {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            display: flex; gap: 6px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green { background: #27c93f; }
+
+        .terminal-body {
+            padding: 15px;
+            height: 100px;
+            font-size: 0.75rem;
+            color: #aaa;
+            line-height: 1.5;
+            display: flex; flex-direction: column-reverse;
+            overflow: hidden;
+        }
+
+        .log-entry { animation: fadeIn 0.3s ease forwards; margin-bottom: 4px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+
+        .footer { 
+            position: fixed; bottom: 20px; font-size: 0.75rem; color: #444; 
+            width: 100%; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+
+    <div class="container">
+        <header>
+            <h1>NovaStore</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Elevating your gameplay with premium scripts.</p>
+        </header>
+
+        <div class="cta-card">
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Katalog lengkap dan pembelian hanya dilayani melalui server Discord kami.</p>
+            <a href="https://discord.gg/eFMMZDgww8" target="_blank" class="discord-btn">Open Discord Ticket ➔</a>
+        </div>
+
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+                <span style="font-size: 0.6rem; color: #444; margin-left: 4px; text-transform: uppercase;">live_updates.log</span>
+            </div>
+            <div class="terminal-body" id="terminal-body">
+                </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2025 NOVASCRIPT STORE — SECURE & UNDETECTED
+    </div>
+
+    <script>
+        const terminalBody = document.getElementById('terminal-body');
+        
+        const messages = [
+            "Syncing database with main branch...",
+            "[PROXY GTFY] : Updated to V 4.0",
+            "[PROXY GTFY] : Now support GrowLauncher",
+            "[PROXY GTFY] : Name Editing on GL is not supported",
+            "[SPLICE GrowPai] : Fix script bug when Recycle Event is Active",
+            "[SPLICE GrowPai] : Optimization",
+            "[CARNIVAL GrowPai] : Card Game removed since its too obvious",
+            "[GrowLauncher] Now supports Fetching!",
+            "[Server-Side] Updated /encrypt screen",
+            "[Server-Side] Obfuscator Updated.."
+        ];
+
+        function addLog() {
+            const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const msg = messages[Math.floor(Math.random() * messages.length)];
+            
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<span style="color: var(--accent-blue)">[${time}]</span> <span style="color: var(--accent-green)">$</span> ${msg}`;
+            
+            terminalBody.prepend(div);
+
+            // Batasi jumlah log yang tampil agar tidak berat
+            if (terminalBody.children.length > 5) {
+                terminalBody.removeChild(terminalBody.lastChild);
+            }
+        }
+
+        // Jalankan awal
+        addLog();
+        // Update setiap 3-6 detik secara acak agar terlihat alami
+        function loop() {
+            const rand = Math.floor(Math.random() * (6000 - 3000 + 1) + 3000);
+            setTimeout(() => {
+                addLog();
+                loop();
+            }, rand);
+        }
+        loop();
+    </script>
+</body>
+</html>
