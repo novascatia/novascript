@@ -3,121 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novascript</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <title>Novascript Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
+            background-color: #030303;
             color: #fff;
-            font-family: 'Inter', sans-serif;
+            margin: 0;
             height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
             overflow: hidden;
         }
 
-        /* Latar belakang grain/bintik halus agar tidak polos */
-        body::before {
-            content: "";
-            position: absolute;
+        /* Background Animasi Garis Bergerak */
+        .bg-lines {
+            position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E");
-            pointer-events: none;
-            opacity: 0.4;
+            background: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
         }
 
-        .main-content {
+        .card {
             position: relative;
-            z-index: 2;
+            z-index: 10;
+            width: 350px;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
             text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            transition: transform 0.3s ease;
         }
 
-        h1 {
-            font-size: clamp(4rem, 15vw, 8rem);
+        .card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-area {
+            font-size: 0.7rem;
+            letter-spacing: 0.4em;
+            color: #555;
+            margin-bottom: 20px;
+            font-family: 'JetBrains Mono';
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #111, #333);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h2 {
             margin: 0;
-            font-weight: 900;
-            letter-spacing: -0.05em;
-            transition: all 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
-            cursor: default;
-            user-select: none;
-            color: transparent;
-            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -1px;
         }
 
-        h1:hover {
-            color: #fff;
-            -webkit-text-stroke: 1px #fff;
-            filter: drop-shadow(0 0 30px rgba(255,255,255,0.4));
-            transform: scale(1.05);
+        .tagline {
+            font-size: 0.85rem;
+            color: #888;
+            margin: 10px 0 30px;
         }
 
-        .sub-text {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            color: #444;
-            margin-top: 20px;
-            letter-spacing: 0.5em;
-            text-transform: uppercase;
-        }
-
-        .discord-link {
-            margin-top: 60px;
-            display: inline-block;
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.9rem;
-            border: 1px solid #222;
-            padding: 15px 40px;
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 14px;
             border-radius: 100px;
-            transition: 0.3s;
-            background: transparent;
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono';
+            color: #4ade80;
+            margin-bottom: 30px;
         }
 
-        .discord-link:hover {
+        .status-dot {
+            width: 6px; height: 6px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #4ade80;
+        }
+
+        .launch-btn {
+            display: block;
             background: #fff;
             color: #000;
-            border-color: #fff;
-            transform: translateY(-5px);
+            text-decoration: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Lingkaran cahaya yang mengikuti kursor */
-        #cursor-glow {
-            position: fixed;
-            top: 0; left: 0;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            z-index: 1;
+        .launch-btn:hover {
+            letter-spacing: 2px;
+            background: #4ade80;
+            color: #000;
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            font-size: 0.65rem;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
-    <div id="cursor-glow"></div>
+    <div class="bg-lines"></div>
 
-    <div class="main-content">
-        <div class="sub-text">Private Store</div>
-        <h1>NOVA</h1>
+    <div class="card">
+        <div class="logo-area">SYSTEM.ACCESS</div>
         
-        <p style="color: #666; font-size: 0.9rem; margin-top: 20px; font-family: 'JetBrains Mono'">
-            Products moved to encrypted channel.
-        </p>
+        <div class="avatar">N</div>
+        
+        <h2>NovaScript</h2>
+        <div class="tagline">Premium script repository. Access restricted to Discord members only.</div>
 
-        <a href="https://discord.gg/eFMMZDgww8" target="_blank" class="discord-link">
-            ENTER DISCORD ➔
+        <div class="status-pill">
+            <div class="status-dot"></div> SERVER ONLINE
+        </div>
+
+        <a href="https://discord.gg/eFMMZDgww8" target="_blank" class="launch-btn">
+            LAUNCH DISCORD
         </a>
+
+        <div class="footer-note">Secure • Undetected • 2025</div>
     </div>
 
     <script>
-        const glow = document.getElementById('cursor-glow');
+        // Efek miring kartu mengikuti mouse
+        const card = document.querySelector('.card');
         document.addEventListener('mousemove', (e) => {
-            glow.style.left = e.clientX + 'px';
-            glow.style.top = e.clientY + 'px';
+            let xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            let yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
         });
     </script>
 </body>
