@@ -3,100 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RamaJoki | Solusi Tugas Kilat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>RamaJoki | Tugas Beres, Nilai Sukses</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #050505;
-            --bg-card: rgba(255, 255, 255, 0.03);
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(59, 130, 246, 0.3); /* Ubah jadi kebiruan agar beda dikit */
-            --text-main: #ededed;
-            --text-muted: #888888;
-            --primary-glow: rgba(59, 130, 246, 0.15);
-            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-            --accent-color: #3b82f6; /* Warna Biru Aksen */
+            /* Palette Warna Pop */
+            --bg-body: #fdfbf7; /* Krem Putih */
+            --text-main: #18181b; /* Hitam Pekat */
+            --primary: #5b21b6; /* Ungu Tua */
+            --accent: #facc15; /* Kuning Cerah */
+            --card-bg: #ffffff;
+            --border-color: #000000;
+            --shadow-hard: 4px 4px 0px 0px #000000;
+            --shadow-hover: 6px 6px 0px 0px #000000;
         }
 
-        /* --- GLOBAL & TEXTURE --- */
+        /* --- GLOBAL --- */
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Outfit', sans-serif; 
             background-color: var(--bg-body); 
+            background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
+            background-size: 20px 20px; /* Pola Titik-titik */
             color: var(--text-main); 
             margin: 0; padding: 0;
             min-height: 100vh;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Noise Overlay (Efek Bintik-bintik) */
-        .noise-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* Spotlight Gradient */
-        .spotlight {
-            position: fixed; top: -20%; left: 50%;
-            transform: translateX(-50%);
-            width: 100%; max-width: 1000px; height: 600px;
-            background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: -1;
         }
 
         .container { 
             max-width: 1000px; 
             margin: 0 auto; 
             padding: 80px 24px 140px 24px; 
-            position: relative;
-            z-index: 1;
         }
 
         /* --- HEADER --- */
         header { 
             text-align: center; 
-            margin-bottom: 80px; 
+            margin-bottom: 70px; 
             display: flex; flex-direction: column; align-items: center;
         }
 
-        .status-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: #4ade80; /* Hijau */
-            background: rgba(74, 222, 128, 0.1);
-            border: 1px solid rgba(74, 222, 128, 0.2);
-            padding: 6px 16px;
-            border-radius: 20px;
-            margin-bottom: 25px;
-            display: inline-flex; align-items: center; gap: 8px;
-            letter-spacing: 0.5px;
+        .badge-pill {
+            background-color: var(--accent);
+            color: #000;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 8px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            box-shadow: var(--shadow-hard);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transform: rotate(-2deg); /* Miring sedikit biar fun */
+            transition: 0.3s;
         }
-        .status-badge::before {
-            content: ''; width: 8px; height: 8px; background: #4ade80; border-radius: 50%;
-            box-shadow: 0 0 8px #4ade80;
-        }
+        .badge-pill:hover { transform: rotate(0deg) scale(1.05); }
 
         header h1 { 
-            font-size: clamp(3rem, 6vw, 4.5rem); 
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(3.5rem, 8vw, 5rem); 
             font-weight: 800; 
-            letter-spacing: -0.04em; 
             margin: 0; 
-            background: linear-gradient(180deg, #fff 0%, #888 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-main);
             line-height: 1;
+            /* Text Stroke Effect */
+            -webkit-text-stroke: 1px #000;
+            text-shadow: 4px 4px 0px var(--accent);
         }
 
-        #rama-logo.glitching { -webkit-text-fill-color: #fff; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-
         header p { 
-            font-size: 1.1rem; 
-            color: var(--text-muted); 
-            margin-top: 20px; 
-            font-weight: 400;
+            font-size: 1.2rem; 
+            color: #4b5563; 
+            margin-top: 25px; 
+            font-weight: 500;
             max-width: 600px;
             line-height: 1.6;
         }
@@ -105,160 +86,174 @@
         .service-list { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
-            gap: 24px; 
+            gap: 30px; 
         }
 
         .service-item { 
-            background-color: var(--bg-card); 
-            backdrop-filter: blur(10px);
-            padding: 32px; 
+            background-color: var(--card-bg); 
+            padding: 30px; 
+            border: 3px solid var(--border-color);
             border-radius: 16px; 
-            border: 1px solid var(--border-subtle); 
             cursor: pointer; 
-            transition: all 0.4s var(--ease-out);
+            box-shadow: var(--shadow-hard);
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
-            opacity: 0; /* Hidden for animation */
-            transform: translateY(20px);
             display: flex; flex-direction: column; justify-content: space-between;
+            overflow: hidden;
         }
 
-        .service-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+        /* Efek Hover Card */
         .service-item:hover { 
-            transform: translateY(-5px) scale(1.01); 
-            background-color: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-hover);
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+            transform: translate(-2px, -2px); 
+            box-shadow: var(--shadow-hover);
+        }
+        .service-item:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px 0px #000;
         }
 
-        .service-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--accent-color);
-            margin-bottom: 10px;
-            display: block;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        /* Dekorasi Warna di Atas Card */
+        .service-item::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: var(--text-main);
+        }
+        .service-item:nth-child(1)::before { background: #ef4444; } /* Merah */
+        .service-item:nth-child(2)::before { background: #3b82f6; } /* Biru */
+        .service-item:nth-child(3)::before { background: #10b981; } /* Hijau */
+        .service-item:nth-child(4)::before { background: #f59e0b; } /* Orange */
+        .service-item:nth-child(5)::before { background: #8b5cf6; } /* Ungu */
+        .service-item:nth-child(6)::before { background: #ec4899; } /* Pink */
+
+        .service-category {
+            font-weight: 800; font-size: 0.8rem; text-transform: uppercase;
+            color: #6b7280; letter-spacing: 1px; margin-bottom: 10px;
         }
 
         .service-item h2 { 
-            font-size: 1.4rem; font-weight: 700; margin: 0 0 12px 0; color: #fff; letter-spacing: -0.02em;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.6rem; font-weight: 700; margin: 0 0 10px 0; 
+            color: #000;
         }
 
         .service-item p { 
-            font-size: 0.95rem; color: #999; margin: 0 0 24px 0; line-height: 1.6;
+            font-size: 1rem; color: #374151; margin: 0 0 25px 0; line-height: 1.5;
             flex-grow: 1;
         }
 
         .card-footer {
-            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;
+            display: flex; justify-content: space-between; align-items: center; 
+            border-top: 2px dashed #e5e7eb; padding-top: 15px;
         }
 
-        .price-tag { 
-            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.9rem; color: #fff; 
+        .price-badge { 
+            background: #000; color: #fff; padding: 4px 10px; 
+            border-radius: 6px; font-weight: 700; font-size: 0.9rem;
         }
 
-        .action-text {
-            font-size: 0.85rem; font-weight: 600; color: var(--accent-color); opacity: 0.8; transition: all 0.3s;
+        .action-arrow {
+            width: 35px; height: 35px; background: var(--accent);
+            border: 2px solid #000; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 800; font-size: 1.2rem;
+            transition: 0.3s;
         }
-        .service-item:hover .action-text { opacity: 1; transform: translateX(5px); }
+        .service-item:hover .action-arrow { background: #000; color: var(--accent); transform: rotate(-45deg); }
 
         /* --- MODAL --- */
         .modal-overlay { 
             position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(12px); 
+            background: rgba(0, 0, 0, 0.4); /* Backdrop lebih terang */
+            backdrop-filter: blur(5px);
             display: none; justify-content: center; align-items: center; 
             z-index: 100; opacity: 0; transition: opacity 0.3s;
         }
         .modal-overlay.active { opacity: 1; }
 
         .modal-content { 
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 20px; 
+            background: #fff;
+            border: 3px solid #000;
+            border-radius: 16px; 
+            box-shadow: 8px 8px 0px 0px #000; /* Shadow Brutal */
             width: 90%; max-width: 500px; 
             display: flex; flex-direction: column; 
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 50px 100px -20px rgba(0,0,0,0.8);
-            transform: scale(0.95) translateY(10px);
-            transition: all 0.4s var(--ease-out);
+            transform: scale(0.9) rotate(-2deg); /* Efek miring saat muncul */
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-overlay.active .modal-content { transform: scale(1) rotate(0deg); }
 
         .modal-header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 24px; border-bottom: 1px solid #1a1a1a;
+            padding: 20px 24px; border-bottom: 3px solid #000;
+            background: var(--accent); /* Header kuning */
+            border-radius: 13px 13px 0 0;
         }
-        .modal-header h3 { margin: 0; color: #fff; font-weight: 600; font-size: 1.2rem; }
+        .modal-header h3 { margin: 0; color: #000; font-family: 'Space Grotesk'; font-weight: 700; font-size: 1.4rem; }
 
-        .close-btn { color: #555; background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
-        .close-btn:hover { color: #fff; }
+        .close-btn { 
+            background: #000; color: #fff; border: none; 
+            width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; 
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: 0.2s;
+        }
+        .close-btn:hover { background: #fff; color: #000; border: 2px solid #000; }
 
         .modal-body { 
-            padding: 24px; 
-            color: #ccc; 
-            font-size: 0.95rem; 
-            line-height: 1.6;
+            padding: 30px 24px; 
+            color: #333; font-size: 1rem; line-height: 1.6;
         }
         
-        .modal-detail-list {
-            list-style: none; padding: 0; margin: 20px 0;
+        .feature-list { list-style: none; padding: 0; margin-top: 20px; }
+        .feature-list li {
+            padding: 10px; margin-bottom: 8px;
+            background: #f3f4f6; border: 2px solid #e5e7eb; border-radius: 8px;
+            font-weight: 600; display: flex; align-items: center; gap: 10px;
         }
-        .modal-detail-list li {
-            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;
-        }
-        .modal-detail-list li::before {
-            content: '✓'; color: var(--accent-color);
-        }
+        .feature-list li::before { content: '★'; color: #000; }
 
         .modal-footer { 
-            padding: 20px 24px; border-top: 1px solid #1a1a1a; background: #0a0a0a; 
-            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            padding: 20px 24px; border-top: 3px solid #000; background: #fff; 
+            border-radius: 0 0 13px 13px;
         }
 
         .btn-wa { 
-            display: flex; justify-content: center; align-items: center; width: 100%;
-            background: #25D366; color: #000; border: none; text-decoration: none;
-            padding: 14px; border-radius: 10px; 
-            font-weight: 700; font-size: 1rem; cursor: pointer; 
+            display: block; width: 100%; text-align: center;
+            background: #25D366; color: #000; text-decoration: none;
+            padding: 16px; border-radius: 12px; 
+            font-family: 'Space Grotesk'; font-weight: 700; font-size: 1.1rem;
+            border: 2px solid #000; box-shadow: 4px 4px 0px 0px #000;
             transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
         }
-        .btn-wa:hover { background: #22c35e; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3); }
+        .btn-wa:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px 0px #000; background: #4ade80; }
+        .btn-wa:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px #000; }
 
         /* --- FOOTER --- */
         .footer { 
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px);
-            border: 1px solid var(--border-subtle);
-            padding: 10px 24px; border-radius: 50px;
-            font-size: 0.8rem; color: #666;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #fff; 
+            border: 2px solid #000;
+            padding: 12px 30px; border-radius: 50px;
+            font-weight: 700; font-size: 0.9rem; color: #000;
             display: flex; gap: 15px; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.2);
             z-index: 50;
         }
-        .footer a { color: #fff; text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
-        .footer a:hover { opacity: 0.7; }
+        .footer a { color: #000; text-decoration: underline; transition: 0.2s; }
+        .footer a:hover { background: var(--accent); text-decoration: none; padding: 0 5px; }
 
         @media (max-width: 600px) {
-            header h1 { font-size: 2.8rem; }
+            header h1 { font-size: 3rem; }
             .container { padding-top: 60px; }
-            .footer { width: 85%; justify-content: center; bottom: 20px; }
+            .footer { width: 85%; justify-content: center; bottom: 15px; font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
-    <div class="noise-overlay"></div>
-    <div class="spotlight"></div>
 
     <div class="container">
         <header>
-            <div class="status-badge">Fast Response & Trusted</div>
-            <h1><span id="rama-logo">RamaJoki</span></h1>
-            <p>Jasa Joki Tugas Sekolah & Kuliah Terpercaya.<br>Coding, Makalah, PPT, Matematika, dan Lainnya.</p>
+            <div class="badge-pill">🚀 Fast Response & Trusted</div>
+            <h1>RamaJoki</h1>
+            <p>Solusi tugas sekolah & kuliah paling sat-set! <br>Coding, Makalah, Desain? Gas langsung jadi!</p>
         </header>
         
         <div id="service-list" class="service-list">
@@ -273,121 +268,80 @@
             </div>
             <div class="modal-body">
                 <p id="modal-desc">Deskripsi layanan akan muncul di sini.</p>
-                <ul class="modal-detail-list">
-                    <li>Pengerjaan Cepat (Fast Track Available)</li>
-                    <li>Privasi Aman 100%</li>
-                    <li>Revisi Gratis (S&K Berlaku)</li>
+                <ul class="feature-list">
+                    <li>⚡ Pengerjaan Kilat (Bisa Deadline Mepet)</li>
+                    <li>🔒 Privasi Aman Terjaga</li>
+                    <li>✅ Revisi Sampai Deal</li>
                 </ul>
             </div>
             <div class="modal-footer">
-                <a href="#" id="modal-wa-btn" target="_blank" class="btn-wa">Chat via WhatsApp ➔</a>
+                <a href="#" id="modal-wa-btn" target="_blank" class="btn-wa">Chat via WhatsApp 💬</a>
             </div>
         </div>
     </div>
     
     <footer class="footer">
         <span>© 2025 RamaJoki</span>
-        <span style="opacity:0.2">|</span>
-        <a href="https://instagram.com/" target="_blank">Testimoni ➔</a>
+        <span>|</span>
+        <a href="https://instagram.com/" target="_blank">Cek Testimoni</a>
     </footer>
 
     <script>
-        // --- Konfigurasi Nomor WhatsApp ---
-        // Ganti dengan nomor WhatsApp kamu (format: kode negara + nomor, contoh: 628123456789)
-        const WA_NUMBER = "628123456789"; 
+        // --- KONFIGURASI NOMOR WA ---
+        const WA_NUMBER = "628123456789"; // Ganti dengan nomor kamu (Format 62...)
 
-        // --- Data Layanan (Edit di sini untuk menambah/mengubah layanan) ---
+        // --- DATA LAYANAN ---
         const servicesData = [
             {
                 title: "Joki Makalah & Essay",
                 category: "Writing",
-                price: "Mulai 25rb",
-                desc: "Pengerjaan makalah, artikel, esai, atau rangkuman materi. Format rapi, sitasi standar (APA/MLA), dan bebas plagiasi (turnitin ready).",
-                msg: "Halo RamaJoki, saya mau pesan joki Makalah/Essay."
+                price: "Start 25K",
+                desc: "Males ngetik? Sini kita bantuin bikin makalah, artikel, atau esai. Format rapih, sitasi aman, anti-plagiat (Turnitin ready!).",
+                msg: "Halo RamaJoki, mau tanya joki Makalah/Essay dong."
             },
             {
-                title: "PowerPoint Interaktif",
-                category: "Design",
-                price: "Mulai 20rb",
-                desc: "Desain presentasi PPT yang menarik, animasi smooth, dan tidak membosankan. Cocok untuk tugas sekolah, kuliah, atau sidang skripsi.",
-                msg: "Halo RamaJoki, saya mau pesan joki PPT."
-            },
-            {
-                title: "Coding & IT",
-                category: "Programming",
-                price: "Diskusi Harga",
-                desc: "Bantu tugas coding HTML, CSS, JS, Python, C++, atau Java. Bisa bantu fix bug atau pembuatan website sederhana.",
-                msg: "Halo RamaJoki, saya mau pesan joki Coding."
-            },
-            {
-                title: "Matematika & Sains",
-                category: "Calculation",
-                price: "Mulai 5rb/Soal",
-                desc: "Pengerjaan soal Matematika, Fisika, atau Kimia lengkap dengan cara/penjelasannya. Tulisan tangan atau ketikan Word.",
-                msg: "Halo RamaJoki, saya mau pesan joki Matematika/Sains."
-            },
-            {
-                title: "Input Data / Ketik",
-                category: "Admin",
-                price: "Mulai 10rb",
-                desc: "Jasa ketik ulang dokumen dari PDF ke Word, input data Excel, atau transkrip audio/video.",
-                msg: "Halo RamaJoki, saya mau pesan joki Ketik/Input Data."
-            },
-            {
-                title: "Edit Foto & Video",
+                title: "PowerPoint Kece",
                 category: "Creative",
-                price: "Mulai 30rb",
-                desc: "Edit video tugas (CapCut/Premiere) atau edit foto poster/feed Instagram. Hasil HD dan revisi sampai cocok.",
-                msg: "Halo RamaJoki, saya mau pesan joki Edit Video/Foto."
+                price: "Start 20K",
+                desc: "Presentasi jangan bikin ngantuk! Kita buatin PPT yang visualnya oke, animasi smooth, siap bikin dosen/guru terpukau.",
+                msg: "Halo RamaJoki, mau tanya joki PPT dong."
+            },
+            {
+                title: "Coding & Website",
+                category: "Programming",
+                price: "Diskusi",
+                desc: "Stuck sama error? Terima joki HTML, CSS, JS, Python, C++. Dari tugas dasar sampai bikin website sederhana.",
+                msg: "Halo RamaJoki, mau tanya joki Coding/Website."
+            },
+            {
+                title: "Tugas Matematika",
+                category: "Science",
+                price: "Start 5K/Soal",
+                desc: "Pusing liat angka? Kirim soal Matematika, Fisika, atau Kimia kamu. Dijawab lengkap pake cara/penjelasan.",
+                msg: "Halo RamaJoki, mau tanya joki Matematika."
+            },
+            {
+                title: "Jasa Ketik / Input",
+                category: "Admin",
+                price: "Start 10K",
+                desc: "Salin tugas dari buku ke Word? Atau input data ke Excel? Gas sini biar kamu bisa rebahan.",
+                msg: "Halo RamaJoki, mau tanya jasa Ketik."
+            },
+            {
+                title: "Edit Video & Foto",
+                category: "Multimedia",
+                price: "Start 30K",
+                desc: "Edit video tugas sekolah (Vlog/Dokumenter) atau desain poster feed IG. Hasil HD, revisi santai.",
+                msg: "Halo RamaJoki, mau tanya jasa Edit Video."
             }
         ];
 
-        // --- Glitch Effect Logic (Efek tulisan acak di logo) ---
-        const logoElement = document.getElementById('rama-logo');
-        const originalText = 'RamaJoki';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@$%&';
-        
-        function startScrambleEffect() {
-            if (!logoElement) return;
-            let tempText = Array(originalText.length).fill(originalText[0]);
-            let scrambleCount = 0;
-            logoElement.classList.add('glitching');
-
-            const scrambleTimer = setInterval(() => {
-                if (scrambleCount < originalText.length) {
-                    tempText[scrambleCount] = characters.charAt(Math.floor(Math.random() * characters.length));
-                    logoElement.textContent = tempText.join('');
-                    scrambleCount++;
-                } else {
-                    clearInterval(scrambleTimer);
-                    let resolveCount = 0;
-                    const resolveTimer = setInterval(() => {
-                        if (resolveCount < originalText.length) {
-                            tempText[resolveCount] = originalText[resolveCount];
-                            logoElement.textContent = tempText.join('');
-                            resolveCount++;
-                        } else {
-                            clearInterval(resolveTimer);
-                            logoElement.classList.remove('glitching');
-                            setTimeout(startScrambleEffect, 8000); // Ulangi setiap 8 detik
-                        }
-                    }, 60); 
-                }
-            }, 50); 
-        }
-        
-        // --- Main Logic ---
+        // --- RENDER LOGIC ---
         window.addEventListener('DOMContentLoaded', () => {
-            startScrambleEffect();
-
             const serviceListContainer = document.getElementById('service-list');
             const infoModal = document.getElementById('info-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalDesc = document.getElementById('modal-desc');
-            const modalWaBtn = document.getElementById('modal-wa-btn');
-            const modalCloseBtn = document.getElementById('modal-close-btn');
-
-            // Render Services
+            
+            // Render Cards
             serviceListContainer.innerHTML = ''; 
             
             servicesData.forEach((service, index) => {
@@ -395,56 +349,46 @@
                 item.className = 'service-item';
                 item.setAttribute('data-index', index);
                 
+                // Animasi delay
+                item.style.animationDelay = `${index * 0.1}s`;
+                
                 item.innerHTML = `
                     <div>
-                        <span class="service-tag">${service.category}</span>
+                        <div class="service-category">${service.category}</div>
                         <h2>${service.title}</h2>
                         <p>${service.desc}</p>
                     </div>
                     <div class="card-footer">
-                        <span class="price-tag">${service.price}</span>
-                        <span class="action-text">Detail & Order →</span>
+                        <span class="price-badge">${service.price}</span>
+                        <div class="action-arrow">➜</div>
                     </div>
                 `;
-                
                 serviceListContainer.appendChild(item);
-                
-                // Animasi muncul satu per satu
-                setTimeout(() => {
-                    item.classList.add('visible');
-                }, index * 100);
             });
 
-            // Klik Service Item
+            // Event Listeners Modal
             serviceListContainer.addEventListener('click', (e) => {
                 const item = e.target.closest('.service-item');
                 if (item) {
-                    const index = item.dataset.index;
-                    const data = servicesData[index];
-
-                    // Set Konten Modal
-                    modalTitle.textContent = data.title;
-                    modalDesc.textContent = data.desc;
+                    const data = servicesData[item.dataset.index];
                     
-                    // Set Link WhatsApp
-                    // Format: https://wa.me/NOMOR?text=PESAN_URL_ENCODED
+                    document.getElementById('modal-title').textContent = data.title;
+                    document.getElementById('modal-desc').textContent = data.desc;
+                    
                     const encodedMsg = encodeURIComponent(data.msg);
-                    modalWaBtn.href = `https://wa.me/${WA_NUMBER}?text=${encodedMsg}`;
+                    document.getElementById('modal-wa-btn').href = `https://wa.me/${WA_NUMBER}?text=${encodedMsg}`;
 
-                    // Tampilkan Modal
                     infoModal.style.display = 'flex';
-                    void infoModal.offsetWidth; // Force reflow
-                    infoModal.classList.add('active');
+                    setTimeout(() => infoModal.classList.add('active'), 10);
                 }
             });
 
-            // Tutup Modal
             const closeModal = () => { 
                 infoModal.classList.remove('active');
                 setTimeout(() => infoModal.style.display = 'none', 300);
             };
             
-            modalCloseBtn.addEventListener('click', closeModal);
+            document.getElementById('modal-close-btn').addEventListener('click', closeModal);
             infoModal.addEventListener('click', (e) => { if (e.target === infoModal) closeModal(); });
         });
     </script>
