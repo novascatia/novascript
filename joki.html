@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RamaJoki | Solusi Tugas Kilat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #050505;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(59, 130, 246, 0.3); /* Ubah jadi kebiruan agar beda dikit */
+            --text-main: #ededed;
+            --text-muted: #888888;
+            --primary-glow: rgba(59, 130, 246, 0.15);
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+            --accent-color: #3b82f6; /* Warna Biru Aksen */
+        }
+
+        /* --- GLOBAL & TEXTURE --- */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Noise Overlay (Efek Bintik-bintik) */
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Spotlight Gradient */
+        .spotlight {
+            position: fixed; top: -20%; left: 50%;
+            transform: translateX(-50%);
+            width: 100%; max-width: 1000px; height: 600px;
+            background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 80px 24px 140px 24px; 
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- HEADER --- */
+        header { 
+            text-align: center; 
+            margin-bottom: 80px; 
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .status-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #4ade80; /* Hijau */
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            display: inline-flex; align-items: center; gap: 8px;
+            letter-spacing: 0.5px;
+        }
+        .status-badge::before {
+            content: ''; width: 8px; height: 8px; background: #4ade80; border-radius: 50%;
+            box-shadow: 0 0 8px #4ade80;
+        }
+
+        header h1 { 
+            font-size: clamp(3rem, 6vw, 4.5rem); 
+            font-weight: 800; 
+            letter-spacing: -0.04em; 
+            margin: 0; 
+            background: linear-gradient(180deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        #rama-logo.glitching { -webkit-text-fill-color: #fff; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+
+        header p { 
+            font-size: 1.1rem; 
+            color: var(--text-muted); 
+            margin-top: 20px; 
+            font-weight: 400;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        /* --- GRID & CARDS --- */
+        .service-list { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 24px; 
+        }
+
+        .service-item { 
+            background-color: var(--bg-card); 
+            backdrop-filter: blur(10px);
+            padding: 32px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border-subtle); 
+            cursor: pointer; 
+            transition: all 0.4s var(--ease-out);
+            position: relative;
+            opacity: 0; /* Hidden for animation */
+            transform: translateY(20px);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .service-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .service-item:hover { 
+            transform: translateY(-5px) scale(1.01); 
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-hover);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+        }
+
+        .service-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .service-item h2 { 
+            font-size: 1.4rem; font-weight: 700; margin: 0 0 12px 0; color: #fff; letter-spacing: -0.02em;
+        }
+
+        .service-item p { 
+            font-size: 0.95rem; color: #999; margin: 0 0 24px 0; line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;
+        }
+
+        .price-tag { 
+            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.9rem; color: #fff; 
+        }
+
+        .action-text {
+            font-size: 0.85rem; font-weight: 600; color: var(--accent-color); opacity: 0.8; transition: all 0.3s;
+        }
+        .service-item:hover .action-text { opacity: 1; transform: translateX(5px); }
+
+        /* --- MODAL --- */
+        .modal-overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(12px); 
+            display: none; justify-content: center; align-items: center; 
+            z-index: 100; opacity: 0; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; }
+
+        .modal-content { 
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 20px; 
+            width: 90%; max-width: 500px; 
+            display: flex; flex-direction: column; 
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 50px 100px -20px rgba(0,0,0,0.8);
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.4s var(--ease-out);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+        .modal-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 24px; border-bottom: 1px solid #1a1a1a;
+        }
+        .modal-header h3 { margin: 0; color: #fff; font-weight: 600; font-size: 1.2rem; }
+
+        .close-btn { color: #555; background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+        .close-btn:hover { color: #fff; }
+
+        .modal-body { 
+            padding: 24px; 
+            color: #ccc; 
+            font-size: 0.95rem; 
+            line-height: 1.6;
+        }
+        
+        .modal-detail-list {
+            list-style: none; padding: 0; margin: 20px 0;
+        }
+        .modal-detail-list li {
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;
+        }
+        .modal-detail-list li::before {
+            content: '✓'; color: var(--accent-color);
+        }
+
+        .modal-footer { 
+            padding: 20px 24px; border-top: 1px solid #1a1a1a; background: #0a0a0a; 
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+        }
+
+        .btn-wa { 
+            display: flex; justify-content: center; align-items: center; width: 100%;
+            background: #25D366; color: #000; border: none; text-decoration: none;
+            padding: 14px; border-radius: 10px; 
+            font-weight: 700; font-size: 1rem; cursor: pointer; 
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+        }
+        .btn-wa:hover { background: #22c35e; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3); }
+
+        /* --- FOOTER --- */
+        .footer { 
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 24px; border-radius: 50px;
+            font-size: 0.8rem; color: #666;
+            display: flex; gap: 15px; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+        .footer a { color: #fff; text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
+        .footer a:hover { opacity: 0.7; }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 2.8rem; }
+            .container { padding-top: 60px; }
+            .footer { width: 85%; justify-content: center; bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="spotlight"></div>
+
+    <div class="container">
+        <header>
+            <div class="status-badge">Fast Response & Trusted</div>
+            <h1><span id="rama-logo">RamaJoki</span></h1>
+            <p>Jasa Joki Tugas Sekolah & Kuliah Terpercaya.<br>Coding, Makalah, PPT, Matematika, dan Lainnya.</p>
+        </header>
+        
+        <div id="service-list" class="service-list">
+            </div>
+    </div>
+
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Judul Layanan</h3>
+                <button id="modal-close-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-desc">Deskripsi layanan akan muncul di sini.</p>
+                <ul class="modal-detail-list">
+                    <li>Pengerjaan Cepat (Fast Track Available)</li>
+                    <li>Privasi Aman 100%</li>
+                    <li>Revisi Gratis (S&K Berlaku)</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="modal-wa-btn" target="_blank" class="btn-wa">Chat via WhatsApp ➔</a>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <span>© 2025 RamaJoki</span>
+        <span style="opacity:0.2">|</span>
+        <a href="https://instagram.com/" target="_blank">Testimoni ➔</a>
+    </footer>
+
+    <script>
+        // --- Konfigurasi Nomor WhatsApp ---
+        // Ganti dengan nomor WhatsApp kamu (format: kode negara + nomor, contoh: 628123456789)
+        const WA_NUMBER = "628123456789"; 
+
+        // --- Data Layanan (Edit di sini untuk menambah/mengubah layanan) ---
+        const servicesData = [
+            {
+                title: "Joki Makalah & Essay",
+                category: "Writing",
+                price: "Mulai 25rb",
+                desc: "Pengerjaan makalah, artikel, esai, atau rangkuman materi. Format rapi, sitasi standar (APA/MLA), dan bebas plagiasi (turnitin ready).",
+                msg: "Halo RamaJoki, saya mau pesan joki Makalah/Essay."
+            },
+            {
+                title: "PowerPoint Interaktif",
+                category: "Design",
+                price: "Mulai 20rb",
+                desc: "Desain presentasi PPT yang menarik, animasi smooth, dan tidak membosankan. Cocok untuk tugas sekolah, kuliah, atau sidang skripsi.",
+                msg: "Halo RamaJoki, saya mau pesan joki PPT."
+            },
+            {
+                title: "Coding & IT",
+                category: "Programming",
+                price: "Diskusi Harga",
+                desc: "Bantu tugas coding HTML, CSS, JS, Python, C++, atau Java. Bisa bantu fix bug atau pembuatan website sederhana.",
+                msg: "Halo RamaJoki, saya mau pesan joki Coding."
+            },
+            {
+                title: "Matematika & Sains",
+                category: "Calculation",
+                price: "Mulai 5rb/Soal",
+                desc: "Pengerjaan soal Matematika, Fisika, atau Kimia lengkap dengan cara/penjelasannya. Tulisan tangan atau ketikan Word.",
+                msg: "Halo RamaJoki, saya mau pesan joki Matematika/Sains."
+            },
+            {
+                title: "Input Data / Ketik",
+                category: "Admin",
+                price: "Mulai 10rb",
+                desc: "Jasa ketik ulang dokumen dari PDF ke Word, input data Excel, atau transkrip audio/video.",
+                msg: "Halo RamaJoki, saya mau pesan joki Ketik/Input Data."
+            },
+            {
+                title: "Edit Foto & Video",
+                category: "Creative",
+                price: "Mulai 30rb",
+                desc: "Edit video tugas (CapCut/Premiere) atau edit foto poster/feed Instagram. Hasil HD dan revisi sampai cocok.",
+                msg: "Halo RamaJoki, saya mau pesan joki Edit Video/Foto."
+            }
+        ];
+
+        // --- Glitch Effect Logic (Efek tulisan acak di logo) ---
+        const logoElement = document.getElementById('rama-logo');
+        const originalText = 'RamaJoki';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@$%&';
+        
+        function startScrambleEffect() {
+            if (!logoElement) return;
+            let tempText = Array(originalText.length).fill(originalText[0]);
+            let scrambleCount = 0;
+            logoElement.classList.add('glitching');
+
+            const scrambleTimer = setInterval(() => {
+                if (scrambleCount < originalText.length) {
+                    tempText[scrambleCount] = characters.charAt(Math.floor(Math.random() * characters.length));
+                    logoElement.textContent = tempText.join('');
+                    scrambleCount++;
+                } else {
+                    clearInterval(scrambleTimer);
+                    let resolveCount = 0;
+                    const resolveTimer = setInterval(() => {
+                        if (resolveCount < originalText.length) {
+                            tempText[resolveCount] = originalText[resolveCount];
+                            logoElement.textContent = tempText.join('');
+                            resolveCount++;
+                        } else {
+                            clearInterval(resolveTimer);
+                            logoElement.classList.remove('glitching');
+                            setTimeout(startScrambleEffect, 8000); // Ulangi setiap 8 detik
+                        }
+                    }, 60); 
+                }
+            }, 50); 
+        }
+        
+        // --- Main Logic ---
+        window.addEventListener('DOMContentLoaded', () => {
+            startScrambleEffect();
+
+            const serviceListContainer = document.getElementById('service-list');
+            const infoModal = document.getElementById('info-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDesc = document.getElementById('modal-desc');
+            const modalWaBtn = document.getElementById('modal-wa-btn');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            // Render Services
+            serviceListContainer.innerHTML = ''; 
+            
+            servicesData.forEach((service, index) => {
+                const item = document.createElement('div');
+                item.className = 'service-item';
+                item.setAttribute('data-index', index);
+                
+                item.innerHTML = `
+                    <div>
+                        <span class="service-tag">${service.category}</span>
+                        <h2>${service.title}</h2>
+                        <p>${service.desc}</p>
+                    </div>
+                    <div class="card-footer">
+                        <span class="price-tag">${service.price}</span>
+                        <span class="action-text">Detail & Order →</span>
+                    </div>
+                `;
+                
+                serviceListContainer.appendChild(item);
+                
+                // Animasi muncul satu per satu
+                setTimeout(() => {
+                    item.classList.add('visible');
+                }, index * 100);
+            });
+
+            // Klik Service Item
+            serviceListContainer.addEventListener('click', (e) => {
+                const item = e.target.closest('.service-item');
+                if (item) {
+                    const index = item.dataset.index;
+                    const data = servicesData[index];
+
+                    // Set Konten Modal
+                    modalTitle.textContent = data.title;
+                    modalDesc.textContent = data.desc;
+                    
+                    // Set Link WhatsApp
+                    // Format: https://wa.me/NOMOR?text=PESAN_URL_ENCODED
+                    const encodedMsg = encodeURIComponent(data.msg);
+                    modalWaBtn.href = `https://wa.me/${WA_NUMBER}?text=${encodedMsg}`;
+
+                    // Tampilkan Modal
+                    infoModal.style.display = 'flex';
+                    void infoModal.offsetWidth; // Force reflow
+                    infoModal.classList.add('active');
+                }
+            });
+
+            // Tutup Modal
+            const closeModal = () => { 
+                infoModal.classList.remove('active');
+                setTimeout(() => infoModal.style.display = 'none', 300);
+            };
+            
+            modalCloseBtn.addEventListener('click', closeModal);
+            infoModal.addEventListener('click', (e) => { if (e.target === infoModal) closeModal(); });
+        });
+    </script>
+</body>
+</html>
