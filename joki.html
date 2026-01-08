@@ -5,17 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RamaJoki | Tugas Beres, Nilai Sukses</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <style>
+  <style>
         :root {
-            /* Palette Warna Pop */
-            --bg-body: #fdfbf7; /* Krem Putih */
-            --text-main: #18181b; /* Hitam Pekat */
-            --primary: #5b21b6; /* Ungu Tua */
-            --accent: #facc15; /* Kuning Cerah */
+            --bg-body: #fdfbf7;
+            --text-main: #18181b;
+            --primary: #5b21b6;
+            --accent: #facc15;
             --card-bg: #ffffff;
             --border-color: #000000;
-            --shadow-hard: 4px 4px 0px 0px #000000;
-            --shadow-hover: 6px 6px 0px 0px #000000;
+            --shadow-hard: 6px 6px 0px 0px #000000; /* Shadow sedikit diperhalus */
+            --shadow-hover: 8px 8px 0px 0px #000000;
         }
 
         /* --- GLOBAL --- */
@@ -23,7 +22,7 @@
             font-family: 'Outfit', sans-serif; 
             background-color: var(--bg-body); 
             background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
-            background-size: 20px 20px; /* Pola Titik-titik */
+            background-size: 20px 20px;
             color: var(--text-main); 
             margin: 0; padding: 0;
             min-height: 100vh;
@@ -56,7 +55,7 @@
             margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transform: rotate(-2deg); /* Miring sedikit biar fun */
+            transform: rotate(-2deg);
             transition: 0.3s;
         }
         .badge-pill:hover { transform: rotate(0deg) scale(1.05); }
@@ -68,7 +67,6 @@
             margin: 0; 
             color: var(--text-main);
             line-height: 1;
-            /* Text Stroke Effect */
             -webkit-text-stroke: 1px #000;
             text-shadow: 4px 4px 0px var(--accent);
         }
@@ -102,7 +100,6 @@
             overflow: hidden;
         }
 
-        /* Efek Hover Card */
         .service-item:hover { 
             transform: translate(-2px, -2px); 
             box-shadow: var(--shadow-hover);
@@ -112,17 +109,16 @@
             box-shadow: 0px 0px 0px 0px #000;
         }
 
-        /* Dekorasi Warna di Atas Card */
         .service-item::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
             background: var(--text-main);
         }
-        .service-item:nth-child(1)::before { background: #ef4444; } /* Merah */
-        .service-item:nth-child(2)::before { background: #3b82f6; } /* Biru */
-        .service-item:nth-child(3)::before { background: #10b981; } /* Hijau */
-        .service-item:nth-child(4)::before { background: #f59e0b; } /* Orange */
-        .service-item:nth-child(5)::before { background: #8b5cf6; } /* Ungu */
-        .service-item:nth-child(6)::before { background: #ec4899; } /* Pink */
+        .service-item:nth-child(1)::before { background: #ef4444; }
+        .service-item:nth-child(2)::before { background: #3b82f6; }
+        .service-item:nth-child(3)::before { background: #10b981; }
+        .service-item:nth-child(4)::before { background: #f59e0b; }
+        .service-item:nth-child(5)::before { background: #8b5cf6; }
+        .service-item:nth-child(6)::before { background: #ec4899; }
 
         .service-category {
             font-weight: 800; font-size: 0.8rem; text-transform: uppercase;
@@ -159,13 +155,19 @@
         }
         .service-item:hover .action-arrow { background: #000; color: var(--accent); transform: rotate(-45deg); }
 
-        /* --- MODAL --- */
+        /* --- MODAL (PERBAIKAN CENTER) --- */
         .modal-overlay { 
             position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.4); /* Backdrop lebih terang */
+            background: rgba(0, 0, 0, 0.5); /* Sedikit lebih gelap biar fokus */
             backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; 
-            z-index: 100; opacity: 0; transition: opacity 0.3s;
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 100; 
+            opacity: 0; transition: opacity 0.3s;
+            /* Trik agar modal visualnya pas di tengah meski ada shadow */
+            padding-right: 6px; 
+            padding-bottom: 6px;
         }
         .modal-overlay.active { opacity: 1; }
 
@@ -173,23 +175,38 @@
             background: #fff;
             border: 3px solid #000;
             border-radius: 16px; 
-            box-shadow: 8px 8px 0px 0px #000; /* Shadow Brutal */
+            box-shadow: 8px 8px 0px 0px #000; 
             width: 90%; max-width: 500px; 
             display: flex; flex-direction: column; 
-            transform: scale(0.9) rotate(-2deg); /* Efek miring saat muncul */
+            transform: scale(0.95);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .modal-overlay.active .modal-content { transform: scale(1) rotate(0deg); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
 
         .modal-header { 
-            display: flex; justify-content: space-between; align-items: center; 
+            display: flex; 
+            justify-content: center; /* JUDUL DI TENGAH */
+            align-items: center; 
+            position: relative; /* Agar tombol close bisa absolute */
             padding: 20px 24px; border-bottom: 3px solid #000;
-            background: var(--accent); /* Header kuning */
+            background: var(--accent);
             border-radius: 13px 13px 0 0;
         }
-        .modal-header h3 { margin: 0; color: #000; font-family: 'Space Grotesk'; font-weight: 700; font-size: 1.4rem; }
+        
+        .modal-header h3 { 
+            margin: 0; 
+            color: #000; 
+            font-family: 'Space Grotesk'; 
+            font-weight: 700; 
+            font-size: 1.4rem; 
+            text-align: center; /* Pastikan teks rata tengah */
+        }
 
         .close-btn { 
+            position: absolute; /* Tombol close nempel di kanan */
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
             background: #000; color: #fff; border: none; 
             width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; 
             cursor: pointer; display: flex; justify-content: center; align-items: center;
@@ -204,11 +221,15 @@
         
         .feature-list { list-style: none; padding: 0; margin-top: 20px; }
         .feature-list li {
-            padding: 10px; margin-bottom: 8px;
-            background: #f3f4f6; border: 2px solid #e5e7eb; border-radius: 8px;
-            font-weight: 600; display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; margin-bottom: 10px;
+            background: #f3f4f6; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 10px;
+            font-weight: 600; 
+            display: flex; align-items: center; gap: 12px;
         }
-        .feature-list li::before { content: '★'; color: #000; }
+        /* Icon pengganti bullet point */
+        .feature-list li i { font-style: normal; font-size: 1.1rem; }
 
         .modal-footer { 
             padding: 20px 24px; border-top: 3px solid #000; background: #fff; 
@@ -222,6 +243,7 @@
             font-family: 'Space Grotesk'; font-weight: 700; font-size: 1.1rem;
             border: 2px solid #000; box-shadow: 4px 4px 0px 0px #000;
             transition: all 0.2s;
+            box-sizing: border-box; /* Fix ukuran button agar pas */
         }
         .btn-wa:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px 0px #000; background: #4ade80; }
         .btn-wa:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px #000; }
@@ -244,6 +266,7 @@
             header h1 { font-size: 3rem; }
             .container { padding-top: 60px; }
             .footer { width: 85%; justify-content: center; bottom: 15px; font-size: 0.8rem; }
+            .modal-content { width: 95%; }
         }
     </style>
 </head>
