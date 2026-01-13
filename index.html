@@ -8,11 +8,11 @@
     <style>
         :root {
             --bg: #0d0d0d;
-            --bg-card: #151515;
-            --text: #f0f0f0;
-            --text-muted: #a0a0a0;
+            --bg-card: #121212;
+            --text: #ffffff;
+            --text-muted: #777777;
             --accent: #ffffff;
-            --border: #252525;
+            --border: #222222;
             --font-mono: 'IBM Plex Mono', monospace;
         }
 
@@ -21,83 +21,73 @@
             background-color: var(--bg); 
             color: var(--text); 
             margin: 0; padding: 0;
-            min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
 
         .container { 
-            max-width: 900px; 
+            max-width: 850px; 
             margin: 0 auto; 
-            padding: 100px 24px; 
+            padding: 60px 20px; 
         }
 
         header { 
-            margin-bottom: 80px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
         }
 
         header h1 { 
             font-family: 'Noto Sans Mono', monospace;
-            font-size: 3.5rem; 
+            font-size: 2.2rem; 
             font-weight: 700;
             margin: 0; 
-            letter-spacing: -3px;
+            letter-spacing: -2px;
             text-transform: lowercase;
-            color: var(--accent);
         }
 
         header p { 
             color: var(--text-muted); 
-            font-size: 1rem;
-            margin-top: 10px;
-        }
-
-        .status-badge {
-            font-size: 0.75rem;
-            color: #4ade80;
-            background: rgba(74, 222, 128, 0.1);
-            padding: 4px 12px;
-            display: inline-block;
-            margin-bottom: 20px;
-            text-transform: lowercase;
+            font-size: 0.85rem;
+            margin: 0;
         }
 
         .script-list { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 12px; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            gap: 1px; 
+            background-color: var(--border); /* Membuat garis antar card tegas */
+            border: 1px solid var(--border);
         }
 
         .script-item { 
             background-color: var(--bg-card); 
-            padding: 30px; 
-            border: 1px solid var(--border); 
-            transition: border-color 0.2s ease;
+            padding: 20px; 
+            transition: background-color 0.1s;
             cursor: pointer;
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        .script-item.visible {
-            opacity: 1;
-            transform: translateY(0);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .script-item:hover { 
-            border-color: var(--accent);
+            background-color: #1a1a1a;
         }
 
         .script-item h2 { 
-            font-size: 1.2rem; 
-            margin: 0 0 12px 0; 
+            font-size: 1rem; 
+            margin: 0 0 8px 0; 
             color: var(--accent);
             text-transform: lowercase;
         }
 
         .script-item p { 
-            font-size: 0.9rem; 
+            font-size: 0.8rem; 
             color: var(--text-muted); 
-            line-height: 1.6;
-            margin-bottom: 25px;
+            line-height: 1.4;
+            margin: 0 0 20px 0;
         }
 
         .card-footer {
@@ -106,22 +96,20 @@
             align-items: center;
         }
 
-        .version-tag { 
-            font-size: 0.75rem; 
-            color: #555;
-        }
+        .version-tag { font-size: 0.7rem; color: #444; font-weight: 600; }
 
         .action-text {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: lowercase;
             color: var(--accent);
+            border-bottom: 1px solid var(--accent);
         }
 
+        /* MODAL - TEGAS & COMPACT */
         .code-modal-overlay { 
             position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.9); 
-            backdrop-filter: blur(4px); 
+            background: rgba(0,0,0,0.85); 
             display: none; z-index: 100;
             align-items: center; justify-content: center;
         }
@@ -129,77 +117,68 @@
         .code-modal-overlay.active { display: flex; }
 
         .code-modal-content { 
-            background: #000; border: 1px solid var(--border);
-            width: 90%; max-width: 700px;
+            background: #000; 
+            border: 1px solid var(--accent);
+            width: 100%; max-width: 600px;
         }
 
         .code-header {
-            padding: 20px; border-bottom: 1px solid var(--border);
+            padding: 15px 20px; border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .code-body { padding: 25px; max-height: 60vh; overflow-y: auto; background: #050505; }
+        .code-body { padding: 20px; max-height: 50vh; overflow-y: auto; background: #050505; }
         
-        pre { margin: 0; }
-        code { font-family: var(--font-mono); font-size: 0.85rem; color: #ccc; }
+        code { font-family: var(--font-mono); font-size: 0.8rem; color: #ccc; white-space: pre-wrap; }
 
-        .modal-footer { padding: 20px; border-top: 1px solid var(--border); text-align: right; }
+        .modal-footer { padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
 
-        .copy-btn { 
-            background: var(--accent); color: #000; border: none;
-            padding: 10px 25px; font-family: var(--font-mono);
-            font-weight: 700; cursor: pointer; text-transform: lowercase;
+        .btn { 
+            background: none; border: 1px solid var(--border); color: var(--text-muted);
+            padding: 8px 16px; font-family: var(--font-mono);
+            font-size: 0.8rem; cursor: pointer; text-transform: lowercase;
         }
 
-        .promo-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            display: none; align-items: center; justify-content: center; z-index: 200;
-        }
-        .promo-overlay.active { display: flex; }
-
-        .promo-card {
-            background: #111; border: 1px solid var(--border);
-            padding: 40px; width: 90%; max-width: 400px; text-align: center;
-        }
-        .promo-card h2 { text-transform: lowercase; margin-top: 0; }
-        .btn-store {
-            display: block; background: #fff; color: #000; padding: 12px;
-            text-decoration: none; font-weight: 700; margin: 20px 0; text-transform: lowercase;
-        }
+        .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
 
         .footer { 
-            margin-top: 120px;
-            font-size: 0.8rem;
+            margin-top: 60px;
+            font-size: 0.7rem;
             color: #333;
+            text-transform: lowercase;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="status-badge">system_updated</div>
-            <h1>novascript</h1>
-            <p>paste the link, get the script, move on.</p>
+            <div>
+                <h1>novascript</h1>
+                <p>clean automation tools.</p>
+            </div>
+            <div style="font-size: 0.7rem; color: #4ade80;">[system_online]</div>
         </header>
         
-        <div id="script-list" class="script-list"></div>
+        <div id="script-list" class="script-list">
+            </div>
 
         <footer class="footer">
-            <span>© 2025 nov4. all rights reserved.</span>
+            <span>© 2025 nov4 / all_rights_reserved</span>
         </footer>
     </div>
 
     <div id="code-modal" class="code-modal-overlay">
         <div class="code-modal-content">
             <div class="code-header">
-                <h3 id="modal-title" style="margin:0; text-transform:lowercase;">source</h3>
-                <button id="modal-close-btn" style="background:none; border:none; color:#555; cursor:pointer; font-size:1.5rem;">&times;</button>
+                <h3 id="modal-title" style="margin:0; font-size:0.9rem; text-transform:lowercase;">source</h3>
+                <button id="modal-close-btn" style="background:none; border:none; color:#555; cursor:pointer; font-size:1.2rem;">&times;</button>
             </div>
             <div class="code-body">
                 <pre><code id="modal-loader-code"></code></pre>
             </div>
             <div class="modal-footer">
-                <button id="modal-copy-btn" class="copy-btn">copy_code</button>
+                <button id="close-m-btn" class="btn">close</button>
+                <button id="modal-copy-btn" class="btn btn-primary">copy_code</button>
             </div>
         </div>
     </div>
@@ -212,9 +191,7 @@
             const modalLoaderCode = document.getElementById('modal-loader-code');
             const modalCloseBtn = document.getElementById('modal-close-btn');
             const modalCopyBtn = document.getElementById('modal-copy-btn');
-            const promoPopup = document.getElementById('promo-popup');
-            const promoCloseBtn = document.getElementById('close-promo-btn');
-            const dontShowCheck = document.getElementById('dont-show-check');
+            const closeMBtn = document.getElementById('close-m-btn');
             
             let scriptsData = [];
 
@@ -236,15 +213,14 @@
                             </div>
                             <div class="card-footer">
                                 <span class="version-tag">v${script.version || '1.0.0'}</span>
-                                <span class="action-text">get_script →</span>
+                                <span class="action-text">get</span>
                             </div>
                         `;
                         scriptListContainer.appendChild(item);
-                        setTimeout(() => item.classList.add('visible'), index * 50);
                     });
                 }
             } catch (e) {
-                scriptListContainer.innerHTML = '<p>connection_error</p>';
+                scriptListContainer.innerHTML = '<div class="script-item"><h2>error_loading_data</h2></div>';
             }
 
             scriptListContainer.addEventListener('click', (e) => {
@@ -259,21 +235,13 @@
 
             const closeM = () => codeModal.classList.remove('active');
             modalCloseBtn.addEventListener('click', closeM);
+            closeMBtn.addEventListener('click', closeM);
             codeModal.addEventListener('click', (e) => { if(e.target === codeModal) closeM(); });
 
             modalCopyBtn.addEventListener('click', () => {
                 navigator.clipboard.writeText(modalLoaderCode.textContent);
-                modalCopyBtn.textContent = 'copied';
-                setTimeout(() => modalCopyBtn.textContent = 'copy_code', 2000);
-            });
-
-            if (!localStorage.getItem('hide_promo')) {
-                setTimeout(() => promoPopup.classList.add('active'), 1000);
-            }
-
-            promoCloseBtn.addEventListener('click', () => {
-                if (dontShowCheck.checked) localStorage.setItem('hide_promo', 'true');
-                promoPopup.classList.remove('active');
+                modalCopyBtn.textContent = 'done';
+                setTimeout(() => modalCopyBtn.textContent = 'copy_code', 1500);
             });
         });
     </script>
