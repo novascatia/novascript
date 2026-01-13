@@ -7,12 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0d0d0d;
-            --bg-card: #121212;
+            --bg: #050505;
+            --bg-card: rgba(255, 255, 255, 0.02);
             --text: #ffffff;
-            --text-muted: #777777;
+            --text-muted: #666;
             --accent: #ffffff;
-            --border: #222222;
+            --border: rgba(255, 255, 255, 0.1);
             --font-mono: 'IBM Plex Mono', monospace;
         }
 
@@ -21,228 +21,189 @@
             background-color: var(--bg); 
             color: var(--text); 
             margin: 0; padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
+        /* Texture & Depth */
+        .noise {
+            position: fixed; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 10;
+        }
+
+        .spotlight {
+            position: fixed; top: -10%; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 800px; height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            pointer-events: none; z-index: 0;
+        }
+
         .container { 
-            max-width: 850px; 
+            max-width: 800px; 
             margin: 0 auto; 
-            padding: 60px 20px; 
+            padding: 80px 24px; 
+            position: relative; z-index: 20;
         }
 
         header { 
-            margin-bottom: 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 20px;
+            margin-bottom: 60px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border);
         }
 
         header h1 { 
             font-family: 'Noto Sans Mono', monospace;
-            font-size: 2.2rem; 
-            font-weight: 700;
-            margin: 0; 
-            letter-spacing: -2px;
+            font-size: 2.5rem; 
+            margin: 0; letter-spacing: -2px;
             text-transform: lowercase;
         }
 
-        header p { 
-            color: var(--text-muted); 
-            font-size: 0.85rem;
-            margin: 0;
-        }
+        header p { color: var(--text-muted); font-size: 0.85rem; margin: 5px 0 0 0; }
 
+        /* Compact Grid */
         .script-list { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
-            gap: 1px; 
-            background-color: var(--border); /* Membuat garis antar card tegas */
-            border: 1px solid var(--border);
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 12px; 
         }
 
         .script-item { 
-            background-color: var(--bg-card); 
-            padding: 20px; 
-            transition: background-color 0.1s;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 24px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            position: relative;
         }
 
-        .script-item:hover { 
-            background-color: #1a1a1a;
+        .script-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
 
         .script-item h2 { 
-            font-size: 1rem; 
-            margin: 0 0 8px 0; 
-            color: var(--accent);
+            font-size: 0.95rem; margin: 0 0 8px 0; font-weight: 600;
             text-transform: lowercase;
         }
 
         .script-item p { 
-            font-size: 0.8rem; 
-            color: var(--text-muted); 
-            line-height: 1.4;
-            margin: 0 0 20px 0;
+            font-size: 0.8rem; color: var(--text-muted); 
+            line-height: 1.5; margin: 0 0 20px 0;
         }
 
         .card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .version-tag { font-size: 0.7rem; color: #444; font-weight: 600; }
-
-        .action-text {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: lowercase;
-            color: var(--accent);
-            border-bottom: 1px solid var(--accent);
-        }
-
-        /* MODAL - TEGAS & COMPACT */
-        .code-modal-overlay { 
-            position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.85); 
-            display: none; z-index: 100;
-            align-items: center; justify-content: center;
-        }
-
-        .code-modal-overlay.active { display: flex; }
-
-        .code-modal-content { 
-            background: #000; 
-            border: 1px solid var(--accent);
-            width: 100%; max-width: 600px;
-        }
-
-        .code-header {
-            padding: 15px 20px; border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .code-body { padding: 20px; max-height: 50vh; overflow-y: auto; background: #050505; }
+        .v-tag { font-size: 0.7rem; color: #444; }
+        .get-btn { font-size: 0.75rem; font-weight: 600; text-transform: lowercase; border-bottom: 1px solid var(--text); }
+
+        /* Modal - Professional Compact */
+        .modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+            display: none; z-index: 100; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-box { 
+            background: #000; border: 1px solid #333;
+            width: 90%; max-width: 600px;
+        }
+
+        .modal-head { padding: 15px 20px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; max-height: 400px; overflow-y: auto; background: #080808; }
         
-        code { font-family: var(--font-mono); font-size: 0.8rem; color: #ccc; white-space: pre-wrap; }
+        pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+        code { font-size: 0.8rem; color: #aaa; }
 
-        .modal-footer { padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-foot { padding: 15px; border-top: 1px solid #222; display: flex; justify-content: flex-end; gap: 10px; }
 
-        .btn { 
-            background: none; border: 1px solid var(--border); color: var(--text-muted);
-            padding: 8px 16px; font-family: var(--font-mono);
-            font-size: 0.8rem; cursor: pointer; text-transform: lowercase;
-        }
+        .btn { background: #fff; color: #000; border: none; padding: 8px 20px; font-family: var(--font-mono); font-weight: 700; cursor: pointer; font-size: 0.75rem; text-transform: lowercase; }
+        .btn-sec { background: transparent; color: #666; border: 1px solid #333; }
 
-        .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
-
-        .footer { 
-            margin-top: 60px;
-            font-size: 0.7rem;
-            color: #333;
-            text-transform: lowercase;
-        }
+        footer { margin-top: 80px; font-size: 0.7rem; color: #222; }
     </style>
 </head>
 <body>
+    <div class="noise"></div>
+    <div class="spotlight"></div>
+
     <div class="container">
         <header>
-            <div>
-                <h1>novascript</h1>
-                <p>clean automation tools.</p>
-            </div>
-            <div style="font-size: 0.7rem; color: #4ade80;">[system_online]</div>
+            <h1>novascript</h1>
+            <p>automated tools. zero nonsense.</p>
         </header>
         
         <div id="script-list" class="script-list">
             </div>
 
-        <footer class="footer">
-            <span>© 2025 nov4 / all_rights_reserved</span>
-        </footer>
+        <footer>© 2025 nov4</footer>
     </div>
 
-    <div id="code-modal" class="code-modal-overlay">
-        <div class="code-modal-content">
-            <div class="code-header">
-                <h3 id="modal-title" style="margin:0; font-size:0.9rem; text-transform:lowercase;">source</h3>
-                <button id="modal-close-btn" style="background:none; border:none; color:#555; cursor:pointer; font-size:1.2rem;">&times;</button>
+    <div id="code-modal" class="modal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <span id="modal-title" style="font-size:0.8rem; font-weight:600">source</span>
+                <span id="close-x" style="cursor:pointer; color:#555">close</span>
             </div>
-            <div class="code-body">
+            <div class="modal-body">
                 <pre><code id="modal-loader-code"></code></pre>
             </div>
-            <div class="modal-footer">
-                <button id="close-m-btn" class="btn">close</button>
-                <button id="modal-copy-btn" class="btn btn-primary">copy_code</button>
+            <div class="modal-foot">
+                <button id="modal-copy-btn" class="btn">copy_code</button>
             </div>
         </div>
     </div>
 
     <script>
         window.addEventListener('DOMContentLoaded', async () => {
-            const scriptListContainer = document.getElementById('script-list');
-            const codeModal = document.getElementById('code-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalLoaderCode = document.getElementById('modal-loader-code');
-            const modalCloseBtn = document.getElementById('modal-close-btn');
-            const modalCopyBtn = document.getElementById('modal-copy-btn');
-            const closeMBtn = document.getElementById('close-m-btn');
+            const list = document.getElementById('script-list');
+            const modal = document.getElementById('code-modal');
+            const mTitle = document.getElementById('modal-title');
+            const mCode = document.getElementById('modal-loader-code');
+            const mCopy = document.getElementById('modal-copy-btn');
+            const closeX = document.getElementById('close-x');
             
             let scriptsData = [];
 
             try {
-                const response = await fetch('/.netlify/functions/get-scripts');
-                const result = await response.json();
-                scriptListContainer.innerHTML = ''; 
-
-                if (result.success && result.scripts.length > 0) {
-                    scriptsData = result.scripts;
-                    scriptsData.forEach((script, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'script-item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `
-                            <div>
-                                <h2>${script.title}</h2>
-                                <p>${script.description}</p>
-                            </div>
+                const res = await fetch('/.netlify/functions/get-scripts');
+                const data = await res.json();
+                if (data.success) {
+                    scriptsData = data.scripts;
+                    list.innerHTML = scriptsData.map((s, i) => `
+                        <div class="script-item" onclick="openM(${i})">
+                            <h2>${s.title}</h2>
+                            <p>${s.description}</p>
                             <div class="card-footer">
-                                <span class="version-tag">v${script.version || '1.0.0'}</span>
-                                <span class="action-text">get</span>
+                                <span class="v-tag">v${s.version || '1.0.0'}</span>
+                                <span class="get-btn">get</span>
                             </div>
-                        `;
-                        scriptListContainer.appendChild(item);
-                    });
+                        </div>
+                    `).join('');
                 }
-            } catch (e) {
-                scriptListContainer.innerHTML = '<div class="script-item"><h2>error_loading_data</h2></div>';
-            }
+            } catch (e) { list.innerHTML = '<p>error_loading</p>'; }
 
-            scriptListContainer.addEventListener('click', (e) => {
-                const item = e.target.closest('.script-item');
-                if (item) {
-                    const data = scriptsData[item.dataset.index];
-                    modalTitle.textContent = data.title;
-                    modalLoaderCode.textContent = data.loader_script;
-                    codeModal.classList.add('active');
-                }
-            });
+            window.openM = (i) => {
+                mTitle.textContent = scriptsData[i].title;
+                mCode.textContent = scriptsData[i].loader_script;
+                modal.classList.add('active');
+            };
 
-            const closeM = () => codeModal.classList.remove('active');
-            modalCloseBtn.addEventListener('click', closeM);
-            closeMBtn.addEventListener('click', closeM);
-            codeModal.addEventListener('click', (e) => { if(e.target === codeModal) closeM(); });
+            const close = () => modal.classList.remove('active');
+            closeX.onclick = close;
+            modal.onclick = (e) => { if(e.target === modal) close(); };
 
-            modalCopyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(modalLoaderCode.textContent);
-                modalCopyBtn.textContent = 'done';
-                setTimeout(() => modalCopyBtn.textContent = 'copy_code', 1500);
-            });
+            mCopy.onclick = () => {
+                navigator.clipboard.writeText(mCode.textContent);
+                mCopy.textContent = 'done';
+                setTimeout(() => mCopy.textContent = 'copy_code', 1500);
+            };
         });
     </script>
 </body>
