@@ -16,102 +16,27 @@
             --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            margin: 0; padding: 0;
-            min-height: 100vh;
-        }
-
-        /* Noise & Spotlight dari index.html */
-        .noise-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none; z-index: 10;
-        }
-
-        .spotlight {
-            position: fixed; top: -20%; left: 50%;
-            transform: translateX(-50%);
-            width: 100%; max-width: 1000px; height: 600px;
-            background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%);
-            pointer-events: none; z-index: -1;
-        }
-
-        .container { 
-            max-width: 1000px; 
-            margin: 0 auto; 
-            padding: 80px 24px; 
-            position: relative;
-            z-index: 1;
-        }
-
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; min-height: 100vh; }
+        .noise-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"); pointer-events: none; z-index: 10; }
+        .spotlight { position: fixed; top: -20%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1000px; height: 600px; background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%); pointer-events: none; z-index: -1; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 80px 24px; position: relative; z-index: 1; }
         header { text-align: left; margin-bottom: 60px; }
-
-        .status-badge {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #4ade80;
-            background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2);
-            padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;
-        }
-
-        header h1 { 
-            font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; margin: 15px 0 0 0;
-            background: linear-gradient(180deg, #fff 0%, #888 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        /* Search Bar */
-        .search-wrap {
-            margin-bottom: 40px; width: 100%;
-        }
-        .search-input {
-            width: 100%; background: var(--bg-card); border: 1px solid var(--border-subtle);
-            padding: 14px 20px; border-radius: 12px; color: #fff; font-family: 'Inter';
-            outline: none; transition: 0.3s;
-        }
+        .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+        header h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; margin: 15px 0 0 0; background: linear-gradient(180deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .search-wrap { margin-bottom: 40px; width: 100%; }
+        .search-input { width: 100%; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 14px 20px; border-radius: 12px; color: #fff; font-family: 'Inter'; outline: none; transition: 0.3s; }
         .search-input:focus { border-color: var(--border-hover); background: rgba(255,255,255,0.05); }
-
-        /* Grid Logs */
-        .logs-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;
-        }
-
-        .log-item {
-            background: var(--bg-card); border: 1px solid var(--border-subtle);
-            border-radius: 16px; padding: 24px; transition: all 0.4s var(--ease-out);
-            position: relative; backdrop-filter: blur(10px);
-        }
-
-        .log-item:hover {
-            border-color: var(--border-hover); transform: translateY(-5px);
-            background: rgba(255,255,255,0.06);
-        }
-
+        .logs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .log-item { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px; transition: all 0.4s var(--ease-out); position: relative; backdrop-filter: blur(10px); }
+        .log-item:hover { border-color: var(--border-hover); transform: translateY(-5px); background: rgba(255,255,255,0.06); }
         .log-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .log-id { font-weight: 700; color: #fff; font-size: 1.1rem; }
         .log-date { font-size: 0.7rem; color: var(--text-muted); font-family: 'JetBrains Mono'; }
-
-        .data-box {
-            background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-top: 10px;
-            border: 1px solid rgba(255,255,255,0.02);
-        }
+        .data-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.02); }
         .data-label { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
         .data-value { font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #ccc; word-break: break-all; }
-
-        .copy-trigger {
-            cursor: pointer; transition: color 0.2s;
-        }
+        .copy-trigger { cursor: pointer; transition: color 0.2s; }
         .copy-trigger:hover { color: #fff; }
-
-        .footer { 
-            margin-top: 80px; text-align: center; font-size: 0.8rem; color: #444; 
-        }
-
-        @media (max-width: 600px) {
-            header h1 { font-size: 2rem; }
-            .container { padding-top: 40px; }
-        }
+        .footer { margin-top: 80px; text-align: center; font-size: 0.8rem; color: #444; }
     </style>
 </head>
 <body>
@@ -122,7 +47,6 @@
         <header>
             <div class="status-badge">Database Online</div>
             <h1>DAT Storage Monitor</h1>
-            <p style="color: var(--text-muted); margin-top: 10px;">Monitoring live save.dat synchronization from launcher.</p>
         </header>
 
         <div class="search-wrap">
@@ -130,8 +54,7 @@
         </div>
 
         <div id="logsContainer" class="logs-grid">
-            <div style="height: 200px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid var(--border-subtle);"></div>
-            <div style="height: 200px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid var(--border-subtle);"></div>
+            <p>Loading records...</p>
         </div>
 
         <div class="footer">© 2025 nov4 • secure repository</div>
@@ -157,42 +80,55 @@
                 return;
             }
 
-            container.innerHTML = items.map(item => `
+            container.innerHTML = items.map(item => {
+                // Redact Password (a******n)
+                const pass = item.tank_id_pass || '';
+                const redactedPass = pass.length > 2 
+                    ? pass[0] + '*'.repeat(6) + pass[pass.length - 1] 
+                    : pass;
+
+                // Meta Capslock
+                const metaCaps = (item.meta_data || 'None').toUpperCase();
+
+                return `
                 <div class="log-item">
                     <div class="log-header">
-                        <span class="log-id">${item.tank_id_name || 'Unknown'}</span>
+                        <span style="font-weight:700; color:#fff;">GrowID : ${item.tank_id_name || 'Unknown'}</span>
                         <span class="log-date">${new Date(item.created_at).toLocaleDateString()}</span>
                     </div>
                     
                     <div class="data-box">
-                        <div class="data-label">Credential (Password)</div>
-                        <div class="data-value copy-trigger" onclick="copy('${item.tank_id_pass}')">${item.tank_id_pass}</div>
+                        <div class="data-label">Password</div>
+                        <div class="data-value copy-trigger" onclick="copy('${item.tank_id_pass}')" title="Click to copy real password">
+                            ${redactedPass}
+                        </div>
                     </div>
 
                     <div class="data-box">
-                        <div class="data-label">Meta / Device Info</div>
-                        <div class="data-value" style="color: #666;">${item.meta_data || 'None'}</div>
+                        <div class="data-label">Device Info</div>
+                        <div class="data-value" style="color: #666;">
+                            META : ${metaCaps}
+                        </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function copy(text) {
             navigator.clipboard.writeText(text);
-            alert('Password copied to clipboard');
+            alert('Password asli disalin ke clipboard!');
         }
 
-        // Live Search
         document.getElementById('search').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             document.querySelectorAll('.log-item').forEach(card => {
-                const content = card.textContent.toLowerCase();
-                card.style.display = content.includes(term) ? 'block' : 'none';
+                card.style.display = card.textContent.toLowerCase().includes(term) ? 'block' : 'none';
             });
         });
 
         loadLogs();
-        setInterval(loadLogs, 15000); // Auto refresh 15s
+        setInterval(loadLogs, 15000); 
     </script>
 </body>
 </html>
