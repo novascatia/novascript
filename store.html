@@ -10,20 +10,23 @@
             --bg-body: #050505;
             --bg-card: rgba(255, 255, 255, 0.03);
             --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(59, 130, 246, 0.3);
             --accent-blue: #3b82f6;
             --text-main: #ededed;
             --text-muted: #888888;
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-body); 
             color: var(--text-main); 
-            margin: 0; min-height: 100vh;
+            margin: 0; padding: 0;
+            min-height: 100vh;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Sama dengan index.html */
         .noise-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
@@ -31,45 +34,74 @@
         }
 
         .spotlight {
-            position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+            position: fixed; top: -10%; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 1000px; height: 600px;
             background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
             pointer-events: none; z-index: -1;
         }
 
-        .container { max-width: 900px; margin: 0 auto; padding: 100px 24px; position: relative; z-index: 1; }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 100px 24px 140px 24px; 
+            position: relative; z-index: 1;
+        }
 
-        header { text-align: center; margin-bottom: 60px; }
+        header { text-align: center; margin-bottom: 80px; }
         header h1 { 
-            font-size: 3.5rem; font-weight: 800; letter-spacing: -0.04em; margin: 0;
+            font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -0.04em; margin: 0; 
             background: linear-gradient(180deg, #fff 0%, #888 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
+        header p { color: var(--text-muted); margin-top: 20px; font-size: 1.1rem; }
 
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 24px; 
+        }
 
         .product-card {
             background: var(--bg-card); border: 1px solid var(--border-subtle);
-            padding: 30px; border-radius: 20px; backdrop-filter: blur(10px);
-            transition: 0.3s; display: flex; flex-direction: column;
+            padding: 32px; border-radius: 20px; backdrop-filter: blur(12px);
+            transition: all 0.4s var(--ease-out); display: flex; flex-direction: column;
+            opacity: 0; transform: translateY(20px);
         }
+        .product-card.visible { opacity: 1; transform: translateY(0); }
+        .product-card:hover { border-color: var(--border-hover); transform: translateY(-5px); }
 
-        .product-card:hover { border-color: var(--accent-blue); transform: translateY(-5px); }
+        .product-card h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 12px 0; color: #fff; }
+        .product-card p { font-size: 0.95rem; color: #999; line-height: 1.6; margin-bottom: 24px; flex-grow: 1; }
 
-        .price { font-size: 1.5rem; font-weight: 700; color: #fff; margin: 15px 0; }
-        .price span { font-size: 0.9rem; color: var(--text-muted); }
+        .price { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; }
+        .price span { font-size: 0.8rem; color: var(--text-muted); font-weight: 400; }
 
         .buy-btn {
-            background: #fff; color: #000; border: none; padding: 12px;
-            border-radius: 10px; font-weight: 700; cursor: pointer;
-            transition: 0.2s; margin-top: auto;
+            background: #fff; color: #000; border: none; padding: 14px;
+            border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: all 0.3s var(--ease-out);
         }
-
-        .buy-btn:hover { background: var(--accent-blue); color: #fff; }
+        .buy-btn:hover { background: var(--accent-blue); color: #fff; transform: scale(1.02); }
 
         .footer { 
-            text-align: center; margin-top: 50px; color: var(--text-muted); font-size: 0.8rem;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle); padding: 10px 24px; border-radius: 50px;
+            font-size: 0.8rem; color: #666; display: flex; gap: 15px; align-items: center; z-index: 50;
         }
+        .footer a { color: #fff; text-decoration: none; font-weight: 500; }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+            border-radius: 20px; height: 300px; position: relative; overflow: hidden;
+        }
+        .skeleton::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+            animation: shimmy 1.5s infinite;
+        }
+        @keyframes shimmy { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
     </style>
 </head>
 <body>
@@ -79,37 +111,69 @@
     <div class="container">
         <header>
             <h1>NovaStore</h1>
-            <p>Automated Script Licensing System</p>
+            <p>Automated Premium Script Solutions</p>
         </header>
 
         <div id="product-list" class="product-grid">
-            <p style="text-align: center; grid-column: 1/-1;">Loading products...</p>
-        </div>
-
-        <div class="footer">
-            © 2026 NovaScript | Secure Payment by Midtrans
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
         </div>
     </div>
 
+    <footer class="footer">
+        <a href="index.html">← Library</a>
+        <span style="opacity:0.2">|</span>
+        <span>© 2026 nov4</span>
+    </footer>
+
     <script>
-        // Simulasi data produk (Nanti kita ambil dari Supabase)
-        const products = [
-            { id: 1, name: "Auto Farm Pro", price: "50000", desc: "Best for Growtopia farming", duration: "30 Days" },
-            { id: 2, name: "VIP Obfuscator", price: "150000", desc: "Lifetime access to V4 Core", duration: "Permanent" }
-        ];
+        window.addEventListener('DOMContentLoaded', async () => {
+            const productListContainer = document.getElementById('product-list');
 
-        const container = document.getElementById('product-list');
-        container.innerHTML = products.map(p => `
-            <div class="product-card">
-                <h2 style="margin:0; font-size: 1.2rem;">${p.name}</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 10px 0;">${p.desc}</p>
-                <div class="price">Rp ${parseInt(p.price).toLocaleString()} <span>/ ${p.duration}</span></div>
-                <button class="buy-btn" onclick="checkout(${p.id})">Purchase Now</button>
-            </div>
-        `).join('');
+            try {
+                // Fetch data produk aktif dari Netlify Function
+                const response = await fetch('/.netlify/functions/get-products');
+                const result = await response.json();
 
-        function checkout(id) {
-            alert("Step 2 Berhasil! Di Step berikutnya kita akan buat fungsi Backend untuk Midtrans.");
+                productListContainer.innerHTML = ''; 
+
+                if (result.success && result.products.length > 0) {
+                    result.products.forEach((p, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'product-card';
+                        
+                        card.innerHTML = `
+                            <h2>${p.name}</h2>
+                            <p>${p.description || 'No description provided.'}</p>
+                            <div class="price">
+                                Rp ${parseInt(p.price).toLocaleString()} 
+                                <span>/ ${p.duration_value} ${p.duration_unit}</span>
+                            </div>
+                            <button class="buy-btn" onclick="initiatePayment(${p.id})">
+                                Purchase Now
+                            </button>
+                        `;
+                        
+                        productListContainer.appendChild(card);
+                        
+                        // Staggered animation effect
+                        setTimeout(() => {
+                            card.classList.add('visible');
+                        }, index * 100);
+                    });
+                } else {
+                    productListContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #555;">No products available at the moment.</p>';
+                }
+            } catch (error) {
+                productListContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #ef4444;">Connection failed. Please try again later.</p>';
+            }
+        });
+
+        function initiatePayment(productId) {
+            // Placeholder untuk Step 3: Integrasi Midtrans Snap
+            console.log("Initiating payment for Product ID:", productId);
+            alert("Preparing secure checkout... (Step 3: Midtrans Integration)");
         }
     </script>
 </body>
