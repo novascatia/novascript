@@ -3,138 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaScript | Add Product</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <title>NovaScript | Sell Script</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
-            --card: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
+            --bg-body: #050505;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-main: #ededed;
+            --text-muted: #888888;
             --accent: #3b82f6;
-            --text: #ededed;
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 40px 20px;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; padding: 0;
+            min-height: 100vh;
         }
 
-        .container { max-width: 600px; margin: 0 auto; }
-        
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 10;
+        }
+
+        .spotlight {
+            position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 1000px; height: 600px;
+            background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+            pointer-events: none; z-index: -1;
+        }
+
+        .container { 
+            max-width: 700px; 
+            margin: 0 auto; 
+            padding: 80px 24px; 
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 { 
+            font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; 
+            margin-bottom: 40px; text-align: center;
+            background: linear-gradient(180deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
         .form-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            padding: 30px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: 20px;
-            backdrop-filter: blur(10px);
+            padding: 40px;
+            backdrop-filter: blur(12px);
         }
 
-        h1 { font-size: 1.8rem; margin-bottom: 25px; letter-spacing: -0.02em; }
-
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #888; }
+        .group { margin-bottom: 25px; }
+        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
         
-        input, textarea, select {
+        input, textarea {
             width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
             color: #fff;
             font-family: inherit;
             box-sizing: border-box;
+            outline: none;
+            transition: 0.2s;
         }
 
-        textarea { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        input:focus, textarea:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.08); }
 
-        .btn-save {
+        textarea { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; resize: vertical; }
+
+        .btn-submit {
             width: 100%;
             background: #fff;
             color: #000;
             border: none;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 16px;
+            border-radius: 12px;
             font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s var(--ease-out);
+            margin-top: 10px;
         }
 
-        .btn-save:hover { background: var(--accent); color: #fff; }
+        .btn-submit:hover { transform: translateY(-2px); background: var(--accent); color: #fff; }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .footer { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #444; }
     </style>
 </head>
 <body>
+    <div class="noise-overlay"></div>
+    <div class="spotlight"></div>
+
     <div class="container">
-        <h1>Add New Script Product</h1>
+        <h1>Sell New Script</h1>
+        
         <div class="form-card">
-            <form id="productForm">
-                <div class="input-group">
-                    <label>Script Name</label>
-                    <input type="text" id="name" placeholder="e.g. Auto Farm Deluxe" required>
+            <form id="sellForm">
+                <div class="group">
+                    <label>Product Name</label>
+                    <input type="text" id="name" placeholder="e.g. Growtopia Auto-Farm VIP" required>
                 </div>
-                <div class="input-group" style="display: flex; gap: 10px;">
-                    <div style="flex: 2;">
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="group">
                         <label>Price (IDR)</label>
                         <input type="number" id="price" placeholder="50000" required>
                     </div>
-                    <div style="flex: 1;">
+                    <div class="group">
                         <label>Duration (Days)</label>
                         <input type="number" id="duration" value="30" required>
                     </div>
                 </div>
-                <div class="input-group">
+
+                <div class="group">
                     <label>Short Description</label>
-                    <textarea id="description" rows="2" placeholder="What does this script do?"></textarea>
+                    <textarea id="description" rows="2" placeholder="Briefly describe what this script does..."></textarea>
                 </div>
-                <div class="input-group">
-                    <label>How to Use (Instruction)</label>
-                    <textarea id="how_to_use" rows="3" placeholder="1. Open executor..."></textarea>
+
+                <div class="group">
+                    <label>How to Use</label>
+                    <textarea id="how_to_use" rows="3" placeholder="Step 1: Execute... Step 2: Login..."></textarea>
                 </div>
-                <div class="input-group">
-                    <label>Script Content (The code user gets)</label>
-                    <textarea id="script_content" rows="6" placeholder="loadstring(game:HttpGet(...))()" required></textarea>
+
+                <div class="group">
+                    <label>Raw Script Content</label>
+                    <textarea id="script_content" rows="8" placeholder="-- Paste your code or loadstring here" required></textarea>
                 </div>
-                <button type="submit" class="btn-save" id="submitBtn">Save Product to Store</button>
+
+                <button type="submit" class="btn-submit" id="submitBtn">Publish Product</button>
             </form>
+        </div>
+
+        <div class="footer">
+            <a href="admin.html" style="color: #666; text-decoration: none;">← Back to Admin Hub</a>
         </div>
     </div>
 
-    <script type="module">
-        // Kita gunakan Supabase Client yang sudah kamu punya di project
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        
-        // Ganti dengan kredensial dari .env atau file config-mu
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        document.getElementById('productForm').addEventListener('submit', async (e) => {
+    <script>
+        document.getElementById('sellForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = 'Saving...';
+            btn.disabled = true;
+            btn.innerText = 'Publishing to Database...';
 
-            const { data, error } = await supabase
-                .from('products')
-                .insert([{
-                    name: document.getElementById('name').value,
-                    price: document.getElementById('price').value,
-                    duration_value: document.getElementById('duration').value,
-                    duration_unit: 'days',
-                    description: document.getElementById('description').value,
-                    how_to_use: document.getElementById('how_to_use').value,
-                    script_content: document.getElementById('script_content').value,
-                    active: true
-                }]);
+            const payload = {
+                name: document.getElementById('name').value,
+                price: document.getElementById('price').value,
+                duration: document.getElementById('duration').value,
+                description: document.getElementById('description').value,
+                how_to_use: document.getElementById('how_to_use').value,
+                script_content: document.getElementById('script_content').value
+            };
 
-            if (error) {
-                alert('Error: ' + error.message);
-            } else {
-                alert('Product added successfully!');
-                document.getElementById('productForm').reset();
+            try {
+                const response = await fetch('/.netlify/functions/add-product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Success! Your product is now live on the store.');
+                    document.getElementById('sellForm').reset();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Publish Product';
             }
-            btn.innerText = 'Save Product to Store';
         });
     </script>
 </body>
