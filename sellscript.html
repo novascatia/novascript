@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaScript | Add Product</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --card: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #3b82f6;
+            --text: #ededed;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        .form-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 { font-size: 1.8rem; margin-bottom: 25px; letter-spacing: -0.02em; }
+
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #888; }
+        
+        input, textarea, select {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 10px;
+            color: #fff;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        textarea { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+
+        .btn-save {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-save:hover { background: var(--accent); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Add New Script Product</h1>
+        <div class="form-card">
+            <form id="productForm">
+                <div class="input-group">
+                    <label>Script Name</label>
+                    <input type="text" id="name" placeholder="e.g. Auto Farm Deluxe" required>
+                </div>
+                <div class="input-group" style="display: flex; gap: 10px;">
+                    <div style="flex: 2;">
+                        <label>Price (IDR)</label>
+                        <input type="number" id="price" placeholder="50000" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Duration (Days)</label>
+                        <input type="number" id="duration" value="30" required>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Short Description</label>
+                    <textarea id="description" rows="2" placeholder="What does this script do?"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>How to Use (Instruction)</label>
+                    <textarea id="how_to_use" rows="3" placeholder="1. Open executor..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Script Content (The code user gets)</label>
+                    <textarea id="script_content" rows="6" placeholder="loadstring(game:HttpGet(...))()" required></textarea>
+                </div>
+                <button type="submit" class="btn-save" id="submitBtn">Save Product to Store</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // Kita gunakan Supabase Client yang sudah kamu punya di project
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        
+        // Ganti dengan kredensial dari .env atau file config-mu
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = 'Saving...';
+
+            const { data, error } = await supabase
+                .from('products')
+                .insert([{
+                    name: document.getElementById('name').value,
+                    price: document.getElementById('price').value,
+                    duration_value: document.getElementById('duration').value,
+                    duration_unit: 'days',
+                    description: document.getElementById('description').value,
+                    how_to_use: document.getElementById('how_to_use').value,
+                    script_content: document.getElementById('script_content').value,
+                    active: true
+                }]);
+
+            if (error) {
+                alert('Error: ' + error.message);
+            } else {
+                alert('Product added successfully!');
+                document.getElementById('productForm').reset();
+            }
+            btn.innerText = 'Save Product to Store';
+        });
+    </script>
+</body>
+</html>
