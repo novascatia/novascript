@@ -147,8 +147,7 @@
                             <h2>${p.name}</h2>
                             <p>${p.description || 'No description provided.'}</p>
                             <div class="price">
-                                Rp ${parseInt(p.price).toLocaleString()} 
-                                <span>/ ${p.duration_value} ${p.duration_unit}</span>
+                            Rp ${parseInt(p.price).toLocaleString()} 
                             </div>
                             <button class="buy-btn" onclick="initiatePayment(${p.id})">
                                 Purchase Now
