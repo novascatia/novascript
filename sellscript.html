@@ -4,148 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaScript | Sell Script</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-body: #050505;
             --bg-card: rgba(255, 255, 255, 0.03);
             --border-subtle: rgba(255, 255, 255, 0.08);
             --text-main: #ededed;
-            --text-muted: #888888;
             --accent: #3b82f6;
-            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            margin: 0; padding: 0;
-            min-height: 100vh;
-        }
-
-        .noise-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none; z-index: 10;
-        }
-
-        .spotlight {
-            position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 1000px; height: 600px;
-            background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
-            pointer-events: none; z-index: -1;
-        }
-
-        .container { 
-            max-width: 700px; 
-            margin: 0 auto; 
-            padding: 80px 24px; 
-            position: relative;
-            z-index: 1;
-        }
-
-        h1 { 
-            font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; 
-            margin-bottom: 40px; text-align: center;
-            background: linear-gradient(180deg, #fff 0%, #888 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .form-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            padding: 40px;
-            backdrop-filter: blur(12px);
-        }
-
-        .group { margin-bottom: 25px; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
-        
-        input, textarea {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            padding: 14px;
-            color: #fff;
-            font-family: inherit;
-            box-sizing: border-box;
-            outline: none;
-            transition: 0.2s;
-        }
-
-        input:focus, textarea:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.08); }
-
-        textarea { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; resize: vertical; }
-
-        .btn-submit {
-            width: 100%;
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s var(--ease-out);
-            margin-top: 10px;
-        }
-
-        .btn-submit:hover { transform: translateY(-2px); background: var(--accent); color: #fff; }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .footer { text-align: center; margin-top: 40px; font-size: 0.8rem; color: #444; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 40px 20px; }
+        .container { max-width: 650px; margin: 0 auto; position: relative; z-index: 1; }
+        .form-card { background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 35px; border-radius: 20px; backdrop-filter: blur(12px); }
+        h1 { font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 30px; letter-spacing: -0.04em; }
+        .group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 8px; }
+        input, textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); padding: 14px; border-radius: 12px; color: #fff; font-family: inherit; box-sizing: border-box; outline: none; }
+        textarea { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        .btn-publish { width: 100%; background: #fff; color: #000; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-publish:hover { background: var(--accent); color: #fff; }
     </style>
 </head>
 <body>
-    <div class="noise-overlay"></div>
-    <div class="spotlight"></div>
-
     <div class="container">
         <h1>Sell New Script</h1>
-        
         <div class="form-card">
             <form id="sellForm">
                 <div class="group">
                     <label>Product Name</label>
-                    <input type="text" id="name" placeholder="e.g. Growtopia Auto-Farm VIP" required>
+                    <input type="text" id="name" placeholder="e.g. Growtopia Auto-Farm" required>
                 </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="group">
-                        <label>Price (IDR)</label>
-                        <input type="number" id="price" placeholder="50000" required>
-                    </div>
-                    <div class="group">
-                        <label>Duration (Days)</label>
-                        <input type="number" id="duration" value="30" required>
-                    </div>
-                </div>
-
                 <div class="group">
-                    <label>Short Description</label>
-                    <textarea id="description" rows="2" placeholder="Briefly describe what this script does..."></textarea>
+                    <label>Price (IDR)</label>
+                    <input type="number" id="price" placeholder="50000" required>
                 </div>
-
                 <div class="group">
-                    <label>How to Use</label>
-                    <textarea id="how_to_use" rows="3" placeholder="Step 1: Execute... Step 2: Login..."></textarea>
+                    <label>Description</label>
+                    <textarea id="description" rows="2" placeholder="Brief info about the script..."></textarea>
                 </div>
-
                 <div class="group">
-                    <label>Raw Script Content</label>
-                    <textarea id="script_content" rows="8" placeholder="-- Paste your code or loadstring here" required></textarea>
+                    <label>How to Use (User will see this after purchase)</label>
+                    <textarea id="how_to_use" rows="3" placeholder="1. Open executor..."></textarea>
                 </div>
-
-                <button type="submit" class="btn-submit" id="submitBtn">Publish Product</button>
+                <div class="group">
+                    <label>Script Content (Sent to Email & Web)</label>
+                    <textarea id="script_content" rows="6" placeholder="loadstring(game:HttpGet(...))()" required></textarea>
+                </div>
+                <button type="submit" class="btn-publish" id="submitBtn">Publish Product</button>
             </form>
-        </div>
-
-        <div class="footer">
-            <a href="admin.html" style="color: #666; text-decoration: none;">← Back to Admin Hub</a>
         </div>
     </div>
 
@@ -153,39 +60,29 @@
         document.getElementById('sellForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
+            btn.innerText = 'Publishing...';
             btn.disabled = true;
-            btn.innerText = 'Publishing to Database...';
 
             const payload = {
                 name: document.getElementById('name').value,
                 price: document.getElementById('price').value,
-                duration: document.getElementById('duration').value,
                 description: document.getElementById('description').value,
                 how_to_use: document.getElementById('how_to_use').value,
                 script_content: document.getElementById('script_content').value
             };
 
             try {
-                const response = await fetch('/.netlify/functions/add-product', {
+                const res = await fetch('/.netlify/functions/add-product', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
-                const result = await response.json();
-                
+                const result = await res.json();
                 if (result.success) {
-                    alert('Success! Your product is now live on the store.');
+                    alert('Product published successfully!');
                     document.getElementById('sellForm').reset();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Publish Product';
-            }
+                } else { throw new Error(result.message); }
+            } catch (err) { alert('Error: ' + err.message); }
+            finally { btn.innerText = 'Publish Product'; btn.disabled = false; }
         });
     </script>
 </body>
