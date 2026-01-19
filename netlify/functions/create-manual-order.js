@@ -26,7 +26,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({ 
             orderId, 
             finalAmount, 
-            qrisUrl: "URL_GAMBAR_QRIS_DANA_BISNIS_KAMU" 
+            qrisUrl: "https://media.discordapp.net/attachments/1408185563944718438/1453987119780462683/qr_ID1025376739336_26.12.25_176672247_1766722476960.jpg?ex=696f1687&is=696dc507&hm=ebfef12a286f2ae9b01df0917257524d54626302054d232ac5d8f88bf3d560ea&=&format=webp&width=639&height=900" 
         })
     };
 };
