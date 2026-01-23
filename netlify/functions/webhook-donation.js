@@ -1,57 +1,49 @@
-const { createClient } = require('@supabase/supabase-js');
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
+// Hapus dependency supabase, kita pakai fetch bawaan (Node 18+)
 exports.handler = async (event) => {
-    // Header agar bisa diakses dari Lua/External
     const headers = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Content-Type": "application/json"
+        "Access-Control-Allow-Headers": "Content-Type"
     };
 
-    // Hanya terima method POST atau GET
     const query = event.queryStringParameters || {};
-    
-    // Format data: ?ign=NamaPlayer&amount=JumlahDL
     const ign = query.ign;
     const amount = parseInt(query.amount);
+    
+    // GANTI INI DENGAN URL WEBHOOK DISCORD KAMU (Channel khusus logs/topup)
+    const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL; 
 
     if (!ign || !amount) {
-        return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({ error: "Missing IGN or Amount" })
-        };
+        return { statusCode: 400, headers, body: "Missing Data" };
     }
 
     try {
-        // Masukkan ke tabel 'donations' di Supabase
-        // Pastikan tabel 'donations' memiliki kolom: id, ign, amount, status (default: 'pending'), created_at
-        const { data, error } = await supabase
-            .from('donations')
-            .insert([
-                { 
-                    ign: ign, 
-                    amount: amount, 
-                    status: 'pending' // Status pending agar diproses oleh Bot Discord
-                }
-            ]);
+        // Kirim data ke Discord Webhook
+        // Kita kirim format teks tersembunyi agar mudah diparsing bot: ||IGN:nama|AMOUNT:100||
+        const payload = {
+            username: "NovaScript Gateway",
+            // Pesan ini yang akan dibaca oleh Bot Python
+            content: `||DATA_PACKET|${ign}|${amount}||`, 
+            embeds: [{
+                title: "💸 Incoming Donation",
+                description: `**IGN:** ${ign}\n**Amount:** ${amount} BGL`,
+                color: 5763719,
+                timestamp: new Date().toISOString()
+            }]
+        };
 
-        if (error) throw error;
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ success: true, message: "Donation recorded", data })
+            body: JSON.stringify({ status: "Sent to Discord" })
         };
 
     } catch (err) {
-        console.error("Error:", err);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ error: err.message })
-        };
+        return { statusCode: 500, headers, body: err.message };
     }
 };
