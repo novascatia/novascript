@@ -1,17 +1,22 @@
-// File: netlify/functions/webhook.js
 exports.handler = async (event) => {
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1464305331965268131/AyQzXd2PcuOFL5ZDsrenIP7xKjo2RJI8tnWOmkWDEbAK3Fz78596uZidEwdWS3qdZkMn"; // Ganti ini
+    // Masukkan URL Webhook Discord Channel PRIVATE kamu di sini
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1464305331965268131/AyQzXd2PcuOFL5ZDsrenIP7xKjo2RJI8tnWOmkWDEbAK3Fz78596uZidEwdWS3qdZkMn"; 
 
     const query = event.queryStringParameters || {};
-    const code = query.code; // Kode unik dari user (misal: A1B2C)
+    const code = query.code; // Membaca KODE (bukan IGN lagi)
     const amount = parseInt(query.amount);
 
+    // Cek kelengkapan data
     if (!code || !amount) {
-        return { statusCode: 400, body: "Missing Code or Amount" };
+        return { 
+            statusCode: 400, 
+            body: "Error: Missing Code or Amount" 
+        };
     }
 
     try {
-        // Format Rahasia ke Discord: ||TOKEN|KODE|JUMLAH||
+        // Format Pesan ke Discord: ||TOKEN|KODE|JUMLAH||
+        // Pesan ini nanti dibaca oleh Bot Python
         const payload = {
             content: `||TOKEN|${code}|${amount}||`
         };
@@ -22,7 +27,7 @@ exports.handler = async (event) => {
             body: JSON.stringify(payload)
         });
 
-        return { statusCode: 200, body: "Sent" };
+        return { statusCode: 200, body: "Success" };
 
     } catch (err) {
         return { statusCode: 500, body: err.message };
