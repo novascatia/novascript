@@ -1,21 +1,19 @@
+// File: netlify/functions/webhook.js
 exports.handler = async (event) => {
-    // 1. Ganti URL ini dengan Webhook ke channel discord PRIVATE (Admin Only)
-    // Channel ini akan jadi "inbox" bot kamu.
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1464305331965268131/AyQzXd2PcuOFL5ZDsrenIP7xKjo2RJI8tnWOmkWDEbAK3Fz78596uZidEwdWS3qdZkMn";
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1464305331965268131/AyQzXd2PcuOFL5ZDsrenIP7xKjo2RJI8tnWOmkWDEbAK3Fz78596uZidEwdWS3qdZkMn"; // Ganti ini
 
     const query = event.queryStringParameters || {};
-    const ign = query.ign;
+    const code = query.code; // Kode unik dari user (misal: A1B2C)
     const amount = parseInt(query.amount);
 
-    if (!ign || !amount) {
-        return { statusCode: 400, body: "Missing Data" };
+    if (!code || !amount) {
+        return { statusCode: 400, body: "Missing Code or Amount" };
     }
 
     try {
-        // Format Rahasia: ||SECRET|IGN|AMOUNT||
-        // Bot Python akan membaca pola ini
+        // Format Rahasia ke Discord: ||TOKEN|KODE|JUMLAH||
         const payload = {
-            content: `||SECRET|${ign}|${amount}||`
+            content: `||TOKEN|${code}|${amount}||`
         };
 
         await fetch(DISCORD_WEBHOOK_URL, {
