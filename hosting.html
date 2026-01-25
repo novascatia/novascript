@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaHost | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
+        :root {
+            --bg-body: #0b0b0f;
+            --bg-sidebar: #121215;
+            --bg-card: #18181b;
+            --border: #27272a;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --accent: #10b981; /* Warna Hijau seperti di gambar */
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
+        body { background: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; }
+        .brand { font-size: 1.2rem; font-weight: 700; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+        .brand span { color: var(--accent); }
+        
+        .menu-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 20px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; color: var(--text-muted); text-decoration: none; border-radius: 8px; transition: 0.2s; font-size: 0.9rem; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background: rgba(16, 185, 129, 0.1); color: var(--accent); }
+        .nav-item i { width: 20px; }
+
+        /* --- MAIN CONTENT --- */
+        .main { flex: 1; padding: 32px; overflow-y: auto; }
+        
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .user-profile { display: flex; align-items: center; gap: 12px; background: var(--bg-card); padding: 8px 16px; border-radius: 50px; border: 1px solid var(--border); }
+        .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; }
+
+        /* Banner Plan */
+        .plan-banner { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .plan-info h3 { margin: 0 0 5px 0; font-size: 1rem; }
+        .plan-info p { margin: 0; color: var(--text-muted); font-size: 0.85rem; }
+        .badge-pro { background: rgba(234, 179, 8, 0.2); color: #eab308; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-right: 10px; }
+        .btn-upgrade { background: var(--bg-body); border: 1px solid var(--border); color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-upgrade:hover { border-color: var(--accent); }
+
+        /* Grid Cards */
+        .section-title { margin-bottom: 20px; font-size: 1.1rem; font-weight: 600; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; }
+        .card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.1); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .icon-box { width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-online { color: var(--accent); } 
+        .status-online .status-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+        .status-offline { color: var(--danger); }
+        .status-offline .status-dot { background: var(--danger); }
+
+        .card h3 { margin: 10px 0 5px 0; font-size: 1.1rem; }
+        .card-meta { color: var(--text-muted); font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .meta-row { display: flex; align-items: center; gap: 8px; }
+        
+        /* Mini Chart Area */
+        .mini-chart { height: 50px; width: 100%; opacity: 0.5; margin-top: auto; }
+
+        /* Add New Button Card */
+        .card-add { border: 2px dashed var(--border); background: transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; color: var(--text-muted); }
+        .card-add:hover { border-color: var(--accent); color: var(--accent); background: rgba(16, 185, 129, 0.02); }
+        .plus-icon { font-size: 2rem; margin-bottom: 10px; }
+
+        /* Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; border: 1px solid var(--border); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem; }
+        .form-group input, .form-group select { width: 100%; background: var(--bg-body); border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; outline: none; }
+        .btn-submit { width: 100%; background: var(--accent); color: #000; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .btn-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">⚡ Nova<span>Host</span></div>
+        
+        <div class="menu-label">Overview</div>
+        <a href="#" class="nav-item active">Dashboard</a>
+        <a href="#" class="nav-item">Billing</a>
+
+        <div class="menu-label">Management</div>
+        <a href="#" class="nav-item">My Bots</a>
+        <a href="#" class="nav-item">Settings</a>
+        
+        <div style="margin-top: auto;">
+            <a href="#" onclick="logout()" class="nav-item" style="color: var(--danger);">Logout</a>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <h2 style="margin:0;">Dashboard</h2>
+            <div class="user-profile">
+                <span style="font-size: 0.9rem; margin-right: 10px;" id="user-email">Loading...</span>
+                <div class="avatar">U</div>
+            </div>
+        </div>
+
+        <div class="plan-banner">
+            <div style="display: flex; align-items: center;">
+                <div style="font-size: 2rem; margin-right: 20px;">👑</div>
+                <div class="plan-info">
+                    <h3><span class="badge-pro">PRO</span> Plan Active</h3>
+                    <p>Expires on Feb 28, 2026 (-30 days remaining)</p>
+                </div>
+            </div>
+            <button class="btn-upgrade">Upgrade Plan</button>
+        </div>
+
+        <div class="section-title">Your Bots (<span id="bot-count">0</span>)</div>
+        <div class="grid" id="bot-grid">
+            <p style="color: #666;">Loading resources...</p>
+        </div>
+    </div>
+
+    <div id="add-modal" class="modal">
+        <div class="modal-content" style="position: relative;">
+            <button onclick="closeModal()" class="btn-close">&times;</button>
+            <h2 style="margin-top: 0;">Deploy New Bot</h2>
+            <div class="form-group">
+                <label>Bot Name</label>
+                <input type="text" id="new-name" placeholder="e.g. Jualan Bot">
+            </div>
+            <div class="form-group">
+                <label>Bot Token (from BotFather)</label>
+                <input type="text" id="new-token" placeholder="123456:ABC-Def...">
+            </div>
+            <div class="form-group">
+                <label>Bot Type</label>
+                <select id="new-type">
+                    <option value="anon_chat">Anonymous Chat</option>
+                    <option value="rekber">Middleman / Rekber</option>
+                </select>
+            </div>
+            <button class="btn-submit" onclick="deployBot()">Deploy Server</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "URL_SUPABASE_KAMU";
+        const SUPABASE_KEY = "ANON_KEY_KAMU"; 
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- AUTH CHECK ---
+        async function checkAuth() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'index.html'; // Redirect kalau belum login
+            } else {
+                document.getElementById('user-email').innerText = user.email;
+                loadBots(user.id);
+            }
+        }
+
+        // --- LOAD BOTS ---
+        async function loadBots(userId) {
+            const { data, error } = await supabase
+                .from('hosted_bots')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', {ascending: false});
+
+            const grid = document.getElementById('bot-grid');
+            grid.innerHTML = ''; // Clear
+
+            // Tambahkan tombol "Add Service" di awal
+            grid.innerHTML += `
+                <div class="card card-add" onclick="openModal()">
+                    <div class="plus-icon">+</div>
+                    <div>Add Service</div>
+                </div>
+            `;
+
+            if (data) {
+                document.getElementById('bot-count').innerText = data.length;
+                
+                data.forEach(bot => {
+                    const statusClass = bot.is_running ? 'status-online' : 'status-offline';
+                    const statusText = bot.is_running ? 'Online' : 'Offline';
+                    const actionBtn = bot.is_running 
+                        ? `<button onclick="toggleBot(${bot.id}, false)" style="background:#27272a; color:#ef4444; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem;">Stop</button>`
+                        : `<button onclick="toggleBot(${bot.id}, true)" style="background:#27272a; color:#10b981; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem;">Start</button>`;
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div>
+                            <div class="card-header">
+                                <div class="icon-box">🤖</div>
+                                <div class="${statusClass}" style="font-size: 0.85rem; font-weight: 600;">
+                                    <span class="status-dot"></span>${statusText}
+                                </div>
+                            </div>
+                            <h3>${bot.name}</h3>
+                            <div class="card-meta">
+                                <div class="meta-row">🆔 ${bot.bot_type.toUpperCase()}</div>
+                                <div class="meta-row">⏱ Uptime: ${bot.uptime || '0%'}</div>
+                                <div class="meta-row">👥 Active Users: ${bot.players_count || 0}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+                            <span style="font-size:0.75rem; color:#666; font-family:'JetBrains Mono'">ID: ${bot.id}</span>
+                            ${actionBtn}
+                        </div>
+                        <div style="position:absolute; bottom:0; left:0; width:100%; height:40px; background: linear-gradient(to top, rgba(16, 185, 129, 0.1), transparent); border-bottom-left-radius:16px; border-bottom-right-radius:16px;"></div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // --- ACTIONS ---
+        function openModal() { document.getElementById('add-modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('add-modal').style.display = 'none'; }
+
+        async function deployBot() {
+            const user = (await supabase.auth.getUser()).data.user;
+            const name = document.getElementById('new-name').value;
+            const token = document.getElementById('new-token').value;
+            const type = document.getElementById('new-type').value;
+
+            if(!name || !token) return alert("Please fill all fields");
+
+            const { error } = await supabase.from('hosted_bots').insert({
+                user_id: user.id,
+                name: name,
+                token: token,
+                bot_type: type,
+                is_running: false
+            });
+
+            if(error) alert(error.message);
+            else {
+                closeModal();
+                loadBots(user.id);
+            }
+        }
+
+        async function toggleBot(id, state) {
+            await supabase.from('hosted_bots').update({ is_running: state }).eq('id', id);
+            // Reload simple agar UI update (di real app bisa pakai realtime subscription)
+            const user = (await supabase.auth.getUser()).data.user;
+            loadBots(user.id);
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>
