@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaHost | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0b0b0f; color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: #18181b; padding: 40px; border-radius: 16px; border: 1px solid #27272a; width: 350px; text-align: center; }
+        h1 { margin-bottom: 20px; font-size: 1.5rem; }
+        span { color: #10b981; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; background: #0b0b0f; border: 1px solid #27272a; color: white; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-login { background: #10b981; color: #000; margin-bottom: 10px; }
+        .btn-login:hover { background: #059669; }
+        .btn-signup { background: transparent; color: #a1a1aa; border: 1px solid #27272a; }
+        .btn-signup:hover { border-color: #fff; color: #fff; }
+        .error { color: #ef4444; font-size: 0.85rem; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>⚡ Nova<span>Host</span></h1>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+        <button class="btn-login" onclick="handleAuth('login')">Login Dashboard</button>
+        <button class="btn-signup" onclick="handleAuth('signup')">Create Account</button>
+        <p id="error-msg" class="error"></p>
+    </div>
+
+    <script>
+        // --- KONFIGURASI SUPABASE (GANTI INI!) ---
+        const SUPABASE_URL = "MASUKKAN_URL_SUPABASE_DISINI";
+        const SUPABASE_KEY = "MASUKKAN_ANON_KEY_DISINI";
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function handleAuth(type) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errBox = document.getElementById('error-msg');
+            
+            if(!email || !password) {
+                errBox.innerText = "Please fill all fields";
+                errBox.style.display = 'block';
+                return;
+            }
+
+            let result;
+            if (type === 'signup') {
+                result = await supabase.auth.signUp({ email, password });
+                if(!result.error) alert("Account created! You can now login.");
+            } else {
+                result = await supabase.auth.signInWithPassword({ email, password });
+            }
+
+            if (result.error) {
+                errBox.innerText = result.error.message;
+                errBox.style.display = 'block';
+            } else if (type === 'login') {
+                // REDIRECT KE /telegram (Dashboard)
+                window.location.href = '/telegram';
+            }
+        }
+
+        async function checkSession() {
+            const { data } = await supabase.auth.getSession();
+            if(data.session) window.location.href = '/telegram';
+        }
+        checkSession();
+    </script>
+</body>
+</html>
