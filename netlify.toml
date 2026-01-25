@@ -5,3 +5,15 @@
   from = "/encrypt/*"
   to = "/.netlify/functions/get-post"
   status = 200
+
+  # 1. Akses /hosting akan membuka login.html
+[[redirects]]
+  from = "/hosting"
+  to = "/login.html"
+  status = 200
+
+# 2. Akses /telegram akan membuka dashboard.html
+[[redirects]]
+  from = "/telegram"
+  to = "/dashboard.html"
+  status = 200
