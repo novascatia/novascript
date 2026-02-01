@@ -15,9 +15,85 @@
             --text-muted: #888888;
             --primary-glow: rgba(255, 255, 255, 0.15);
             --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+            --accent-green: #10b981;
         }
 
-        /* --- GLOBAL & TEXTURE --- */
+        /* --- NOVASECURITY LAYER --- */
+        #security-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg-body);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .security-card {
+            background: #0a0a0a;
+            border: 1px solid var(--border-subtle);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .verify-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-subtle);
+            padding: 16px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .verify-box:hover { border-color: rgba(255,255,255,0.2); }
+
+        .checkbox-custom {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #333;
+            border-radius: 6px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+
+        .checkbox-custom.checked {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- LIBRARY CONTENT (HIDDEN INITIALLY) --- */
+        #main-library-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        /* --- ORIGINAL STYLES --- */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-body); 
@@ -28,371 +104,237 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Noise Overlay */
         .noise-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 10;
+            pointer-events: none; z-index: 10;
         }
 
-        /* Spotlight Gradient */
         .spotlight {
-            position: fixed; top: -20%; left: 50%;
-            transform: translateX(-50%);
+            position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 1000px; height: 600px;
             background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: -1;
+            pointer-events: none; z-index: -1;
         }
 
-        .container { 
-            max-width: 900px; 
-            margin: 0 auto; 
-            padding: 100px 24px 140px 24px; 
-            position: relative;
-            z-index: 1;
-        }
+        .container { max-width: 900px; margin: 0 auto; padding: 100px 24px 140px 24px; position: relative; z-index: 1; }
 
-        /* --- HEADER --- */
-        header { 
-            text-align: center; 
-            margin-bottom: 80px; 
-            display: flex; flex-direction: column; align-items: center;
-        }
+        header { text-align: center; margin-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
 
         .status-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: #4ade80; /* Green */
-            background: rgba(74, 222, 128, 0.1);
-            border: 1px solid rgba(74, 222, 128, 0.2);
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            display: inline-flex; align-items: center; gap: 6px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #4ade80;
+            background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2);
+            padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px;
         }
-        .status-badge::before {
-            content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%;
-            box-shadow: 0 0 8px #4ade80;
-        }
+        .status-badge::before { content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 8px #4ade80; }
 
         header h1 { 
-            font-size: clamp(3rem, 6vw, 4.5rem); 
-            font-weight: 800; 
-            letter-spacing: -0.04em; 
-            margin: 0; 
-            background: linear-gradient(180deg, #fff 0%, #888 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1;
+            font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -0.04em; margin: 0; 
+            background: linear-gradient(180deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
         }
 
         #nova-logo.glitching { -webkit-text-fill-color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
-        header p { 
-            font-size: 1.1rem; 
-            color: var(--text-muted); 
-            margin-top: 20px; 
-            font-weight: 400;
-            max-width: 500px;
-            line-height: 1.6;
-        }
+        header p { font-size: 1.1rem; color: var(--text-muted); margin-top: 20px; font-weight: 400; max-width: 500px; line-height: 1.6; }
 
-        /* --- GRID & CARDS --- */
-        .script-list { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
-            gap: 24px; 
-        }
+        .script-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
 
         .script-item { 
-            background-color: var(--bg-card); 
-            backdrop-filter: blur(10px);
-            padding: 32px; 
-            border-radius: 16px; 
-            border: 1px solid var(--border-subtle); 
-            cursor: pointer; 
-            transition: all 0.4s var(--ease-out);
-            position: relative;
-            opacity: 0; /* Hidden for animation */
-            transform: translateY(20px);
-            display: flex; flex-direction: column; justify-content: space-between;
+            background-color: var(--bg-card); backdrop-filter: blur(10px); padding: 32px; border-radius: 16px; 
+            border: 1px solid var(--border-subtle); cursor: pointer; transition: all 0.4s var(--ease-out);
+            position: relative; opacity: 0; transform: translateY(20px); display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        .script-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .script-item.visible { opacity: 1; transform: translateY(0); }
 
         .script-item:hover { 
-            transform: translateY(-5px) scale(1.01); 
-            background-color: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-hover);
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+            transform: translateY(-5px) scale(1.01); background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-hover); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
         }
 
-        .script-item h2 { 
-            font-size: 1.25rem; font-weight: 600; margin: 0 0 12px 0; color: #fff; letter-spacing: -0.02em;
-        }
+        .script-item h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 12px 0; color: #fff; letter-spacing: -0.02em; }
+        .script-item p { font-size: 0.95rem; color: #999; margin: 0 0 24px 0; line-height: 1.6; flex-grow: 1; }
 
-        .script-item p { 
-            font-size: 0.95rem; color: #999; margin: 0 0 24px 0; line-height: 1.6;
-            flex-grow: 1;
-        }
-
-        .card-footer {
-            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;
-        }
-
-        .version-tag { 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #666; 
-        }
-
-        .action-text {
-            font-size: 0.8rem; font-weight: 600; color: #fff; opacity: 0; transform: translateX(-10px); transition: all 0.3s;
-        }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
+        .version-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #666; }
+        .action-text { font-size: 0.8rem; font-weight: 600; color: #fff; opacity: 0; transform: translateX(-10px); transition: all 0.3s; }
         .script-item:hover .action-text { opacity: 1; transform: translateX(0); }
 
-        /* --- SKELETON LOADER --- */
-        .skeleton {
-            background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
-            border-radius: 16px; height: 200px; width: 100%; position: relative; overflow: hidden;
-        }
-        .skeleton::after {
-            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-            animation: shimmy 1.5s infinite;
-        }
+        .skeleton { background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 16px; height: 200px; width: 100%; position: relative; overflow: hidden; }
+        .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); animation: shimmy 1.5s infinite; }
         @keyframes shimmy { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-        /* --- CODE MODAL --- */
-        .code-modal-overlay { 
-            position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(12px); 
-            display: none; justify-content: center; align-items: center; 
-            z-index: 100; opacity: 0; transition: opacity 0.3s;
-        }
+        .code-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.3s; }
         .code-modal-overlay.active { opacity: 1; }
-
-        .code-modal-content { 
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 20px; 
-            width: 90%; max-width: 680px; max-height: 85vh; 
-            display: flex; flex-direction: column; 
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 50px 100px -20px rgba(0,0,0,0.8);
-            transform: scale(0.95) translateY(10px);
-            transition: all 0.4s var(--ease-out);
-        }
+        .code-modal-content { background: #0a0a0a; border: 1px solid #333; border-radius: 20px; width: 90%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; transform: scale(0.95) translateY(10px); transition: all 0.4s var(--ease-out); }
         .code-modal-overlay.active .code-modal-content { transform: scale(1) translateY(0); }
-
-        .code-modal-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 24px; border-bottom: 1px solid #1a1a1a;
-        }
-        .code-modal-header h3 { margin: 0; color: #fff; font-weight: 500; font-size: 1.1rem; }
-
-        .close-btn { color: #555; background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
-        .close-btn:hover { color: #fff; }
-
-        .code-modal-body { 
-            padding: 0; overflow-y: auto; background: #080808; 
-            scrollbar-width: thin; scrollbar-color: #333 transparent;
-        }
-        
+        .code-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid #1a1a1a; }
+        .code-modal-header h3 { margin: 0; color: #fff; font-size: 1.1rem; }
+        .close-btn { color: #555; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .code-modal-body { padding: 0; overflow-y: auto; background: #080808; }
         .code-block-wrapper { padding: 24px; }
+        .code-modal-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #ccc; line-height: 1.7; }
+        .code-modal-footer { padding: 20px 24px; border-top: 1px solid #1a1a1a; background: #0a0a0a; text-align: right; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+        .copy-btn { background: #fff; color: #000; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
 
-        .code-modal-body code { 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #ccc; line-height: 1.7;
-        }
-
-        .code-modal-footer { 
-            padding: 20px 24px; border-top: 1px solid #1a1a1a; background: #0a0a0a; text-align: right;
-            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
-        }
-
-        .copy-btn { 
-            background: #fff; color: #000; border: none; 
-            padding: 10px 24px; border-radius: 8px; 
-            font-weight: 600; font-size: 0.9rem; cursor: pointer; 
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
-        }
-        .copy-btn:hover { background: #eee; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.2); }
-        .copy-btn:active { transform: translateY(1px); }
-
-        /* --- PROMO MODAL (POPUP STORE) --- */
-        .promo-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 200; /* Higher than regular modal */
-            display: none; justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.4s ease;
-        }
+        .promo-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 20000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
         .promo-overlay.active { opacity: 1; }
-
-        .promo-card {
-            background: linear-gradient(145deg, #111, #0a0a0a);
-            border: 1px solid var(--border-subtle);
-            width: 90%; max-width: 400px;
-            padding: 30px; border-radius: 24px;
-            text-align: center;
-            position: relative;
-            transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.7);
-        }
+        .promo-card { background: linear-gradient(145deg, #111, #0a0a0a); border: 1px solid var(--border-subtle); width: 90%; max-width: 400px; padding: 30px; border-radius: 24px; text-align: center; position: relative; transform: scale(0.9); transition: transform 0.4s; }
         .promo-overlay.active .promo-card { transform: scale(1); }
+        .promo-title { font-size: 1.5rem; color: #fff; margin-bottom: 10px; background: linear-gradient(90deg, #fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-store { display: block; background: #fff; color: #000; text-decoration: none; padding: 12px; border-radius: 12px; font-weight: 600; margin-bottom: 20px; }
 
-        .promo-title {
-            font-size: 1.5rem; color: #fff; margin: 0 0 10px 0;
-            background: linear-gradient(90deg, #fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .promo-desc { color: #888; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; }
-
-        .btn-store {
-            display: inline-block; width: 100%; box-sizing: border-box;
-            background: #fff; color: #000; text-decoration: none;
-            padding: 12px; border-radius: 12px; font-weight: 600;
-            margin-bottom: 20px; transition: 0.2s;
-            box-shadow: 0 5px 15px rgba(255,255,255,0.15);
-        }
-        .btn-store:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,255,255,0.25); background: #f0f0f0; }
-
-        .dont-show-wrap {
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-            font-size: 0.8rem; color: #666; cursor: pointer;
-            user-select: none;
-        }
-        .dont-show-wrap:hover { color: #999; }
-        
-        .promo-close-abs {
-            position: absolute; top: 15px; right: 20px;
-            background: none; border: none; color: #444; font-size: 1.5rem;
-            cursor: pointer; transition: 0.2s;
-        }
-        .promo-close-abs:hover { color: #fff; }
-
-        /* --- FOOTER --- */
-        .footer { 
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px);
-            border: 1px solid var(--border-subtle);
-            padding: 10px 24px; border-radius: 50px;
-            font-size: 0.8rem; color: #666;
-            display: flex; gap: 15px; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 50;
-        }
-        .footer a { color: #fff; text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
-        .footer a:hover { opacity: 0.7; }
-
-        @media (max-width: 600px) {
-            .container { padding-top: 60px; }
-            header h1 { font-size: 2.8rem; }
-            .footer { width: 80%; justify-content: center; bottom: 20px; }
-        }
+        .footer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--border-subtle); padding: 10px 24px; border-radius: 50px; font-size: 0.8rem; color: #666; display: flex; gap: 15px; align-items: center; z-index: 50; }
+        .footer a { color: #fff; text-decoration: none; font-weight: 500; }
     </style>
 </head>
 <body>
-    <div class="noise-overlay"></div>
-    <div class="spotlight"></div>
 
-    <div class="container">
-        <header>
-            <div class="status-badge">Script is Updated</div>
-            <h1><span id="nova-logo">NovaScript</span></h1>
-            <p>Discord : @novascatia</p>
-        </header>
-        
-        <div id="script-list" class="script-list">
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
+    <div id="security-layer">
+        <div class="security-card">
+            <div style="font-size: 0.7rem; color: var(--accent-green); font-family: 'JetBrains Mono'; margin-bottom: 12px; letter-spacing: 2px;">🛡️ NOVA SECURITY</div>
+            <h1 style="font-size: 1.4rem; margin: 0 0 10px 0; font-weight: 700;">Verifying Connection</h1>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">Checking your browser security to prevent automated access.</p>
+
+            <div class="verify-box" id="verify-trigger">
+                <div class="checkbox-custom" id="check-box">
+                    <div class="spinner" id="loading-spinner"></div>
+                    <svg id="check-icon" style="display:none; width:16px; height:16px; fill:none; stroke:white; stroke-width:3;" viewBox="0 0 24 24"><path d="M20 6L9 17L4 12"></path></svg>
+                </div>
+                <span id="status-text" style="font-size: 0.95rem; font-weight: 500;">Verify you are a human</span>
+            </div>
         </div>
     </div>
 
-    <div id="code-modal" class="code-modal-overlay">
-        <div class="code-modal-content">
-            <div class="code-modal-header">
-                <h3 id="modal-title">Script Source</h3>
-                <button id="modal-close-btn" class="close-btn">&times;</button>
+    <div id="main-library-content">
+        <div class="noise-overlay"></div>
+        <div class="spotlight"></div>
+
+        <div class="container">
+            <header>
+                <div class="status-badge">Script is Updated</div>
+                <h1><span id="nova-logo">NovaScript</span></h1>
+                <p>Discord : @novascatia</p>
+            </header>
+            
+            <div id="script-list" class="script-list">
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
             </div>
-            <div class="code-modal-body">
-                <div class="code-block-wrapper">
-                    <pre><code id="modal-loader-code"></code></pre>
+        </div>
+
+        <div id="code-modal" class="code-modal-overlay">
+            <div class="code-modal-content">
+                <div class="code-modal-header">
+                    <h3 id="modal-title">Script Source</h3>
+                    <button id="modal-close-btn" class="close-btn">&times;</button>
+                </div>
+                <div class="code-modal-body">
+                    <div class="code-block-wrapper">
+                        <pre><code id="modal-loader-code"></code></pre>
+                    </div>
+                </div>
+                <div class="code-modal-footer">
+                    <button id="modal-copy-btn" class="copy-btn">Copy to Clipboard</button>
                 </div>
             </div>
-            <div class="code-modal-footer">
-                <button id="modal-copy-btn" class="copy-btn">Copy to Clipboard</button>
+        </div>
+
+        <div id="promo-popup" class="promo-overlay">
+            <div class="promo-card">
+                <button id="close-promo-btn" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#444; font-size:1.5rem; cursor:pointer;">&times;</button>
+                <h2 class="promo-title">✨ Premium Store Open</h2>
+                <p style="color:#888; font-size:0.95rem; margin-bottom:25px;">Looking for exclusive scripts? Visit our new store.</p>
+                <a href="store.html" class="btn-store">Visit Store →</a>
+                <div style="display:flex; justify-content:center; align-items:center; gap:8px; font-size:0.8rem; color:#666; cursor:pointer;">
+                    <input type="checkbox" id="dont-show-check" style="cursor:pointer;">
+                    <label for="dont-show-check" style="cursor:pointer;">Do not show again</label>
+                </div>
             </div>
         </div>
+        
+        <footer class="footer">
+            <span>© 2025 nov4</span>
+            <span style="opacity:0.2">|</span>
+            <a href="https://discord.gg/eFMMZDgww8" target="_blank">Discord Community ➔</a>
+        </footer>
     </div>
-
-    <div id="promo-popup" class="promo-overlay">
-        <div class="promo-card">
-            <button id="close-promo-btn" class="promo-close-abs">&times;</button>
-            
-            <h2 class="promo-title">✨ Premium Store Open</h2>
-            <p class="promo-desc">
-                Looking for exclusive scripts? Visit our new store to get premium automation tools.
-            </p>
-            
-            <a href="store.html" class="btn-store">Visit Store →</a>
-
-            <div class="dont-show-wrap">
-                <input type="checkbox" id="dont-show-check" style="accent-color: #fff; cursor: pointer;">
-                <label for="dont-show-check" style="cursor: pointer;">Do not show this again</label>
-            </div>
-        </div>
-    </div>
-    
-    <footer class="footer">
-        <span>© 2025 nov4</span>
-        <span style="opacity:0.2">|</span>
-        <a href="https://discord.gg/eFMMZDgww8" target="_blank">Discord Community ➔</a>
-    </footer>
 
     <script>
-        // --- Glitch Logic ---
+        // --- 1. NOVASECURITY LOGIC ---
+        const trigger = document.getElementById('verify-trigger');
+        const checkbox = document.getElementById('check-box');
+        const spinner = document.getElementById('loading-spinner');
+        const checkIcon = document.getElementById('check-icon');
+        const statusText = document.getElementById('status-text');
+        const securityLayer = document.getElementById('security-layer');
+        const mainContent = document.getElementById('main-library-content');
+
+        trigger.addEventListener('click', () => {
+            statusText.innerText = "Verifying...";
+            spinner.style.display = "block";
+            trigger.style.pointerEvents = "none";
+
+            const delay = Math.floor(Math.random() * 3000) + 2000;
+
+            setTimeout(() => {
+                spinner.style.display = "none";
+                checkIcon.style.display = "block";
+                checkbox.classList.add('checked');
+                statusText.innerText = "Verified! Secure Connection";
+                statusText.style.color = "#10b981";
+
+                setTimeout(() => {
+                    securityLayer.style.opacity = "0";
+                    setTimeout(() => {
+                        securityLayer.style.display = "none";
+                        mainContent.style.display = "block";
+                        setTimeout(() => { mainContent.style.opacity = "1"; }, 50);
+                        startLibrary(); // Start fetching data
+                    }, 500);
+                }, 800);
+            }, delay);
+        });
+
+        // --- 2. GLITCH LOGIC ---
         const logoElement = document.getElementById('nova-logo');
-        const originalText = 'NovaScript';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/{}[]-_+';
+        const originalLogoText = 'NovaScript';
+        const glitchChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/{}[]-_+';
         
         function startScrambleEffect() {
             if (!logoElement) return;
-            let tempText = Array(originalText.length).fill(originalText[0]);
+            let tempText = Array(originalLogoText.length).fill(originalLogoText[0]);
             let scrambleCount = 0;
             logoElement.classList.add('glitching');
 
             const scrambleTimer = setInterval(() => {
-                if (scrambleCount < originalText.length) {
-                    tempText[scrambleCount] = characters.charAt(Math.floor(Math.random() * characters.length));
+                if (scrambleCount < originalLogoText.length) {
+                    tempText[scrambleCount] = glitchChars.charAt(Math.floor(Math.random() * glitchChars.length));
                     logoElement.textContent = tempText.join('');
                     scrambleCount++;
                 } else {
                     clearInterval(scrambleTimer);
                     let resolveCount = 0;
                     const resolveTimer = setInterval(() => {
-                        if (resolveCount < originalText.length) {
-                            tempText[resolveCount] = originalText[resolveCount];
+                        if (resolveCount < originalLogoText.length) {
+                            tempText[resolveCount] = originalLogoText[resolveCount];
                             logoElement.textContent = tempText.join('');
                             resolveCount++;
                         } else {
                             clearInterval(resolveTimer);
                             logoElement.classList.remove('glitching');
-                            setTimeout(startScrambleEffect, 6000); // 6s Delay
+                            setTimeout(startScrambleEffect, 6000);
                         }
                     }, 60); 
                 }
             }, 50); 
         }
-        startScrambleEffect();
-        
-        // --- Main Logic ---
-        window.addEventListener('DOMContentLoaded', async () => {
+
+        // --- 3. MAIN LIBRARY LOGIC ---
+        async function startLibrary() {
+            startScrambleEffect();
+            
             const scriptListContainer = document.getElementById('script-list');
             const codeModal = document.getElementById('code-modal');
             const modalTitle = document.getElementById('modal-title');
@@ -400,7 +342,6 @@
             const modalCloseBtn = document.getElementById('modal-close-btn');
             const modalCopyBtn = document.getElementById('modal-copy-btn');
             
-            // Promo Popup Elements
             const promoPopup = document.getElementById('promo-popup');
             const promoCloseBtn = document.getElementById('close-promo-btn');
             const dontShowCheck = document.getElementById('dont-show-check');
@@ -409,10 +350,8 @@
             let scriptsData = [];
 
             try {
-                // Fetch Scripts
                 const response = await fetch('/.netlify/functions/get-scripts');
                 const result = await response.json();
-                
                 scriptListContainer.innerHTML = ''; 
 
                 if (result.success && result.scripts.length > 0) {
@@ -421,24 +360,9 @@
                         const item = document.createElement('div');
                         item.className = 'script-item';
                         item.setAttribute('data-index', index);
-                        
-                        item.innerHTML = `
-                            <div>
-                                <h2>${script.title}</h2>
-                                <p>${script.description}</p>
-                            </div>
-                            <div class="card-footer">
-                                <span class="version-tag">v${script.version || '1.0.0'}</span>
-                                <span class="action-text">Get Script →</span>
-                            </div>
-                        `;
-                        
+                        item.innerHTML = `<div><h2>${script.title}</h2><p>${script.description}</p></div><div class="card-footer"><span class="version-tag">v${script.version || '1.0.0'}</span><span class="action-text">Get Script →</span></div>`;
                         scriptListContainer.appendChild(item);
-                        
-                        // Staggered Animation
-                        setTimeout(() => {
-                            item.classList.add('visible');
-                        }, index * 100);
+                        setTimeout(() => { item.classList.add('visible'); }, index * 100);
                     });
                 } else {
                     scriptListContainer.innerHTML = '<p style="text-align:center; color:#555;">Library empty.</p>';
@@ -447,67 +371,50 @@
                 scriptListContainer.innerHTML = `<p style="color:#ff5555; text-align:center;">Failed to connect.</p>`;
             }
 
-            // Script UI Interactions
             scriptListContainer.addEventListener('click', (e) => {
-                const scriptItem = e.target.closest('.script-item');
-                if (scriptItem) {
-                    const index = scriptItem.dataset.index;
-                    modalTitle.textContent = scriptsData[index].title;
-                    modalLoaderCode.textContent = scriptsData[index].loader_script;
+                const item = e.target.closest('.script-item');
+                if (item) {
+                    const idx = item.dataset.index;
+                    modalTitle.textContent = scriptsData[idx].title;
+                    modalLoaderCode.textContent = scriptsData[idx].loader_script;
                     codeModal.style.display = 'flex';
-                    // Force reflow
                     void codeModal.offsetWidth; 
                     codeModal.classList.add('active');
                 }
             });
 
-            const closeModal = () => { 
+            const closeCodeModal = () => { 
                 codeModal.classList.remove('active');
                 setTimeout(() => codeModal.style.display = 'none', 300);
             };
-            
-            modalCloseBtn.addEventListener('click', closeModal);
-            codeModal.addEventListener('click', (e) => { if (e.target === codeModal) closeModal(); });
+            modalCloseBtn.addEventListener('click', closeCodeModal);
+            codeModal.addEventListener('click', (e) => { if (e.target === codeModal) closeCodeModal(); });
 
             modalCopyBtn.addEventListener('click', () => {
                 navigator.clipboard.writeText(modalLoaderCode.textContent).then(() => {
-                    const originalText = modalCopyBtn.textContent;
-                    modalCopyBtn.textContent = 'Copied to Clipboard!';
+                    const original = modalCopyBtn.textContent;
+                    modalCopyBtn.textContent = 'Copied!';
                     modalCopyBtn.style.background = '#4ade80';
-                    setTimeout(() => { 
-                        modalCopyBtn.textContent = originalText; 
-                        modalCopyBtn.style.background = '#fff'; 
-                    }, 2000);
+                    setTimeout(() => { modalCopyBtn.textContent = original; modalCopyBtn.style.background = '#fff'; }, 2000);
                 });
             });
 
-            // --- PROMO POPUP LOGIC ---
-            // Cek localStorage
-            const isHidden = localStorage.getItem(promoKey);
-
-            if (!isHidden) {
+            if (!localStorage.getItem(promoKey)) {
                 setTimeout(() => {
                     promoPopup.style.display = 'flex';
                     void promoPopup.offsetWidth; 
                     promoPopup.classList.add('active');
-                }, 1500); // 1.5s delay
+                }, 1500);
             }
 
             function closePromo() {
-                if (dontShowCheck.checked) {
-                    localStorage.setItem(promoKey, 'true');
-                }
+                if (dontShowCheck.checked) localStorage.setItem(promoKey, 'true');
                 promoPopup.classList.remove('active');
-                setTimeout(() => {
-                    promoPopup.style.display = 'none';
-                }, 400);
+                setTimeout(() => { promoPopup.style.display = 'none'; }, 400);
             }
-
             promoCloseBtn.addEventListener('click', closePromo);
-            promoPopup.addEventListener('click', (e) => {
-                if (e.target === promoPopup) closePromo();
-            });
-        });
+            promoPopup.addEventListener('click', (e) => { if (e.target === promoPopup) closePromo(); });
+        }
     </script>
 </body>
 </html>
