@@ -24,7 +24,7 @@
             inset: 0;
             z-index: 9999;
             background: var(--bg-body);
-            display: flex;
+            display: none; /* Default sembunyi, muncul via JS */
             justify-content: center;
             align-items: center;
             transition: opacity 0.5s ease;
@@ -86,84 +86,39 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* --- LIBRARY CONTENT (HIDDEN INITIALLY) --- */
+        /* --- MAIN CONTENT --- */
         #main-library-content {
-            display: none;
+            display: none; /* Muncul setelah verifikasi atau jika hoki */
             opacity: 0;
             transition: opacity 0.8s ease;
         }
 
-        /* --- ORIGINAL STYLES --- */
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            margin: 0; padding: 0;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .noise-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none; z-index: 10;
-        }
-
-        .spotlight {
-            position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 1000px; height: 600px;
-            background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%);
-            pointer-events: none; z-index: -1;
-        }
-
+        /* --- ORIGINAL STYLES DARI INDEX.HTML --- */
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        .noise-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"); pointer-events: none; z-index: 10; }
+        .spotlight { position: fixed; top: -20%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1000px; height: 600px; background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%); pointer-events: none; z-index: -1; }
         .container { max-width: 900px; margin: 0 auto; padding: 100px 24px 140px 24px; position: relative; z-index: 1; }
-
         header { text-align: center; margin-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
-
-        .status-badge {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #4ade80;
-            background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2);
-            padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px;
-        }
+        .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2); padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px; }
         .status-badge::before { content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 8px #4ade80; }
-
-        header h1 { 
-            font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -0.04em; margin: 0; 
-            background: linear-gradient(180deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
-        }
-
+        header h1 { font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -0.04em; margin: 0; background: linear-gradient(180deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
         #nova-logo.glitching { -webkit-text-fill-color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-
         header p { font-size: 1.1rem; color: var(--text-muted); margin-top: 20px; font-weight: 400; max-width: 500px; line-height: 1.6; }
-
         .script-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
-
-        .script-item { 
-            background-color: var(--bg-card); backdrop-filter: blur(10px); padding: 32px; border-radius: 16px; 
-            border: 1px solid var(--border-subtle); cursor: pointer; transition: all 0.4s var(--ease-out);
-            position: relative; opacity: 0; transform: translateY(20px); display: flex; flex-direction: column; justify-content: space-between;
-        }
-
+        .script-item { background-color: var(--bg-card); backdrop-filter: blur(10px); padding: 32px; border-radius: 16px; border: 1px solid var(--border-subtle); cursor: pointer; transition: all 0.4s var(--ease-out); position: relative; opacity: 0; transform: translateY(20px); display: flex; flex-direction: column; justify-content: space-between; }
         .script-item.visible { opacity: 1; transform: translateY(0); }
-
-        .script-item:hover { 
-            transform: translateY(-5px) scale(1.01); background-color: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-hover); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
-        }
-
+        .script-item:hover { transform: translateY(-5px) scale(1.01); background-color: rgba(255, 255, 255, 0.05); border-color: var(--border-hover); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); }
         .script-item h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 12px 0; color: #fff; letter-spacing: -0.02em; }
         .script-item p { font-size: 0.95rem; color: #999; margin: 0 0 24px 0; line-height: 1.6; flex-grow: 1; }
-
         .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
         .version-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #666; }
         .action-text { font-size: 0.8rem; font-weight: 600; color: #fff; opacity: 0; transform: translateX(-10px); transition: all 0.3s; }
         .script-item:hover .action-text { opacity: 1; transform: translateX(0); }
-
         .skeleton { background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 16px; height: 200px; width: 100%; position: relative; overflow: hidden; }
         .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); animation: shimmy 1.5s infinite; }
         @keyframes shimmy { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
+        /* MODAL & POPUP STYLES */
         .code-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.3s; }
         .code-modal-overlay.active { opacity: 1; }
         .code-modal-content { background: #0a0a0a; border: 1px solid #333; border-radius: 20px; width: 90%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; transform: scale(0.95) translateY(10px); transition: all 0.4s var(--ease-out); }
@@ -192,9 +147,9 @@
 
     <div id="security-layer">
         <div class="security-card">
-            <div style="font-size: 0.7rem; color: var(--accent-green); font-family: 'JetBrains Mono'; margin-bottom: 12px; letter-spacing: 2px;">🛡️ NOVA SECURITY</div>
-            <h1 style="font-size: 1.4rem; margin: 0 0 10px 0; font-weight: 700;">Verifying Connection</h1>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">Checking your browser security to prevent automated access.</p>
+            <div style="font-size: 0.7rem; color: var(--accent-green); font-family: 'JetBrains Mono'; margin-bottom: 12px; letter-spacing: 2px;">NovaBrowse V.1</div>
+            <h1 style="font-size: 1.4rem; margin: 0 0 10px 0; font-weight: 700;">Verify that you're human</h1>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">To check your browser security, to prevent automated access.</p>
 
             <div class="verify-box" id="verify-trigger">
                 <div class="checkbox-custom" id="check-box">
@@ -262,15 +217,37 @@
     </div>
 
     <script>
-        // --- 1. NOVASECURITY LOGIC ---
+        const securityLayer = document.getElementById('security-layer');
+        const mainContent = document.getElementById('main-library-content');
         const trigger = document.getElementById('verify-trigger');
         const checkbox = document.getElementById('check-box');
         const spinner = document.getElementById('loading-spinner');
         const checkIcon = document.getElementById('check-icon');
         const statusText = document.getElementById('status-text');
-        const securityLayer = document.getElementById('security-layer');
-        const mainContent = document.getElementById('main-library-content');
 
+        // --- RANDOMIZER LOGIC ---
+        // Peluang muncul NovaSecurity (0.4 = 40% kemungkinan muncul)
+        const chanceOfSecurity = 0.4; 
+
+        function bypassSecurity() {
+            securityLayer.style.display = 'none';
+            mainContent.style.display = 'block';
+            setTimeout(() => { mainContent.style.opacity = '1'; }, 50);
+            startLibrary(); 
+        }
+
+        function showSecurity() {
+            securityLayer.style.display = 'flex';
+        }
+
+        // Tentukan apakah muncul atau tidak saat load
+        if (Math.random() > chanceOfSecurity) {
+            bypassSecurity();
+        } else {
+            showSecurity();
+        }
+
+        // --- VERIFICATION LOGIC ---
         trigger.addEventListener('click', () => {
             statusText.innerText = "Verifying...";
             spinner.style.display = "block";
@@ -291,47 +268,13 @@
                         securityLayer.style.display = "none";
                         mainContent.style.display = "block";
                         setTimeout(() => { mainContent.style.opacity = "1"; }, 50);
-                        startLibrary(); // Start fetching data
+                        startLibrary();
                     }, 500);
                 }, 800);
             }, delay);
         });
 
-        // --- 2. GLITCH LOGIC ---
-        const logoElement = document.getElementById('nova-logo');
-        const originalLogoText = 'NovaScript';
-        const glitchChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/{}[]-_+';
-        
-        function startScrambleEffect() {
-            if (!logoElement) return;
-            let tempText = Array(originalLogoText.length).fill(originalLogoText[0]);
-            let scrambleCount = 0;
-            logoElement.classList.add('glitching');
-
-            const scrambleTimer = setInterval(() => {
-                if (scrambleCount < originalLogoText.length) {
-                    tempText[scrambleCount] = glitchChars.charAt(Math.floor(Math.random() * glitchChars.length));
-                    logoElement.textContent = tempText.join('');
-                    scrambleCount++;
-                } else {
-                    clearInterval(scrambleTimer);
-                    let resolveCount = 0;
-                    const resolveTimer = setInterval(() => {
-                        if (resolveCount < originalLogoText.length) {
-                            tempText[resolveCount] = originalLogoText[resolveCount];
-                            logoElement.textContent = tempText.join('');
-                            resolveCount++;
-                        } else {
-                            clearInterval(resolveTimer);
-                            logoElement.classList.remove('glitching');
-                            setTimeout(startScrambleEffect, 6000);
-                        }
-                    }, 60); 
-                }
-            }, 50); 
-        }
-
-        // --- 3. MAIN LIBRARY LOGIC ---
+        // --- ORIGINAL LIBRARY DATA FETCH & LOGIC ---
         async function startLibrary() {
             startScrambleEffect();
             
@@ -341,7 +284,6 @@
             const modalLoaderCode = document.getElementById('modal-loader-code');
             const modalCloseBtn = document.getElementById('modal-close-btn');
             const modalCopyBtn = document.getElementById('modal-copy-btn');
-            
             const promoPopup = document.getElementById('promo-popup');
             const promoCloseBtn = document.getElementById('close-promo-btn');
             const dontShowCheck = document.getElementById('dont-show-check');
@@ -383,13 +325,9 @@
                 }
             });
 
-            const closeCodeModal = () => { 
-                codeModal.classList.remove('active');
-                setTimeout(() => codeModal.style.display = 'none', 300);
-            };
+            const closeCodeModal = () => { codeModal.classList.remove('active'); setTimeout(() => codeModal.style.display = 'none', 300); };
             modalCloseBtn.addEventListener('click', closeCodeModal);
             codeModal.addEventListener('click', (e) => { if (e.target === codeModal) closeCodeModal(); });
-
             modalCopyBtn.addEventListener('click', () => {
                 navigator.clipboard.writeText(modalLoaderCode.textContent).then(() => {
                     const original = modalCopyBtn.textContent;
@@ -400,20 +338,44 @@
             });
 
             if (!localStorage.getItem(promoKey)) {
-                setTimeout(() => {
-                    promoPopup.style.display = 'flex';
-                    void promoPopup.offsetWidth; 
-                    promoPopup.classList.add('active');
-                }, 1500);
+                setTimeout(() => { promoPopup.style.display = 'flex'; void promoPopup.offsetWidth; promoPopup.classList.add('active'); }, 1500);
             }
 
-            function closePromo() {
-                if (dontShowCheck.checked) localStorage.setItem(promoKey, 'true');
-                promoPopup.classList.remove('active');
-                setTimeout(() => { promoPopup.style.display = 'none'; }, 400);
-            }
+            function closePromo() { if (dontShowCheck.checked) localStorage.setItem(promoKey, 'true'); promoPopup.classList.remove('active'); setTimeout(() => { promoPopup.style.display = 'none'; }, 400); }
             promoCloseBtn.addEventListener('click', closePromo);
             promoPopup.addEventListener('click', (e) => { if (e.target === promoPopup) closePromo(); });
+        }
+
+        // --- GLITCH LOGIC ---
+        function startScrambleEffect() {
+            const logo = document.getElementById('nova-logo');
+            const text = 'NovaScript';
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/{}[]-_+';
+            if (!logo) return;
+            let tempText = Array(text.length).fill(text[0]);
+            let scrambleCount = 0;
+            logo.classList.add('glitching');
+            const scrambleTimer = setInterval(() => {
+                if (scrambleCount < text.length) {
+                    tempText[scrambleCount] = chars.charAt(Math.floor(Math.random() * chars.length));
+                    logo.textContent = tempText.join('');
+                    scrambleCount++;
+                } else {
+                    clearInterval(scrambleTimer);
+                    let resolveCount = 0;
+                    const resolveTimer = setInterval(() => {
+                        if (resolveCount < text.length) {
+                            tempText[resolveCount] = text[resolveCount];
+                            logo.textContent = tempText.join('');
+                            resolveCount++;
+                        } else {
+                            clearInterval(resolveTimer);
+                            logo.classList.remove('glitching');
+                            setTimeout(startScrambleEffect, 6000);
+                        }
+                    }, 60); 
+                }
+            }, 50); 
         }
     </script>
 </body>
