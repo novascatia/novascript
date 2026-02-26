@@ -20,9 +20,11 @@
         .modal.active { opacity: 1; pointer-events: auto; }
         .modal-box { transform: scale(0.95); transition: all 0.2s ease-in-out; }
         .modal.active .modal-box { transform: scale(1); }
-        pre::-webkit-scrollbar { height: 6px; width: 6px; }
-        pre::-webkit-scrollbar-track { background: #09090b; }
-        pre::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        
+        /* Custom Scrollbar */
+        pre::-webkit-scrollbar, textarea::-webkit-scrollbar { height: 6px; width: 6px; }
+        pre::-webkit-scrollbar-track, textarea::-webkit-scrollbar-track { background: #09090b; }
+        pre::-webkit-scrollbar-thumb, textarea::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
     </style>
 </head>
 <body class="text-gray-300 min-h-screen">
@@ -128,7 +130,7 @@
                 <pre><code id="script-code-content" class="text-xs md:text-sm font-mono text-green-400 whitespace-pre-wrap break-all">Loading...</code></pre>
             </div>
             <div class="p-4 border-t border-[#27272a] flex flex-col sm:flex-row justify-between items-center bg-[#121214] gap-3">
-                <span class="text-[10px] md:text-xs text-gray-500 text-center sm:text-left">Paste this code into your Growlauncher.</span>
+                <span class="text-[10px] md:text-xs text-gray-500 text-center sm:text-left">Paste this code into your executor.</span>
                 <button onclick="copyScriptCode(this)" class="w-full sm:w-auto bg-white hover:bg-gray-200 text-black px-6 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors">
                     Copy to Clipboard
                 </button>
@@ -137,36 +139,59 @@
     </div>
 
     <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
+        <div class="modal-box w-full max-w-lg bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
             <div class="p-5 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
                 <h3 class="font-bold text-white">Top Up Wallet</h3>
                 <button onclick="closeTopup()" class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
+            
             <div class="p-5 md:p-6">
-                <div class="flex gap-2 mb-5 bg-[#09090b] p-1 rounded-lg border border-[#27272a]">
-                    <button onclick="switchTopup('bgl')" id="tab-bgl" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow">Automated (BGL)</button>
-                    <button onclick="switchTopup('qris')" id="tab-qris" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200">Manual (QRIS)</button>
-                </div>
-                <div id="section-bgl" class="text-center">
-                    <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg mb-4">
-                        <p class="text-[10px] md:text-xs text-blue-400 font-semibold mb-1 uppercase tracking-wider">Current Exchange Rate</p>
-                        <p class="text-xl md:text-2xl font-bold text-white font-mono">1 BGL = Rp 1.500</p>
+                <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg mb-5 flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] md:text-xs text-blue-400 font-semibold mb-1 uppercase tracking-wider">Current Rate</p>
+                        <p class="text-lg md:text-xl font-bold text-white font-mono">1 BGL = Rp 1.500</p>
                     </div>
-                    <div class="text-left text-xs md:text-sm text-gray-400 space-y-3 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
-                        <p>Set this endpoint in your Lua Script:</p>
-                        <div class="flex flex-col sm:flex-row items-center gap-2">
-                            <input type="text" id="bgl-endpoint" readonly value="novascript.site/encrypt/topupgl" class="w-full bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs px-3 py-2.5 rounded-md outline-none">
-                            <button onclick="copyEndpoint(this)" class="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-md text-xs font-semibold border border-zinc-700">Copy</button>
-                        </div>
-                        <p class="mt-2 text-[10px] md:text-xs text-yellow-500">⚠️ Auto-link username: <code class="text-gray-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 font-bold" id="bgl-username"></code></p>
+                    <div class="text-right">
+                        <p class="text-[10px] md:text-xs text-yellow-500 mb-1">Auto-link Account</p>
+                        <code class="text-white bg-black px-2 py-1 rounded border border-zinc-700 font-bold text-xs" id="topup-username-badge"></code>
                     </div>
                 </div>
-                <div id="section-qris" class="hidden text-center">
-                    <p class="text-xs md:text-sm text-gray-400 mb-4">Scan using any E-Wallet</p>
-                    <div class="bg-white p-2 rounded-xl inline-block mb-4">
-                        <img src="https://media.discordapp.net/attachments/1408185563944718438/1453987119780462683/qr_ID1025376739336_26.12.25_176672247_1766722476960.jpg" alt="QRIS" class="w-32 md:w-40 h-auto rounded-lg">
+
+                <div class="flex gap-2 mb-4 bg-[#09090b] p-1 rounded-lg border border-[#27272a]">
+                    <button onclick="switchTopup('gl')" id="tab-gl" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors">TopUp GL</button>
+                    <button onclick="switchTopup('gpai')" id="tab-gpai" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors">TopUp GrowPai</button>
+                </div>
+
+                <div id="section-gl" class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                    <p class="text-white font-semibold mb-2">Growlauncher Loader:</p>
+                    <div class="relative">
+                        <textarea id="gl-script" readonly class="w-full h-40 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
+
+if not res then
+    LogToConsole(err)
+    return
+end
+
+local chunk, loadErr = load(res)
+if not chunk then
+    LogToConsole(loadErr)
+    return
+end
+
+chunk()</textarea>
+                        <button onclick="copyScriptText('gl-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
                     </div>
-                    <p class="text-[10px] md:text-xs text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 py-2 px-3 rounded-lg block">Send proof to Discord Admin.</p>
+                </div>
+
+                <div id="section-gpai" class="hidden text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                    <p class="text-white font-semibold mb-2">GrowPai Loader:</p>
+                    <div class="relative">
+                        <textarea id="gpai-script" readonly class="w-full h-32 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
+local script = handle and handle:read("*a") or nil
+if handle then handle:close() end
+if script then local f = load(script) if f then f() end end</textarea>
+                        <button onclick="copyScriptText('gpai-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -177,7 +202,6 @@
         let pendingBuy = null;
         let reloadAfterNotif = false;
 
-        // Custom Notification (Pengganti Alert)
         function showNotif(title, msg, isError = false) {
             document.getElementById('notif-title').innerText = title;
             document.getElementById('notif-title').className = `font-bold text-lg mb-2 ${isError ? 'text-red-500' : 'text-white'}`;
@@ -195,8 +219,11 @@
             if (userStr) {
                 let user = JSON.parse(userStr);
                 document.getElementById('display-username').innerText = user.username;
-                const bglUsernameSpan = document.getElementById('bgl-username');
-                if(bglUsernameSpan) bglUsernameSpan.innerText = user.username;
+                
+                // Set Auto-link Username badge in Top Up modal
+                const topupBadge = document.getElementById('topup-username-badge');
+                if(topupBadge) topupBadge.innerText = user.username;
+                
                 document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" id="live-indicator"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
 
                 if (localStorage.getItem('nova_role') !== 'guest') {
@@ -244,7 +271,6 @@
                     
                     resultScripts.scripts.forEach((script) => {
                         const isFree = !script.price || script.price === 0;
-                        // Pastikan tipe data sama saat pengecekan (ubah semua ke string)
                         const isOwned = ownedIds.map(String).includes(String(script.id));
                         
                         const card = document.createElement('div');
@@ -290,7 +316,6 @@
             }
         }
 
-        // --- Logic Eksekusi Script (Free/Owned) ---
         function executeScript(scriptId) {
             const script = allScripts.find(s => String(s.id) === String(scriptId));
             if(script) {
@@ -310,7 +335,7 @@
             });
         }
 
-        // --- Logic Custom Buy Modal (Pengganti Confirm) ---
+        // --- Logic Custom Buy Modal ---
         function triggerBuy(scriptId, price, title) {
             const userStr = localStorage.getItem('nova_user');
             if(!userStr) { showNotif('Error', 'Please login first.', true); return; }
@@ -321,7 +346,6 @@
                 return;
             } 
             
-            // Siapkan Modal Confirm
             pendingBuy = { scriptId, price, title, user };
             document.getElementById('buy-title').innerText = title;
             document.getElementById('buy-price').innerText = price + ' BGL';
@@ -338,9 +362,21 @@
             try {
                 const res = await fetch('/.netlify/functions/buy-script', {
                     method: 'POST',
-                    body: JSON.stringify({ username: pendingBuy.user.username, script_id: String(pendingBuy.scriptId), price: pendingBuy.price })
+                    body: JSON.stringify({ username: pendingBuy.user.username, script_id: String(pendingBuy.scriptId), price: parseInt(pendingBuy.price) })
                 });
-                const data = await res.json();
+                
+                const rawText = await res.text(); 
+                let data;
+                
+                try {
+                    data = JSON.parse(rawText);
+                } catch(parseError) {
+                    console.error("Format balasan aneh:", rawText);
+                    closeBuyModal();
+                    showNotif('Processing...', 'Verifying your transaction...');
+                    setTimeout(() => location.reload(), 1500); 
+                    return;
+                }
                 
                 if(data.success) {
                     pendingBuy.user.wallet = data.new_balance;
@@ -350,10 +386,13 @@
                     showNotif('Purchase Successful!', `"${pendingBuy.title}" has been moved to your Owned tab.`);
                 } else {
                     closeBuyModal();
-                    showNotif('Purchase Failed', data.message, true);
+                    showNotif('Purchase Failed', data.message || "Transaction error.", true);
                 }
             } catch(e) { 
-                closeBuyModal(); showNotif('Error', 'Connection error.', true); 
+                console.error("System Error:", e);
+                closeBuyModal(); 
+                showNotif('Notice', 'Checking transaction status...'); 
+                setTimeout(() => location.reload(), 1500);
             } finally {
                 btn.disabled = false; btn.innerText = 'Purchase';
             }
@@ -364,25 +403,32 @@
         function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
 
         function switchTopup(type) {
-            const tabBgl = document.getElementById('tab-bgl'), tabQris = document.getElementById('tab-qris');
-            const secBgl = document.getElementById('section-bgl'), secQris = document.getElementById('section-qris');
-            if(type === 'bgl') {
-                tabBgl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
-                tabQris.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secBgl.classList.remove('hidden'); secQris.classList.add('hidden');
+            const tabGl = document.getElementById('tab-gl'), tabGpai = document.getElementById('tab-gpai');
+            const secGl = document.getElementById('section-gl'), secGpai = document.getElementById('section-gpai');
+            if(type === 'gl') {
+                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors';
+                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors';
+                secGl.classList.remove('hidden'); secGpai.classList.add('hidden');
             } else {
-                tabQris.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
-                tabBgl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secQris.classList.remove('hidden'); secBgl.classList.add('hidden');
+                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors';
+                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors';
+                secGpai.classList.remove('hidden'); secGl.classList.add('hidden');
             }
         }
 
-        function copyEndpoint(btn) {
-            const inputField = document.getElementById('bgl-endpoint');
-            navigator.clipboard.writeText(inputField.value).then(() => {
+        // Fungsi copy untuk textarea multi-line di modal TopUp
+        function copyScriptText(elementId, btn) {
+            const textArea = document.getElementById(elementId);
+            navigator.clipboard.writeText(textArea.value).then(() => {
                 const ori = btn.innerText;
-                btn.innerText = 'Copied!'; btn.classList.replace('text-white', 'text-green-400');
-                setTimeout(() => { btn.innerText = ori; btn.classList.replace('text-green-400', 'text-white'); }, 2000);
+                btn.innerText = 'Copied!'; 
+                btn.classList.replace('text-white', 'text-green-400');
+                btn.classList.replace('border-zinc-700', 'border-green-500');
+                setTimeout(() => { 
+                    btn.innerText = ori; 
+                    btn.classList.replace('text-green-400', 'text-white'); 
+                    btn.classList.replace('border-green-500', 'border-zinc-700');
+                }, 2000);
             });
         }
 
