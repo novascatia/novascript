@@ -24,6 +24,11 @@
         .modal.active { opacity: 1; pointer-events: auto; }
         .modal-box { transform: scale(0.95); transition: all 0.2s ease-in-out; }
         .modal.active .modal-box { transform: scale(1); }
+        
+        /* Custom Scrollbar for Code Block */
+        pre::-webkit-scrollbar { height: 8px; width: 8px; }
+        pre::-webkit-scrollbar-track { background: #09090b; }
+        pre::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
     </style>
 </head>
 <body class="text-gray-300 min-h-screen">
@@ -56,12 +61,21 @@
     <main class="max-w-6xl mx-auto pt-28 pb-20 px-6">
         <header class="mb-10 border-b border-zinc-800 pb-6">
             <h1 class="text-3xl font-bold text-white mb-2">Script Library</h1>
-            <p class="text-gray-400 text-sm">Explore Free & Premium execution scripts. Make sure you have enough BGL for premium ones.</p>
+            <p class="text-gray-400 text-sm">Explore Free & Premium execution scripts. Your purchased scripts will appear in the Owned section.</p>
         </header>
 
         <div class="mb-12">
             <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Public / Free Scripts
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></span> Purchased / Owned
+            </h2>
+            <div id="owned-scripts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <p class="text-gray-600 text-sm italic">You don't own any premium scripts yet.</p>
+            </div>
+        </div>
+
+        <div class="mb-12">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Public / Free
             </h2>
             <div id="free-scripts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <p class="text-gray-500 text-sm">Loading free scripts...</p>
@@ -70,13 +84,36 @@
 
         <div>
             <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></span> Premium Scripts
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></span> Premium Marketplace
             </h2>
             <div id="paid-scripts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <p class="text-gray-500 text-sm">Loading premium scripts...</p>
             </div>
         </div>
     </main>
+
+    <div id="code-modal" class="modal fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-3xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="p-4 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
+                <h3 class="font-bold text-white flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Script Execution Code
+                </h3>
+                <button onclick="closeCodeModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto bg-[#09090b] flex-1">
+                <pre><code id="script-code-content" class="text-sm font-mono text-green-400 whitespace-pre-wrap break-all">Loading...</code></pre>
+            </div>
+            <div class="p-4 border-t border-[#27272a] flex justify-between items-center bg-[#121214]">
+                <span class="text-xs text-gray-500">Paste this code into your Growlauncher.</span>
+                <button onclick="copyScriptCode(this)" class="bg-white hover:bg-gray-200 text-black px-6 py-2 rounded-lg text-sm font-bold transition-colors">
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="modal-box w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
@@ -100,7 +137,7 @@
                     </div>
                     
                     <div class="text-left text-sm text-gray-400 space-y-3 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
-                        <p>Set this endpoint in your Auto Top-Up Lua Script:</p>
+                        <p>Execute this script:</p>
                         
                         <div class="flex items-center gap-2">
                             <input type="text" id="bgl-endpoint" readonly value="novascript.site/encrypt/topupgl" class="w-full bg-black border border-zinc-700 text-green-400 font-mono text-xs px-3 py-2.5 rounded-md focus:outline-none selection:bg-green-900">
@@ -130,6 +167,8 @@
     </div>
 
     <script>
+        let allScripts = []; // Global variable untuk simpan data scripts buat Modal
+
         async function initApp() {
             const userStr = localStorage.getItem('nova_user');
             const role = localStorage.getItem('nova_role');
@@ -137,39 +176,34 @@
             if (userStr) {
                 let user = JSON.parse(userStr);
                 
-                // 1. Tampilkan Username di Navbar dan Modal
+                // Set data statis ke UI
                 document.getElementById('display-username').innerText = user.username;
                 const bglUsernameSpan = document.getElementById('bgl-username');
                 if(bglUsernameSpan) bglUsernameSpan.innerText = user.username;
                 
-                // 2. Set saldo awal dari LocalStorage biar ga kosong pas web baru diload
+                // Tampilkan saldo sementara dari memori
                 document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" id="live-indicator"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
 
-                // 3. Jika bukan Guest, tampilkan tombol Top Up & Sync Database Live
                 if (role !== 'guest') {
                     document.getElementById('btn-topup').classList.remove('hidden');
                     
+                    // Sync Saldo Live dari Backend
                     try {
-                        // Tembak API get-balance (Pastikan file get-balance.js sudah ada di Netlify)
                         const res = await fetch(`/.netlify/functions/get-balance?username=${user.username}`);
                         const data = await res.json();
                         
                         if (data.balance !== undefined) {
-                            // Update UI Navbar dengan data Live dari Supabase
                             document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500" title="Live Database Synced"></span> ${parseInt(data.balance).toLocaleString('id-ID')} BGL`;
-                            
-                            // Update LocalStorage agar sinkron
                             user.wallet = data.balance;
                             localStorage.setItem('nova_user', JSON.stringify(user));
                         }
                     } catch (err) {
-                        console.log("Failed to fetch live balance. Using cached balance.");
+                        console.log("Failed to fetch live balance.");
                         document.getElementById('live-indicator').classList.replace('bg-blue-400', 'bg-red-500');
                         document.getElementById('live-indicator').classList.remove('animate-pulse');
                     }
                 } else {
-                    // Kalau Guest, hapus icon loading di dompet
-                    document.getElementById('display-wallet').innerText = '0 BGL';
+                    document.getElementById('display-wallet').innerText = '0 BGL'; // Guest mode
                 }
             }
             loadScripts();
@@ -178,34 +212,58 @@
         async function loadScripts() {
             const freeContainer = document.getElementById('free-scripts');
             const paidContainer = document.getElementById('paid-scripts');
+            const ownedContainer = document.getElementById('owned-scripts');
             
             try {
-                const res = await fetch('/.netlify/functions/get-scripts');
-                const result = await res.json();
+                // 1. Ambil Data Semua Script
+                const resScripts = await fetch('/.netlify/functions/get-scripts');
+                const resultScripts = await resScripts.json();
                 
+                // 2. Ambil Data Script Kepemilikan (Owned)
+                const user = JSON.parse(localStorage.getItem('nova_user') || '{}');
+                let ownedIds = [];
+                if (user.username) {
+                    try {
+                        const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
+                        const resultOwned = await resOwned.json();
+                        if (resultOwned.success) ownedIds = resultOwned.owned_scripts;
+                    } catch(e) { console.log("Gagal meload data owned script"); }
+                }
+
                 freeContainer.innerHTML = ''; 
                 paidContainer.innerHTML = '';
+                
+                // Hapus tulisan default kalau ada isi
+                if(ownedIds.length > 0) ownedContainer.innerHTML = ''; 
 
-                if (result.success && result.scripts.length > 0) {
-                    result.scripts.forEach((script) => {
+                if (resultScripts.success && resultScripts.scripts.length > 0) {
+                    allScripts = resultScripts.scripts; // Simpan ke global
+                    
+                    resultScripts.scripts.forEach((script) => {
                         const isFree = !script.price || script.price === 0;
+                        const isOwned = ownedIds.includes(script.id);
+                        
                         const card = document.createElement('div');
                         card.className = 'card-item p-5 rounded-xl flex flex-col justify-between h-full';
                         
                         let actionButton = '';
-                        if (isFree) {
-                            actionButton = `<button onclick="executeScript('${script.id}')" class="text-sm font-semibold text-blue-500 hover:text-blue-400 bg-blue-500/10 px-4 py-1.5 rounded-lg border border-blue-500/20 transition-colors">Execute</button>`;
+                        let badge = '';
+
+                        if (isFree || isOwned) {
+                            actionButton = `<button onclick="executeScript('${script.id}')" class="text-sm font-semibold text-blue-500 hover:text-blue-400 bg-blue-500/10 px-4 py-1.5 rounded-lg border border-blue-500/20 transition-colors shadow-sm">Execute</button>`;
+                            badge = isFree 
+                                ? '<span class="text-[10px] font-bold tracking-wider bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">FREE</span>' 
+                                : '<span class="text-[10px] font-bold tracking-wider bg-purple-500/10 text-purple-400 px-2 py-1 rounded border border-purple-500/20">OWNED</span>';
                         } else {
-                            actionButton = `<button onclick="buyScript('${script.id}', ${script.price})" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-md">Buy - ${script.price} BGL</button>`;
+                            actionButton = `<button onclick="buyScript('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-1.5 rounded-lg text-sm font-bold shadow-md transition-colors">Buy - ${script.price} BGL</button>`;
+                            badge = '<span class="text-[10px] font-bold tracking-wider bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded border border-yellow-500/20">PREMIUM</span>';
                         }
 
                         card.innerHTML = `
                             <div>
                                 <div class="flex justify-between items-start mb-3">
-                                    <h2 class="text-lg font-bold text-white leading-tight">${script.title}</h2>
-                                    ${isFree 
-                                        ? '<span class="text-[10px] font-bold tracking-wider bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">FREE</span>' 
-                                        : '<span class="text-[10px] font-bold tracking-wider bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded border border-yellow-500/20">PREMIUM</span>'}
+                                    <h2 class="text-lg font-bold text-white leading-tight pr-2">${script.title}</h2>
+                                    ${badge}
                                 </div>
                                 <p class="text-sm text-gray-400 line-clamp-3 mb-4">${script.description}</p>
                             </div>
@@ -215,11 +273,10 @@
                             </div>
                         `;
                         
-                        if (isFree) {
-                            freeContainer.appendChild(card);
-                        } else {
-                            paidContainer.appendChild(card);
-                        }
+                        // Masukkan ke Grid yang Tepat
+                        if (isFree) freeContainer.appendChild(card);
+                        else if (isOwned) ownedContainer.appendChild(card);
+                        else paidContainer.appendChild(card);
                     });
                 } else {
                     freeContainer.innerHTML = '<p class="text-gray-500 text-sm">No free scripts available.</p>';
@@ -231,28 +288,71 @@
             }
         }
 
+        // --- Logika Eksekusi Code Modal ---
         function executeScript(scriptId) {
-            alert('Executing script ID: ' + scriptId);
-            // Tambahkan logika untuk pop-up/modal source code loader kalau butuh
+            const script = allScripts.find(s => s.id === scriptId);
+            if(script) {
+                // Tampilkan source code. Fallback ke 'code' atau teks kosong jika tidak ada loader_script
+                document.getElementById('script-code-content').innerText = script.loader_script || script.code || '-- No execution code provided in database --';
+                document.getElementById('code-modal').classList.add('active');
+            }
         }
 
-        function buyScript(scriptId, price) {
+        function closeCodeModal() { document.getElementById('code-modal').classList.remove('active'); }
+
+        function copyScriptCode(btn) {
+            const code = document.getElementById('script-code-content').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = 'Copied!';
+                btn.classList.add('bg-green-400', 'text-white');
+                btn.classList.remove('bg-white', 'text-black');
+                
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.classList.remove('bg-green-400', 'text-white');
+                    btn.classList.add('bg-white', 'text-black');
+                }, 2000);
+            });
+        }
+
+        // --- Logika Pembelian ---
+        async function buyScript(scriptId, price, title) {
             const userStr = localStorage.getItem('nova_user');
-            if(!userStr) return;
+            if(!userStr) { alert('Please login first.'); return; }
             const user = JSON.parse(userStr);
             
             if(user.wallet < price) {
-                alert(`Insufficient balance! You need ${price} BGL to buy this script.`);
+                alert(`Insufficient balance! You need ${price} BGL to buy "${title}".`);
                 openTopup();
-            } else {
-                if(confirm(`Confirm purchase for ${price} BGL?`)) {
-                    // Integrasi API beli script
-                    alert('Purchase endpoint logic not connected yet.');
+                return;
+            } 
+            
+            if(confirm(`Are you sure you want to purchase "${title}" for ${price} BGL?`)) {
+                try {
+                    const res = await fetch('/.netlify/functions/buy-script', {
+                        method: 'POST',
+                        body: JSON.stringify({ username: user.username, script_id: scriptId, price: price })
+                    });
+                    const data = await res.json();
+                    
+                    if(data.success) {
+                        alert('Purchase successful! The script is now in your Owned tab.');
+                        // Update saldo di memori
+                        user.wallet = data.new_balance;
+                        localStorage.setItem('nova_user', JSON.stringify(user));
+                        // Refresh halaman untuk mereload UI (memindah script)
+                        location.reload(); 
+                    } else {
+                        alert('Purchase Failed: ' + data.message);
+                    }
+                } catch(e) { 
+                    alert('Connection error. Could not complete purchase.'); 
                 }
             }
         }
 
-        // Modal Topup Logic
+        // --- Modal Topup Logic ---
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
         function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
 
@@ -265,17 +365,14 @@
             if(type === 'bgl') {
                 tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
                 tabQris.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secBgl.classList.remove('hidden'); 
-                secQris.classList.add('hidden');
+                secBgl.classList.remove('hidden'); secQris.classList.add('hidden');
             } else {
                 tabQris.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
                 tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secQris.classList.remove('hidden'); 
-                secBgl.classList.add('hidden');
+                secQris.classList.remove('hidden'); secBgl.classList.add('hidden');
             }
         }
 
-        // Copy Endpoint Logic
         function copyEndpoint(btn) {
             const inputField = document.getElementById('bgl-endpoint');
             navigator.clipboard.writeText(inputField.value).then(() => {
@@ -292,9 +389,12 @@
             });
         }
 
-        // Close modal jika klik background gelap
+        // Close modal jika klik area luar modal
         document.getElementById('topup-modal').addEventListener('click', (e) => {
             if (e.target === document.getElementById('topup-modal')) closeTopup();
+        });
+        document.getElementById('code-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('code-modal')) closeCodeModal();
         });
 
         // Logout
