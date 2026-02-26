@@ -354,7 +354,7 @@ if script then local f = load(script) if f then f() end end</textarea>
 
         function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
 
-        document.getElementById('confirm-buy-btn').onclick = async function() {
+document.getElementById('confirm-buy-btn').onclick = async function() {
             if(!pendingBuy) return;
             const btn = this;
             btn.disabled = true; btn.innerText = 'Processing...';
@@ -362,7 +362,11 @@ if script then local f = load(script) if f then f() end end</textarea>
             try {
                 const res = await fetch('/.netlify/functions/buy-script', {
                     method: 'POST',
-                    body: JSON.stringify({ username: pendingBuy.user.username, script_id: String(pendingBuy.scriptId), price: parseInt(pendingBuy.price) })
+                    body: JSON.stringify({ 
+                        username: pendingBuy.user.username, 
+                        script_id: String(pendingBuy.scriptId), 
+                        price: parseInt(pendingBuy.price) 
+                    })
                 });
                 
                 const rawText = await res.text(); 
@@ -371,7 +375,6 @@ if script then local f = load(script) if f then f() end end</textarea>
                 try {
                     data = JSON.parse(rawText);
                 } catch(parseError) {
-                    console.error("Format balasan aneh:", rawText);
                     closeBuyModal();
                     showNotif('Processing...', 'Verifying your transaction...');
                     setTimeout(() => location.reload(), 1500); 
@@ -379,19 +382,23 @@ if script then local f = load(script) if f then f() end end</textarea>
                 }
                 
                 if(data.success) {
+                    // Update saldo lokal
                     pendingBuy.user.wallet = data.new_balance;
                     localStorage.setItem('nova_user', JSON.stringify(pendingBuy.user));
-                    closeBuyModal();
+                    
+                    // Tampilkan notifikasi DULU sebelum modal ditutup
                     reloadAfterNotif = true;
                     showNotif('Purchase Successful!', `"${pendingBuy.title}" has been moved to your Owned tab.`);
+                    
+                    // Baru tutup modal buy-nya
+                    closeBuyModal(); 
                 } else {
-                    closeBuyModal();
                     showNotif('Purchase Failed', data.message || "Transaction error.", true);
+                    closeBuyModal();
                 }
             } catch(e) { 
                 console.error("System Error:", e);
-                closeBuyModal(); 
-                showNotif('Notice', 'Checking transaction status...'); 
+                showNotif('Notice', 'Syncing your data...'); 
                 setTimeout(() => location.reload(), 1500);
             } finally {
                 btn.disabled = false; btn.innerText = 'Purchase';
