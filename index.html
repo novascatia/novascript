@@ -1,382 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novascript Library</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>NovaScript | Library</title>
+    
+    <script>
+        if (!localStorage.getItem('nova_user')) {
+            window.location.href = '/login'; // Redirect bersih
+        }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --bg-body: #050505;
-            --bg-card: rgba(255, 255, 255, 0.03);
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(255, 255, 255, 0.2);
-            --text-main: #ededed;
-            --text-muted: #888888;
-            --primary-glow: rgba(255, 255, 255, 0.15);
-            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-            --accent-green: #10b981;
-        }
-
-        /* --- NOVASECURITY LAYER --- */
-        #security-layer {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: var(--bg-body);
-            display: none; /* Default sembunyi, muncul via JS */
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.5s ease;
-        }
-
-        .security-card {
-            background: #0a0a0a;
-            border: 1px solid var(--border-subtle);
-            padding: 40px;
-            border-radius: 24px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        }
-
-        .verify-box {
-            display: flex;
-            align-items: center;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border-subtle);
-            padding: 16px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .verify-box:hover { border-color: rgba(255,255,255,0.2); }
-
-        .checkbox-custom {
-            width: 22px;
-            height: 22px;
-            border: 2px solid #333;
-            border-radius: 6px;
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.3s;
-            flex-shrink: 0;
-        }
-
-        .checkbox-custom.checked {
-            background: var(--accent-green);
-            border-color: var(--accent-green);
-        }
-
-        .spinner {
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* --- MAIN CONTENT --- */
-        #main-library-content {
-            display: none; /* Muncul setelah verifikasi atau jika hoki */
-            opacity: 0;
-            transition: opacity 0.8s ease;
-        }
-
-        /* --- ORIGINAL STYLES DARI INDEX.HTML --- */
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-        .noise-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"); pointer-events: none; z-index: 10; }
-        .spotlight { position: fixed; top: -20%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1000px; height: 600px; background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%); pointer-events: none; z-index: -1; }
-        .container { max-width: 900px; margin: 0 auto; padding: 100px 24px 140px 24px; position: relative; z-index: 1; }
-        header { text-align: center; margin-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
-        .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2); padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px; }
-        .status-badge::before { content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 8px #4ade80; }
-        header h1 { font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -0.04em; margin: 0; background: linear-gradient(180deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
-        #nova-logo.glitching { -webkit-text-fill-color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        header p { font-size: 1.1rem; color: var(--text-muted); margin-top: 20px; font-weight: 400; max-width: 500px; line-height: 1.6; }
-        .script-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
-        .script-item { background-color: var(--bg-card); backdrop-filter: blur(10px); padding: 32px; border-radius: 16px; border: 1px solid var(--border-subtle); cursor: pointer; transition: all 0.4s var(--ease-out); position: relative; opacity: 0; transform: translateY(20px); display: flex; flex-direction: column; justify-content: space-between; }
-        .script-item.visible { opacity: 1; transform: translateY(0); }
-        .script-item:hover { transform: translateY(-5px) scale(1.01); background-color: rgba(255, 255, 255, 0.05); border-color: var(--border-hover); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); }
-        .script-item h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 12px 0; color: #fff; letter-spacing: -0.02em; }
-        .script-item p { font-size: 0.95rem; color: #999; margin: 0 0 24px 0; line-height: 1.6; flex-grow: 1; }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
-        .version-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #666; }
-        .action-text { font-size: 0.8rem; font-weight: 600; color: #fff; opacity: 0; transform: translateX(-10px); transition: all 0.3s; }
-        .script-item:hover .action-text { opacity: 1; transform: translateX(0); }
-        .skeleton { background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 16px; height: 200px; width: 100%; position: relative; overflow: hidden; }
-        .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); animation: shimmy 1.5s infinite; }
-        @keyframes shimmy { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-
-        /* MODAL & POPUP STYLES */
-        .code-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.3s; }
-        .code-modal-overlay.active { opacity: 1; }
-        .code-modal-content { background: #0a0a0a; border: 1px solid #333; border-radius: 20px; width: 90%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; transform: scale(0.95) translateY(10px); transition: all 0.4s var(--ease-out); }
-        .code-modal-overlay.active .code-modal-content { transform: scale(1) translateY(0); }
-        .code-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid #1a1a1a; }
-        .code-modal-header h3 { margin: 0; color: #fff; font-size: 1.1rem; }
-        .close-btn { color: #555; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
-        .code-modal-body { padding: 0; overflow-y: auto; background: #080808; }
-        .code-block-wrapper { padding: 24px; }
-        .code-modal-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #ccc; line-height: 1.7; }
-        .code-modal-footer { padding: 20px 24px; border-top: 1px solid #1a1a1a; background: #0a0a0a; text-align: right; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
-        .copy-btn { background: #fff; color: #000; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-
-        .promo-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 20000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }
-        .promo-overlay.active { opacity: 1; }
-        .promo-card { background: linear-gradient(145deg, #111, #0a0a0a); border: 1px solid var(--border-subtle); width: 90%; max-width: 400px; padding: 30px; border-radius: 24px; text-align: center; position: relative; transform: scale(0.9); transition: transform 0.4s; }
-        .promo-overlay.active .promo-card { transform: scale(1); }
-        .promo-title { font-size: 1.5rem; color: #fff; margin-bottom: 10px; background: linear-gradient(90deg, #fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .btn-store { display: block; background: #fff; color: #000; text-decoration: none; padding: 12px; border-radius: 12px; font-weight: 600; margin-bottom: 20px; }
-
-        .footer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--border-subtle); padding: 10px 24px; border-radius: 50px; font-size: 0.8rem; color: #666; display: flex; gap: 15px; align-items: center; z-index: 50; }
-        .footer a { color: #fff; text-decoration: none; font-weight: 500; }
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; }
+        .nav-glass { background: rgba(9, 9, 11, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #27272a; }
+        .card-item { background-color: #18181b; border: 1px solid #27272a; transition: 0.2s; }
+        .card-item:hover { border-color: #3b82f6; }
+        .modal { opacity: 0; pointer-events: none; transition: 0.2s; }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        .modal-box { transform: scale(0.95); transition: 0.2s; }
+        .modal.active .modal-box { transform: scale(1); }
     </style>
 </head>
-<body>
+<body class="text-gray-300 min-h-screen">
 
-    <div id="security-layer">
-        <div class="security-card">
-            <div style="font-size: 0.7rem; color: var(--accent-green); font-family: 'JetBrains Mono'; margin-bottom: 12px; letter-spacing: 2px;">NovaBrowse V.1</div>
-            <h1 style="font-size: 1.4rem; margin: 0 0 10px 0; font-weight: 700;">Verify that you're human</h1>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 25px;">To check your browser security, to prevent automated access.</p>
-
-            <div class="verify-box" id="verify-trigger">
-                <div class="checkbox-custom" id="check-box">
-                    <div class="spinner" id="loading-spinner"></div>
-                    <svg id="check-icon" style="display:none; width:16px; height:16px; fill:none; stroke:white; stroke-width:3;" viewBox="0 0 24 24"><path d="M20 6L9 17L4 12"></path></svg>
-                </div>
-                <span id="status-text" style="font-size: 0.95rem; font-weight: 500;">Verify you are a human</span>
+    <nav class="nav-glass fixed top-0 w-full z-40 px-6 py-4 flex justify-between items-center">
+        <div class="font-bold text-white text-lg tracking-tight">NovaScript</div>
+        
+        <div class="flex items-center gap-5">
+            <div class="flex flex-col text-right">
+                <span id="display-username" class="text-sm font-semibold text-white">Loading...</span>
+                <span id="display-wallet" class="text-xs text-blue-400 font-mono">Rp 0</span>
             </div>
-        </div>
-    </div>
-
-    <div id="main-library-content">
-        <div class="noise-overlay"></div>
-        <div class="spotlight"></div>
-
-        <div class="container">
-            <header>
-                <div class="status-badge">Script is Updated</div>
-                <h1><span id="nova-logo">NovaScript</span></h1>
-                <p>Discord : @novascatia</p>
-            </header>
             
-            <div id="script-list" class="script-list">
-                <div class="skeleton"></div>
-                <div class="skeleton"></div>
-                <div class="skeleton"></div>
-            </div>
-        </div>
+            <button id="btn-topup" onclick="openTopup()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-colors">
+                Top Up
+            </button>
 
-        <div id="code-modal" class="code-modal-overlay">
-            <div class="code-modal-content">
-                <div class="code-modal-header">
-                    <h3 id="modal-title">Script Source</h3>
-                    <button id="modal-close-btn" class="close-btn">&times;</button>
+            <button onclick="logout()" class="text-gray-400 hover:text-red-400 transition-colors" title="Logout">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto pt-28 pb-20 px-6">
+        <h1 class="text-3xl font-bold text-white mb-2">Script Library</h1>
+        <p class="text-gray-400 mb-10 text-sm">Explore premium automated scripts.</p>
+
+        <div id="script-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <p class="text-gray-500">Loading library...</p>
+        </div>
+    </main>
+
+    <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-[#27272a] flex justify-between items-center">
+                <h3 class="font-bold text-white">Top Up Wallet</h3>
+                <button onclick="closeTopup()" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex gap-2 mb-5 bg-[#09090b] p-1 rounded-lg border border-[#27272a]">
+                    <button onclick="switchTopup('qris')" id="tab-qris" class="flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white">QRIS</button>
+                    <button onclick="switchTopup('bgl')" id="tab-bgl" class="flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200">BGL</button>
                 </div>
-                <div class="code-modal-body">
-                    <div class="code-block-wrapper">
-                        <pre><code id="modal-loader-code"></code></pre>
+
+                <div id="section-qris" class="text-center">
+                    <p class="text-sm text-gray-400 mb-4">Scan using any E-Wallet or Bank</p>
+                    <img src="https://media.discordapp.net/attachments/1408185563944718438/1453987119780462683/qr_ID1025376739336_26.12.25_176672247_1766722476960.jpg?ex=696f1687&is=696dc507&hm=ebfef12a286f2ae9b01df0917257524d54626302054d232ac5d8f88bf3d560ea&=&format=webp&width=639&height=900" class="w-48 h-auto mx-auto rounded-lg border border-[#27272a] mb-4">
+                    <p class="text-xs text-yellow-500">Send proof of payment to Discord Admin.</p>
+                </div>
+
+                <div id="section-bgl" class="hidden text-center">
+                    <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg mb-4">
+                        <p class="text-sm text-blue-400 font-semibold mb-1">Current Rate</p>
+                        <p class="text-2xl font-bold text-white font-mono">1 BGL = Rp 15.000</p>
+                    </div>
+                    <div class="text-left text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                        <p><strong>World:</strong> <span class="text-white">NOVADONATE</span></p>
+                        <p><strong>Owner:</strong> <span class="text-white">novascatia</span></p>
+                        <p class="mt-2 text-xs text-yellow-500">⚠️ Put your username <span id="bgl-username" class="font-bold text-white"></span> on the bulletin board or message.</p>
                     </div>
                 </div>
-                <div class="code-modal-footer">
-                    <button id="modal-copy-btn" class="copy-btn">Copy to Clipboard</button>
-                </div>
             </div>
         </div>
-
-        <div id="promo-popup" class="promo-overlay">
-            <div class="promo-card">
-                <button id="close-promo-btn" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#444; font-size:1.5rem; cursor:pointer;">&times;</button>
-                <h2 class="promo-title">✨ Premium Store Open</h2>
-                <p style="color:#888; font-size:0.95rem; margin-bottom:25px;">Looking for exclusive scripts? Visit our new store.</p>
-                <a href="store.html" class="btn-store">Visit Store →</a>
-                <div style="display:flex; justify-content:center; align-items:center; gap:8px; font-size:0.8rem; color:#666; cursor:pointer;">
-                    <input type="checkbox" id="dont-show-check" style="cursor:pointer;">
-                    <label for="dont-show-check" style="cursor:pointer;">Do not show again</label>
-                </div>
-            </div>
-        </div>
-        
-        <footer class="footer">
-            <span>© 2025 nov4</span>
-            <span style="opacity:0.2">|</span>
-            <a href="https://discord.gg/eFMMZDgww8" target="_blank">Discord Community ➔</a>
-        </footer>
     </div>
 
     <script>
-        const securityLayer = document.getElementById('security-layer');
-        const mainContent = document.getElementById('main-library-content');
-        const trigger = document.getElementById('verify-trigger');
-        const checkbox = document.getElementById('check-box');
-        const spinner = document.getElementById('loading-spinner');
-        const checkIcon = document.getElementById('check-icon');
-        const statusText = document.getElementById('status-text');
-
-        // --- RANDOMIZER LOGIC ---
-        // Peluang muncul NovaSecurity (0.4 = 40% kemungkinan muncul)
-        const chanceOfSecurity = 0.4; 
-
-        function bypassSecurity() {
-            securityLayer.style.display = 'none';
-            mainContent.style.display = 'block';
-            setTimeout(() => { mainContent.style.opacity = '1'; }, 50);
-            startLibrary(); 
-        }
-
-        function showSecurity() {
-            securityLayer.style.display = 'flex';
-        }
-
-        // Tentukan apakah muncul atau tidak saat load
-        if (Math.random() > chanceOfSecurity) {
-            bypassSecurity();
-        } else {
-            showSecurity();
-        }
-
-        // --- VERIFICATION LOGIC ---
-        trigger.addEventListener('click', () => {
-            statusText.innerText = "Verifying...";
-            spinner.style.display = "block";
-            trigger.style.pointerEvents = "none";
-
-            const delay = Math.floor(Math.random() * 3000) + 2000;
-
-            setTimeout(() => {
-                spinner.style.display = "none";
-                checkIcon.style.display = "block";
-                checkbox.classList.add('checked');
-                statusText.innerText = "Verified! Secure Connection";
-                statusText.style.color = "#10b981";
-
-                setTimeout(() => {
-                    securityLayer.style.opacity = "0";
-                    setTimeout(() => {
-                        securityLayer.style.display = "none";
-                        mainContent.style.display = "block";
-                        setTimeout(() => { mainContent.style.opacity = "1"; }, 50);
-                        startLibrary();
-                    }, 500);
-                }, 800);
-            }, delay);
-        });
-
-        // --- ORIGINAL LIBRARY DATA FETCH & LOGIC ---
-        async function startLibrary() {
-            startScrambleEffect();
+        function initApp() {
+            const userStr = localStorage.getItem('nova_user');
+            const role = localStorage.getItem('nova_role');
             
-            const scriptListContainer = document.getElementById('script-list');
-            const codeModal = document.getElementById('code-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalLoaderCode = document.getElementById('modal-loader-code');
-            const modalCloseBtn = document.getElementById('modal-close-btn');
-            const modalCopyBtn = document.getElementById('modal-copy-btn');
-            const promoPopup = document.getElementById('promo-popup');
-            const promoCloseBtn = document.getElementById('close-promo-btn');
-            const dontShowCheck = document.getElementById('dont-show-check');
-            const promoKey = 'nova_hide_store_popup_v1';
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('display-username').innerText = user.username;
+                document.getElementById('bgl-username').innerText = `(${user.username})`;
+                document.getElementById('display-wallet').innerText = `Rp ${parseInt(user.wallet || 0).toLocaleString('id-ID')}`;
 
-            let scriptsData = [];
+                if (role !== 'guest') {
+                    document.getElementById('btn-topup').classList.remove('hidden');
+                }
+            }
+            loadScripts();
+        }
 
+        async function loadScripts() {
+            const container = document.getElementById('script-list');
             try {
-                const response = await fetch('/.netlify/functions/get-scripts');
-                const result = await response.json();
-                scriptListContainer.innerHTML = ''; 
+                const res = await fetch('/.netlify/functions/get-scripts');
+                const result = await res.json();
+                container.innerHTML = ''; 
 
                 if (result.success && result.scripts.length > 0) {
-                    scriptsData = result.scripts;
-                    scriptsData.forEach((script, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'script-item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `<div><h2>${script.title}</h2><p>${script.description}</p></div><div class="card-footer"><span class="version-tag">v${script.version || '1.0.0'}</span><span class="action-text">Get Script →</span></div>`;
-                        scriptListContainer.appendChild(item);
-                        setTimeout(() => { item.classList.add('visible'); }, index * 100);
+                    result.scripts.forEach((script) => {
+                        const card = document.createElement('div');
+                        card.className = 'card-item p-6 rounded-xl cursor-pointer flex flex-col justify-between';
+                        card.innerHTML = `
+                            <div>
+                                <h2 class="text-lg font-bold text-white mb-2">${script.title}</h2>
+                                <p class="text-sm text-gray-400 line-clamp-2">${script.description}</p>
+                            </div>
+                            <div class="mt-6 flex justify-between items-center">
+                                <span class="text-xs text-gray-500">v${script.version || '1.0.0'}</span>
+                                <span class="text-sm font-semibold text-blue-500">Execute</span>
+                            </div>
+                        `;
+                        container.appendChild(card);
                     });
                 } else {
-                    scriptListContainer.innerHTML = '<p style="text-align:center; color:#555;">Library empty.</p>';
+                    container.innerHTML = '<p class="text-gray-500">No scripts available.</p>';
                 }
             } catch (error) {
-                scriptListContainer.innerHTML = `<p style="color:#ff5555; text-align:center;">Failed to connect.</p>`;
+                container.innerHTML = '<p class="text-red-400">Connection failed.</p>';
             }
-
-            scriptListContainer.addEventListener('click', (e) => {
-                const item = e.target.closest('.script-item');
-                if (item) {
-                    const idx = item.dataset.index;
-                    modalTitle.textContent = scriptsData[idx].title;
-                    modalLoaderCode.textContent = scriptsData[idx].loader_script;
-                    codeModal.style.display = 'flex';
-                    void codeModal.offsetWidth; 
-                    codeModal.classList.add('active');
-                }
-            });
-
-            const closeCodeModal = () => { codeModal.classList.remove('active'); setTimeout(() => codeModal.style.display = 'none', 300); };
-            modalCloseBtn.addEventListener('click', closeCodeModal);
-            codeModal.addEventListener('click', (e) => { if (e.target === codeModal) closeCodeModal(); });
-            modalCopyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(modalLoaderCode.textContent).then(() => {
-                    const original = modalCopyBtn.textContent;
-                    modalCopyBtn.textContent = 'Copied!';
-                    modalCopyBtn.style.background = '#4ade80';
-                    setTimeout(() => { modalCopyBtn.textContent = original; modalCopyBtn.style.background = '#fff'; }, 2000);
-                });
-            });
-
-            if (!localStorage.getItem(promoKey)) {
-                setTimeout(() => { promoPopup.style.display = 'flex'; void promoPopup.offsetWidth; promoPopup.classList.add('active'); }, 1500);
-            }
-
-            function closePromo() { if (dontShowCheck.checked) localStorage.setItem(promoKey, 'true'); promoPopup.classList.remove('active'); setTimeout(() => { promoPopup.style.display = 'none'; }, 400); }
-            promoCloseBtn.addEventListener('click', closePromo);
-            promoPopup.addEventListener('click', (e) => { if (e.target === promoPopup) closePromo(); });
         }
 
-        // --- GLITCH LOGIC ---
-        function startScrambleEffect() {
-            const logo = document.getElementById('nova-logo');
-            const text = 'NovaScript';
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/{}[]-_+';
-            if (!logo) return;
-            let tempText = Array(text.length).fill(text[0]);
-            let scrambleCount = 0;
-            logo.classList.add('glitching');
-            const scrambleTimer = setInterval(() => {
-                if (scrambleCount < text.length) {
-                    tempText[scrambleCount] = chars.charAt(Math.floor(Math.random() * chars.length));
-                    logo.textContent = tempText.join('');
-                    scrambleCount++;
-                } else {
-                    clearInterval(scrambleTimer);
-                    let resolveCount = 0;
-                    const resolveTimer = setInterval(() => {
-                        if (resolveCount < text.length) {
-                            tempText[resolveCount] = text[resolveCount];
-                            logo.textContent = tempText.join('');
-                            resolveCount++;
-                        } else {
-                            clearInterval(resolveTimer);
-                            logo.classList.remove('glitching');
-                            setTimeout(startScrambleEffect, 6000);
-                        }
-                    }, 60); 
-                }
-            }, 50); 
+        function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
+        function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
+
+        function switchTopup(type) {
+            const tabQris = document.getElementById('tab-qris');
+            const tabBgl = document.getElementById('tab-bgl');
+            const secQris = document.getElementById('section-qris');
+            const secBgl = document.getElementById('section-bgl');
+
+            if(type === 'qris') {
+                tabQris.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white';
+                tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
+                secQris.classList.remove('hidden'); secBgl.classList.add('hidden');
+            } else {
+                tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white';
+                tabQris.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
+                secBgl.classList.remove('hidden'); secQris.classList.add('hidden');
+            }
         }
+
+        function logout() {
+            localStorage.removeItem('nova_user');
+            localStorage.removeItem('nova_role');
+            window.location.href = '/login'; 
+        }
+
+        initApp();
     </script>
 </body>
 </html>
