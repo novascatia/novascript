@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 exports.handler = async function(event, context) {
-    const { title, description, version, loader_script } = JSON.parse(event.body);
+    // [DIPERBAIKI] Tambahkan 'price' di dalam kurung kurawal ini
+    const { title, description, version, price, loader_script } = JSON.parse(event.body);
     
     if (!title || !description || !loader_script) {
         return {
@@ -14,10 +15,10 @@ exports.handler = async function(event, context) {
     const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Hapus source_script dan slug dari sini
+    // [DIPERBAIKI] Masukkan 'price' ke dalam perintah insert ke Supabase
     const { data, error } = await supabase
         .from('scripts')
-        .insert([{ title, description, version, loader_script }])
+        .insert([{ title, description, version, price, loader_script }])
         .select();
 
     if (error) {
