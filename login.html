@@ -1,283 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaScript | AUTH.GATEWAY</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <title>NovaScript | Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --bg: #030303;
-            --surface: #0a0a0a;
-            --border: #222;
-            --text-main: #ededed;
-            --text-muted: #666;
-            --accent: #fff;
-            --error: #ef4444;
-            --success: #10b981;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Scanline & Noise Effect */
-        body::before {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
-        }
-
-        .auth-container {
-            width: 100%; max-width: 420px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 40px;
-            position: relative;
-            z-index: 10;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-        }
-
-        /* Frame Accents */
-        .auth-container::before, .auth-container::after {
-            content: ''; position: absolute; width: 10px; height: 10px; border: 1px solid var(--text-muted);
-        }
-        .auth-container::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
-        .auth-container::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
-
-        .header { text-align: center; margin-bottom: 35px; }
-        .header h1 {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.5rem; font-weight: 700;
-            letter-spacing: -1px; text-transform: uppercase;
-        }
-        .header p { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono'; margin-top: 5px; }
-
-        /* Tabs System */
-        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 25px; }
-        .tab-btn {
-            flex: 1; background: none; border: none; padding: 12px 0;
-            color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
-            cursor: pointer; transition: 0.3s; position: relative;
-        }
-        .tab-btn::after {
-            content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 1px;
-            background: var(--accent); transform: scaleX(0); transition: 0.3s;
-        }
-        .tab-btn.active { color: var(--accent); }
-        .tab-btn.active::after { transform: scaleX(1); }
-        .tab-btn:hover:not(.active) { color: #aaa; }
-
-        /* Form Elements */
-        .form-group { margin-bottom: 20px; position: relative; }
-        .form-group label {
-            display: flex; justify-content: space-between;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;
-        }
-        .form-group input {
-            width: 100%; background: #000; border: 1px solid var(--border);
-            padding: 14px 16px; color: var(--text-main); font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem; outline: none; transition: 0.3s;
-        }
-        .form-group input:focus { border-color: var(--text-muted); background: #050505; }
-        
-        .get-code-link { color: var(--text-muted); text-decoration: none; border-bottom: 1px dashed var(--text-muted); transition: 0.2s;}
-        .get-code-link:hover { color: var(--accent); border-color: var(--accent); }
-
-        /* Buttons */
-        .btn-submit {
-            width: 100%; background: var(--accent); color: #000;
-            border: none; padding: 16px; font-family: 'JetBrains Mono', monospace;
-            font-weight: 700; font-size: 0.85rem; cursor: pointer;
-            transition: 0.2s; text-transform: uppercase; margin-top: 10px;
-        }
-        .btn-submit:hover { background: #ccc; }
-        .btn-submit:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
-
-        .divider {
-            display: flex; align-items: center; text-align: center; margin: 25px 0;
-            font-family: 'JetBrains Mono'; font-size: 0.7rem; color: var(--text-muted);
-        }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px dashed var(--border); }
-        .divider:not(:empty)::before { margin-right: .25em; }
-        .divider:not(:empty)::after { margin-left: .25em; }
-
-        .btn-guest {
-            width: 100%; background: transparent; color: var(--text-muted);
-            border: 1px solid var(--border); padding: 14px; font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem; cursor: pointer; transition: 0.2s;
-        }
-        .btn-guest:hover { border-color: var(--text-muted); color: var(--accent); }
-
-        /* Alert Box */
-        .alert {
-            padding: 12px; margin-bottom: 20px; font-family: 'JetBrains Mono'; font-size: 0.75rem;
-            border: 1px solid; display: none; text-align: center;
-        }
-        .alert.error { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.05); }
-        .alert.success { border-color: var(--success); color: var(--success); background: rgba(16, 185, 129, 0.05); }
-
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; } /* Zinc 950 */
+        .card-auth { background-color: #18181b; border: 1px solid #27272a; } /* Zinc 900 & 800 */
+        .input-clean { background-color: #09090b; border: 1px solid #27272a; transition: border-color 0.2s; }
+        .input-clean:focus { border-color: #3b82f6; outline: none; }
     </style>
 </head>
-<body>
+<body class="text-gray-300 min-h-screen flex items-center justify-center p-4">
 
-    <div class="auth-container">
-        <div class="header">
-            <h1>NovaScript</h1>
-            <p>UNAUTHORIZED ACCESS PROHIBITED</p>
+    <div class="card-auth w-full max-w-md rounded-2xl p-8 shadow-xl">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-white tracking-tight">NovaScript</h1>
+            <p class="text-sm text-gray-400 mt-1">Sign in to your account</p>
         </div>
 
-        <div id="alert-box" class="alert"></div>
+        <div id="alert-box" class="hidden mb-6 p-3 rounded-lg text-sm text-center font-medium"></div>
 
-        <div class="tabs">
-            <button type="button" id="tab-login" class="tab-btn active">AUTH</button>
-            <button type="button" id="tab-register" class="tab-btn">REGISTER</button>
+        <div class="flex gap-4 mb-6 border-b border-zinc-800">
+            <button onclick="switchTab('login')" id="tab-login" class="pb-2 text-sm font-semibold border-b-2 border-blue-500 text-white transition-colors">Login</button>
+            <button onclick="switchTab('register')" id="tab-register" class="pb-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors">Register</button>
         </div>
 
-        <form id="auth-form">
+        <form id="auth-form" onsubmit="handleAuth(event)">
             <input type="hidden" id="auth-action" value="login">
             
-            <div class="form-group">
-                <label>Identify (Username)</label>
-                <input type="text" id="username" required autocomplete="off" spellcheck="false" placeholder="Enter identity">
-            </div>
-            
-            <div class="form-group">
-                <label>Passphrase</label>
-                <input type="password" id="password" required placeholder="••••••••">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Username</label>
+                    <input type="text" id="username" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="Enter username">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Password</label>
+                    <input type="password" id="password" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="••••••••">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Verification PIN</label>
+                    <input type="password" id="secret-pin" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="Enter your secret PIN">
+                    <p id="pin-hint" class="text-xs text-gray-500 mt-1 hidden">Create a custom PIN to verify your future logins.</p>
+                </div>
             </div>
 
-            <div class="form-group" id="group-code" style="display: none;">
-                <label>
-                    Invite Code
-                    <a href="https://discord.gg/eFMMZDgww8" target="_blank" class="get-code-link">Request Code</a>
-                </label>
-                <input type="text" id="verification-code" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX">
-            </div>
-
-            <button type="submit" id="submit-btn" class="btn-submit">
-                <span id="btn-text">INITIALIZE CONNECTION</span>
+            <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg mt-8 transition-colors">
+                Continue
             </button>
         </form>
 
-        <div class="divider">OR</div>
-
-        <button type="button" id="guest-btn" class="btn-guest">
-            > EXECUTE GUEST_MODE
-        </button>
+        <div class="mt-6">
+            <button onclick="loginAsGuest()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-medium py-2.5 rounded-lg transition-colors">
+                Continue as Guest
+            </button>
+        </div>
     </div>
 
     <script>
-        // DOM Elements
-        const tabLogin = document.getElementById('tab-login');
-        const tabRegister = document.getElementById('tab-register');
-        const groupCode = document.getElementById('group-code');
-        const inputCode = document.getElementById('verification-code');
-        const authAction = document.getElementById('auth-action');
-        const btnText = document.getElementById('btn-text');
-        const authForm = document.getElementById('auth-form');
-        const alertBox = document.getElementById('alert-box');
-        const submitBtn = document.getElementById('submit-btn');
-        const guestBtn = document.getElementById('guest-btn');
-
-        // Logic Ganti Tab (Dijamin Fix)
-        tabLogin.addEventListener('click', () => {
-            authAction.value = 'login';
+        function switchTab(tab) {
+            document.getElementById('auth-action').value = tab;
+            document.getElementById('alert-box').classList.add('hidden');
             
-            tabLogin.classList.add('active');
-            tabRegister.classList.remove('active');
+            const btnLogin = document.getElementById('tab-login');
+            const btnRegister = document.getElementById('tab-register');
+            const pinHint = document.getElementById('pin-hint');
             
-            groupCode.style.display = 'none';
-            inputCode.removeAttribute('required');
-            
-            btnText.innerText = 'INITIALIZE CONNECTION';
-            alertBox.style.display = 'none';
-        });
-
-        tabRegister.addEventListener('click', () => {
-            authAction.value = 'register';
-            
-            tabRegister.classList.add('active');
-            tabLogin.classList.remove('active');
-            
-            groupCode.style.display = 'block';
-            inputCode.setAttribute('required', 'true');
-            
-            btnText.innerText = 'CREATE ENTITY';
-            alertBox.style.display = 'none';
-        });
-
-        // Tampilkan Pesan Error / Sukses
-        function showAlert(msg, type = 'error') {
-            alertBox.innerText = `> ${msg}`;
-            alertBox.className = `alert ${type}`;
-            alertBox.style.display = 'block';
+            if (tab === 'login') {
+                btnLogin.classList.add('border-blue-500', 'text-white');
+                btnLogin.classList.remove('border-transparent', 'text-gray-500');
+                btnRegister.classList.remove('border-blue-500', 'text-white');
+                btnRegister.classList.add('border-transparent', 'text-gray-500');
+                pinHint.classList.add('hidden');
+                document.getElementById('submit-btn').innerText = 'Continue';
+            } else {
+                btnRegister.classList.add('border-blue-500', 'text-white');
+                btnRegister.classList.remove('border-transparent', 'text-gray-500');
+                btnLogin.classList.remove('border-blue-500', 'text-white');
+                btnLogin.classList.add('border-transparent', 'text-gray-500');
+                pinHint.classList.remove('hidden');
+                document.getElementById('submit-btn').innerText = 'Create Account';
+            }
         }
 
-        // Logic Submit Form
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); // Cegah halaman refresh
-            
-            const action = authAction.value;
+        function showAlert(msg, isSuccess = false) {
+            const box = document.getElementById('alert-box');
+            box.className = `mb-6 p-3 rounded-lg text-sm text-center font-medium ${isSuccess ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`;
+            box.innerText = msg;
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const action = document.getElementById('auth-action').value;
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const verificationCode = inputCode.value.trim();
+            const secretPin = document.getElementById('secret-pin').value;
+            const btn = document.getElementById('submit-btn');
 
-            submitBtn.disabled = true;
-            btnText.innerText = 'PROCESSING...';
+            btn.disabled = true; btn.innerText = 'Processing...';
 
             try {
-                // Pastikan kamu udah bikin auth.js di netlify/functions/ sesuai langkah sebelumnya
                 const res = await fetch('/.netlify/functions/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action, username, password, verificationCode })
+                    method: 'POST', body: JSON.stringify({ action, username, password, secretPin })
                 });
-                
                 const data = await res.json();
 
                 if (data.success) {
-                    showAlert(action === 'login' ? 'ACCESS GRANTED' : 'ENTITY CREATED', 'success');
-                    
-                    // Set session di localStorage
                     localStorage.setItem('nova_user', JSON.stringify(data.user));
                     localStorage.setItem('nova_role', 'member');
-                    
-                    // Lempar ke halaman library
-                    setTimeout(() => window.location.href = 'index.html', 1000);
+                    showAlert('Success! Redirecting...', true);
+                    // Pindah ke index (root)
+                    setTimeout(() => window.location.href = '/', 1000); 
                 } else {
-                    showAlert(data.message.toUpperCase());
+                    showAlert(data.message);
                 }
             } catch (err) {
-                showAlert('CONNECTION TO MAINFRAME FAILED');
+                showAlert('Connection error. Please try again.');
             } finally {
-                submitBtn.disabled = false;
-                btnText.innerText = action === 'login' ? 'INITIALIZE CONNECTION' : 'CREATE ENTITY';
+                btn.disabled = false; btn.innerText = action === 'login' ? 'Continue' : 'Create Account';
             }
-        });
+        }
 
-        // Logic Login Guest
-        guestBtn.addEventListener('click', () => {
-            const randomID = Math.floor(Math.random() * 9000) + 1000;
-            const guestData = { username: `GUEST_${randomID}`, wallet: 0 };
-            
-            localStorage.setItem('nova_user', JSON.stringify(guestData));
+        function loginAsGuest() {
+            localStorage.setItem('nova_user', JSON.stringify({ username: 'Guest_' + Math.floor(Math.random() * 9999), wallet: 0 }));
             localStorage.setItem('nova_role', 'guest');
-            
-            guestBtn.innerText = '> CONNECTING...';
-            setTimeout(() => window.location.href = 'index.html', 800);
-        });
+            window.location.href = '/'; 
+        }
     </script>
 </body>
 </html>
