@@ -37,7 +37,10 @@
         <div class="flex items-center gap-5">
             <div class="flex flex-col text-right">
                 <span id="display-username" class="text-sm font-semibold text-white">Loading...</span>
-                <span id="display-wallet" class="text-xs text-blue-400 font-mono">0 BGL</span>
+                <span id="display-wallet" class="text-xs text-blue-400 font-mono flex items-center gap-1 justify-end">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse hidden" id="live-indicator"></span>
+                    0 BGL
+                </span>
             </div>
             
             <button id="btn-topup" onclick="openTopup()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-colors">
@@ -107,7 +110,7 @@
                         </div>
 
                         <p class="mt-2 text-xs text-yellow-500">
-                            ⚠️ In-game command: <code class="text-gray-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">/setuser <span id="bgl-username" class="font-bold text-white"></span></code>
+                            ⚠️ In-game dialog input: <code class="text-gray-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 font-bold" id="bgl-username"></code>
                         </p>
                         <p class="text-[10px] text-gray-500 leading-tight">Your web balance will automatically update once you purchase the item from the designated Vending Machine in-game.</p>
                     </div>
@@ -116,7 +119,7 @@
                 <div id="section-qris" class="hidden text-center">
                     <p class="text-sm text-gray-400 mb-4">Scan using any E-Wallet or Bank App</p>
                     <div class="bg-white p-2 rounded-xl inline-block mb-4">
-                        <img src="https://media.discordapp.net/attachments/1408185563944718438/1453987119780462683/qr_ID1025376739336_26.12.25_176672247_1766722476960.jpg?ex=696f1687&is=696dc507&hm=ebfef12a286f2ae9b01df0917257524d54626302054d232ac5d8f88bf3d560ea&=&format=webp&width=639&height=900" class="w-40 h-auto rounded-lg">
+                        <img src="https://media.discordapp.net/attachments/1408185563944718438/1453987119780462683/qr_ID1025376739336_26.12.25_176672247_1766722476960.jpg" alt="QRIS" class="w-40 h-auto rounded-lg">
                     </div>
                     <p class="text-xs text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 py-2 px-3 rounded-lg inline-block">
                         Send proof of payment to Discord Admin manually.
@@ -127,24 +130,46 @@
     </div>
 
     <script>
-        function initApp() {
+        async function initApp() {
             const userStr = localStorage.getItem('nova_user');
             const role = localStorage.getItem('nova_role');
             
             if (userStr) {
-                const user = JSON.parse(userStr);
-                document.getElementById('display-username').innerText = user.username;
+                let user = JSON.parse(userStr);
                 
-                // Set username di kotak warning topup biar user gampang liat
+                // 1. Tampilkan Username di Navbar dan Modal
+                document.getElementById('display-username').innerText = user.username;
                 const bglUsernameSpan = document.getElementById('bgl-username');
                 if(bglUsernameSpan) bglUsernameSpan.innerText = user.username;
                 
-                // Format saldo BGL
-                document.getElementById('display-wallet').innerText = `${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
+                // 2. Set saldo awal dari LocalStorage biar ga kosong pas web baru diload
+                document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" id="live-indicator"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
 
-                // Tampilkan tombol TopUp kalau bukan guest
+                // 3. Jika bukan Guest, tampilkan tombol Top Up & Sync Database Live
                 if (role !== 'guest') {
                     document.getElementById('btn-topup').classList.remove('hidden');
+                    
+                    try {
+                        // Tembak API get-balance (Pastikan file get-balance.js sudah ada di Netlify)
+                        const res = await fetch(`/.netlify/functions/get-balance?username=${user.username}`);
+                        const data = await res.json();
+                        
+                        if (data.balance !== undefined) {
+                            // Update UI Navbar dengan data Live dari Supabase
+                            document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500" title="Live Database Synced"></span> ${parseInt(data.balance).toLocaleString('id-ID')} BGL`;
+                            
+                            // Update LocalStorage agar sinkron
+                            user.wallet = data.balance;
+                            localStorage.setItem('nova_user', JSON.stringify(user));
+                        }
+                    } catch (err) {
+                        console.log("Failed to fetch live balance. Using cached balance.");
+                        document.getElementById('live-indicator').classList.replace('bg-blue-400', 'bg-red-500');
+                        document.getElementById('live-indicator').classList.remove('animate-pulse');
+                    }
+                } else {
+                    // Kalau Guest, hapus icon loading di dompet
+                    document.getElementById('display-wallet').innerText = '0 BGL';
                 }
             }
             loadScripts();
@@ -206,10 +231,9 @@
             }
         }
 
-        // Functions untuk interaksi Dummy (Bisa kamu sambungin ke backend nanti)
         function executeScript(scriptId) {
             alert('Executing script ID: ' + scriptId);
-            // Logika menampilkan source code modal kayak sebelumnya ditaruh sini
+            // Tambahkan logika untuk pop-up/modal source code loader kalau butuh
         }
 
         function buyScript(scriptId, price) {
@@ -218,12 +242,12 @@
             const user = JSON.parse(userStr);
             
             if(user.wallet < price) {
-                alert(`Insufficient balance! You need ${price} BGL.`);
+                alert(`Insufficient balance! You need ${price} BGL to buy this script.`);
                 openTopup();
             } else {
-                if(confirm(`Are you sure you want to buy this script for ${price} BGL?`)) {
-                    // Tembak endpoint Netlify untuk proses pembelian di database
-                    alert('Purchase request sent! (Integrate with backend)');
+                if(confirm(`Confirm purchase for ${price} BGL?`)) {
+                    // Integrasi API beli script
+                    alert('Purchase endpoint logic not connected yet.');
                 }
             }
         }
@@ -268,7 +292,7 @@
             });
         }
 
-        // Close modal jika klik background
+        // Close modal jika klik background gelap
         document.getElementById('topup-modal').addEventListener('click', (e) => {
             if (e.target === document.getElementById('topup-modal')) closeTopup();
         });
