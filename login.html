@@ -3,72 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaHost | Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>NovaScript | AUTH.GATEWAY</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { background: #0b0b0f; color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: #18181b; padding: 40px; border-radius: 16px; border: 1px solid #27272a; width: 350px; text-align: center; }
-        h1 { margin-bottom: 20px; font-size: 1.5rem; }
-        span { color: #10b981; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; background: #0b0b0f; border: 1px solid #27272a; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-login { background: #10b981; color: #000; margin-bottom: 10px; }
-        .btn-login:hover { background: #059669; }
-        .btn-signup { background: transparent; color: #a1a1aa; border: 1px solid #27272a; }
-        .btn-signup:hover { border-color: #fff; color: #fff; }
-        .error { color: #ef4444; font-size: 0.85rem; margin-top: 10px; display: none; }
+        :root {
+            --bg: #030303;
+            --surface: #0a0a0a;
+            --border: #222;
+            --text-main: #ededed;
+            --text-muted: #666;
+            --accent: #fff;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scanline & Noise Effect */
+        body::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+
+        .auth-container {
+            width: 100%; max-width: 420px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 40px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        }
+
+        /* Frame Accents */
+        .auth-container::before, .auth-container::after {
+            content: ''; position: absolute; width: 10px; height: 10px; border: 1px solid var(--text-muted);
+        }
+        .auth-container::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .auth-container::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem; font-weight: 700;
+            letter-spacing: -1px; text-transform: uppercase;
+        }
+        .header p { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono'; margin-top: 5px; }
+
+        /* Tabs System */
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 25px; }
+        .tab-btn {
+            flex: 1; background: none; border: none; padding: 12px 0;
+            color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+            cursor: pointer; transition: 0.3s; position: relative;
+        }
+        .tab-btn::after {
+            content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 1px;
+            background: var(--accent); transform: scaleX(0); transition: 0.3s;
+        }
+        .tab-btn.active { color: var(--accent); }
+        .tab-btn.active::after { transform: scaleX(1); }
+        .tab-btn:hover:not(.active) { color: #aaa; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 20px; position: relative; }
+        .form-group label {
+            display: flex; justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;
+        }
+        .form-group input {
+            width: 100%; background: #000; border: 1px solid var(--border);
+            padding: 14px 16px; color: var(--text-main); font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem; outline: none; transition: 0.3s;
+        }
+        .form-group input:focus { border-color: var(--text-muted); background: #050505; }
+        
+        .get-code-link { color: var(--text-muted); text-decoration: none; border-bottom: 1px dashed var(--text-muted); transition: 0.2s;}
+        .get-code-link:hover { color: var(--accent); border-color: var(--accent); }
+
+        /* Buttons */
+        .btn-submit {
+            width: 100%; background: var(--accent); color: #000;
+            border: none; padding: 16px; font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; font-size: 0.85rem; cursor: pointer;
+            transition: 0.2s; text-transform: uppercase; margin-top: 10px;
+        }
+        .btn-submit:hover { background: #ccc; }
+        .btn-submit:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+        .divider {
+            display: flex; align-items: center; text-align: center; margin: 25px 0;
+            font-family: 'JetBrains Mono'; font-size: 0.7rem; color: var(--text-muted);
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px dashed var(--border); }
+        .divider:not(:empty)::before { margin-right: .25em; }
+        .divider:not(:empty)::after { margin-left: .25em; }
+
+        .btn-guest {
+            width: 100%; background: transparent; color: var(--text-muted);
+            border: 1px solid var(--border); padding: 14px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; cursor: pointer; transition: 0.2s;
+        }
+        .btn-guest:hover { border-color: var(--text-muted); color: var(--accent); }
+
+        /* Alert Box */
+        .alert {
+            padding: 12px; margin-bottom: 20px; font-family: 'JetBrains Mono'; font-size: 0.75rem;
+            border: 1px solid; display: none; text-align: center;
+        }
+        .alert.error { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.05); }
+        .alert.success { border-color: var(--success); color: var(--success); background: rgba(16, 185, 129, 0.05); }
+
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h1>⚡ Nova<span>Host</span></h1>
-        <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="password" placeholder="Password">
-        <button class="btn-login" onclick="handleAuth('login')">Login Dashboard</button>
-        <button class="btn-signup" onclick="handleAuth('signup')">Create Account</button>
-        <p id="error-msg" class="error"></p>
+
+    <div class="auth-container">
+        <div class="header">
+            <h1>NovaScript</h1>
+            <p>UNAUTHORIZED ACCESS PROHIBITED</p>
+        </div>
+
+        <div id="alert-box" class="alert"></div>
+
+        <div class="tabs">
+            <button type="button" id="tab-login" class="tab-btn active">AUTH</button>
+            <button type="button" id="tab-register" class="tab-btn">REGISTER</button>
+        </div>
+
+        <form id="auth-form">
+            <input type="hidden" id="auth-action" value="login">
+            
+            <div class="form-group">
+                <label>Identify (Username)</label>
+                <input type="text" id="username" required autocomplete="off" spellcheck="false" placeholder="Enter identity">
+            </div>
+            
+            <div class="form-group">
+                <label>Passphrase</label>
+                <input type="password" id="password" required placeholder="••••••••">
+            </div>
+
+            <div class="form-group" id="group-code" style="display: none;">
+                <label>
+                    Invite Code
+                    <a href="https://discord.gg/eFMMZDgww8" target="_blank" class="get-code-link">Request Code</a>
+                </label>
+                <input type="text" id="verification-code" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX">
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn-submit">
+                <span id="btn-text">INITIALIZE CONNECTION</span>
+            </button>
+        </form>
+
+        <div class="divider">OR</div>
+
+        <button type="button" id="guest-btn" class="btn-guest">
+            > EXECUTE GUEST_MODE
+        </button>
     </div>
 
     <script>
-        // --- KONFIGURASI SUPABASE (GANTI INI!) ---
-        const SUPABASE_URL = "MASUKKAN_URL_SUPABASE_DISINI";
-        const SUPABASE_KEY = "MASUKKAN_ANON_KEY_DISINI";
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // DOM Elements
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const groupCode = document.getElementById('group-code');
+        const inputCode = document.getElementById('verification-code');
+        const authAction = document.getElementById('auth-action');
+        const btnText = document.getElementById('btn-text');
+        const authForm = document.getElementById('auth-form');
+        const alertBox = document.getElementById('alert-box');
+        const submitBtn = document.getElementById('submit-btn');
+        const guestBtn = document.getElementById('guest-btn');
 
-        async function handleAuth(type) {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errBox = document.getElementById('error-msg');
+        // Logic Ganti Tab (Dijamin Fix)
+        tabLogin.addEventListener('click', () => {
+            authAction.value = 'login';
             
-            if(!email || !password) {
-                errBox.innerText = "Please fill all fields";
-                errBox.style.display = 'block';
-                return;
-            }
+            tabLogin.classList.add('active');
+            tabRegister.classList.remove('active');
+            
+            groupCode.style.display = 'none';
+            inputCode.removeAttribute('required');
+            
+            btnText.innerText = 'INITIALIZE CONNECTION';
+            alertBox.style.display = 'none';
+        });
 
-            let result;
-            if (type === 'signup') {
-                result = await supabase.auth.signUp({ email, password });
-                if(!result.error) alert("Account created! You can now login.");
-            } else {
-                result = await supabase.auth.signInWithPassword({ email, password });
-            }
+        tabRegister.addEventListener('click', () => {
+            authAction.value = 'register';
+            
+            tabRegister.classList.add('active');
+            tabLogin.classList.remove('active');
+            
+            groupCode.style.display = 'block';
+            inputCode.setAttribute('required', 'true');
+            
+            btnText.innerText = 'CREATE ENTITY';
+            alertBox.style.display = 'none';
+        });
 
-            if (result.error) {
-                errBox.innerText = result.error.message;
-                errBox.style.display = 'block';
-            } else if (type === 'login') {
-                // REDIRECT KE /telegram (Dashboard)
-                window.location.href = '/telegram';
-            }
+        // Tampilkan Pesan Error / Sukses
+        function showAlert(msg, type = 'error') {
+            alertBox.innerText = `> ${msg}`;
+            alertBox.className = `alert ${type}`;
+            alertBox.style.display = 'block';
         }
 
-        async function checkSession() {
-            const { data } = await supabase.auth.getSession();
-            if(data.session) window.location.href = '/telegram';
-        }
-        checkSession();
+        // Logic Submit Form
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Cegah halaman refresh
+            
+            const action = authAction.value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const verificationCode = inputCode.value.trim();
+
+            submitBtn.disabled = true;
+            btnText.innerText = 'PROCESSING...';
+
+            try {
+                // Pastikan kamu udah bikin auth.js di netlify/functions/ sesuai langkah sebelumnya
+                const res = await fetch('/.netlify/functions/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, username, password, verificationCode })
+                });
+                
+                const data = await res.json();
+
+                if (data.success) {
+                    showAlert(action === 'login' ? 'ACCESS GRANTED' : 'ENTITY CREATED', 'success');
+                    
+                    // Set session di localStorage
+                    localStorage.setItem('nova_user', JSON.stringify(data.user));
+                    localStorage.setItem('nova_role', 'member');
+                    
+                    // Lempar ke halaman library
+                    setTimeout(() => window.location.href = 'index.html', 1000);
+                } else {
+                    showAlert(data.message.toUpperCase());
+                }
+            } catch (err) {
+                showAlert('CONNECTION TO MAINFRAME FAILED');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.innerText = action === 'login' ? 'INITIALIZE CONNECTION' : 'CREATE ENTITY';
+            }
+        });
+
+        // Logic Login Guest
+        guestBtn.addEventListener('click', () => {
+            const randomID = Math.floor(Math.random() * 9000) + 1000;
+            const guestData = { username: `GUEST_${randomID}`, wallet: 0 };
+            
+            localStorage.setItem('nova_user', JSON.stringify(guestData));
+            localStorage.setItem('nova_role', 'guest');
+            
+            guestBtn.innerText = '> CONNECTING...';
+            setTimeout(() => window.location.href = 'index.html', 800);
+        });
     </script>
 </body>
 </html>
