@@ -249,16 +249,25 @@
                         let actionButton = '';
                         let badge = '';
 
+// --- MULAI GANTI DARI SINI ---
                         if (isFree || isOwned) {
-                            actionButton = `<button onclick="executeScript('${script.id}')" class="text-sm font-semibold text-blue-500 hover:text-blue-400 bg-blue-500/10 px-4 py-1.5 rounded-lg border border-blue-500/20 transition-colors shadow-sm">Execute</button>`;
+                            // [DIPERBAIKI] Membuat seluruh kotak (card) bisa diklik dan ada efek kursor
+                            card.classList.add('cursor-pointer', 'hover:bg-[#1a1a1f]');
+                            card.onclick = () => executeScript(script.id); // Klik dimana saja = Buka script
+                            
+                            // Tombol dibuat pointer-events-none agar klik tembus ke kotak
+                            actionButton = `<button class="text-sm font-semibold text-blue-500 hover:text-blue-400 bg-blue-500/10 px-4 py-1.5 rounded-lg border border-blue-500/20 transition-colors shadow-sm pointer-events-none">Open Script</button>`;
+                            
                             badge = isFree 
                                 ? '<span class="text-[10px] font-bold tracking-wider bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">FREE</span>' 
                                 : '<span class="text-[10px] font-bold tracking-wider bg-purple-500/10 text-purple-400 px-2 py-1 rounded border border-purple-500/20">OWNED</span>';
                         } else {
-                            actionButton = `<button onclick="buyScript('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-1.5 rounded-lg text-sm font-bold shadow-md transition-colors">Buy - ${script.price} BGL</button>`;
+                            // Script Berbayar tidak bisa dibuka kodenya, hanya tombol BUY yang bereaksi
+                            actionButton = `<button onclick="buyScript('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-1.5 rounded-lg text-sm font-bold shadow-md transition-colors relative z-10">Buy - ${script.price} BGL</button>`;
+                            
                             badge = '<span class="text-[10px] font-bold tracking-wider bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded border border-yellow-500/20">PREMIUM</span>';
                         }
-
+                        // --- SAMPAI SINI ---
                         card.innerHTML = `
                             <div>
                                 <div class="flex justify-between items-start mb-3">
