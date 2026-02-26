@@ -7,7 +7,7 @@
     
     <script>
         if (!localStorage.getItem('nova_user')) {
-            window.location.href = '/login'; // Redirect bersih
+            window.location.href = '/login'; 
         }
     </script>
 
@@ -16,23 +16,28 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #09090b; }
         .nav-glass { background: rgba(9, 9, 11, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #27272a; }
-        .card-item { background-color: #18181b; border: 1px solid #27272a; transition: 0.2s; }
+        .card-item { background-color: #18181b; border: 1px solid #27272a; transition: border-color 0.2s; }
         .card-item:hover { border-color: #3b82f6; }
-        .modal { opacity: 0; pointer-events: none; transition: 0.2s; }
+        
+        /* Modal Transitions */
+        .modal { opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; }
         .modal.active { opacity: 1; pointer-events: auto; }
-        .modal-box { transform: scale(0.95); transition: 0.2s; }
+        .modal-box { transform: scale(0.95); transition: all 0.2s ease-in-out; }
         .modal.active .modal-box { transform: scale(1); }
     </style>
 </head>
 <body class="text-gray-300 min-h-screen">
 
     <nav class="nav-glass fixed top-0 w-full z-40 px-6 py-4 flex justify-between items-center">
-        <div class="font-bold text-white text-lg tracking-tight">NovaScript</div>
+        <div class="font-bold text-white text-lg tracking-tight flex items-center gap-2">
+            <div class="w-6 h-6 rounded bg-blue-600 text-white flex items-center justify-center text-xs font-bold">N</div>
+            NovaScript
+        </div>
         
         <div class="flex items-center gap-5">
             <div class="flex flex-col text-right">
                 <span id="display-username" class="text-sm font-semibold text-white">Loading...</span>
-                <span id="display-wallet" class="text-xs text-blue-400 font-mono">Rp 0</span>
+                <span id="display-wallet" class="text-xs text-blue-400 font-mono">0 BGL</span>
             </div>
             
             <button id="btn-topup" onclick="openTopup()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-colors">
@@ -46,43 +51,76 @@
     </nav>
 
     <main class="max-w-6xl mx-auto pt-28 pb-20 px-6">
-        <h1 class="text-3xl font-bold text-white mb-2">Script Library</h1>
-        <p class="text-gray-400 mb-10 text-sm">Explore premium automated scripts.</p>
+        <header class="mb-10 border-b border-zinc-800 pb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Script Library</h1>
+            <p class="text-gray-400 text-sm">Explore Free & Premium execution scripts. Make sure you have enough BGL for premium ones.</p>
+        </header>
 
-        <div id="script-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <p class="text-gray-500">Loading library...</p>
+        <div class="mb-12">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Public / Free Scripts
+            </h2>
+            <div id="free-scripts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <p class="text-gray-500 text-sm">Loading free scripts...</p>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></span> Premium Scripts
+            </h2>
+            <div id="paid-scripts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <p class="text-gray-500 text-sm">Loading premium scripts...</p>
+            </div>
         </div>
     </main>
 
-    <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="modal-box w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
-            <div class="p-5 border-b border-[#27272a] flex justify-between items-center">
+            <div class="p-5 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
                 <h3 class="font-bold text-white">Top Up Wallet</h3>
-                <button onclick="closeTopup()" class="text-gray-400 hover:text-white">&times;</button>
+                <button onclick="closeTopup()" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
             <div class="p-6">
                 <div class="flex gap-2 mb-5 bg-[#09090b] p-1 rounded-lg border border-[#27272a]">
-                    <button onclick="switchTopup('qris')" id="tab-qris" class="flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white">QRIS</button>
-                    <button onclick="switchTopup('bgl')" id="tab-bgl" class="flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200">BGL</button>
+                    <button onclick="switchTopup('bgl')" id="tab-bgl" class="flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white shadow">Automated (BGL)</button>
+                    <button onclick="switchTopup('qris')" id="tab-qris" class="flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200">Manual (QRIS)</button>
                 </div>
 
-                <div id="section-qris" class="text-center">
-                    <p class="text-sm text-gray-400 mb-4">Scan using any E-Wallet or Bank</p>
-                    <img src="https://media.discordapp.net/attachments/1408185563944718438/1453987119780462683/qr_ID1025376739336_26.12.25_176672247_1766722476960.jpg?ex=696f1687&is=696dc507&hm=ebfef12a286f2ae9b01df0917257524d54626302054d232ac5d8f88bf3d560ea&=&format=webp&width=639&height=900" class="w-48 h-auto mx-auto rounded-lg border border-[#27272a] mb-4">
-                    <p class="text-xs text-yellow-500">Send proof of payment to Discord Admin.</p>
-                </div>
-
-                <div id="section-bgl" class="hidden text-center">
+                <div id="section-bgl" class="text-center">
                     <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg mb-4">
-                        <p class="text-sm text-blue-400 font-semibold mb-1">Current Rate</p>
+                        <p class="text-xs text-blue-400 font-semibold mb-1 uppercase tracking-wider">Current Exchange Rate</p>
                         <p class="text-2xl font-bold text-white font-mono">1 BGL = Rp 1.500</p>
                     </div>
-                    <div class="text-left text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
-                        <p><strong>World:</strong> <span class="text-white">DEXT</span></p>
-                        <p><strong>Owner:</strong> <span class="text-white">Dexterity</span></p>
-                        <p class="mt-2 text-xs text-yellow-500">⚠️ Put your username <span id="bgl-username" class="font-bold text-white"></span></p>
+                    
+                    <div class="text-left text-sm text-gray-400 space-y-3 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                        <p>Set this endpoint in your Auto Top-Up Lua Script:</p>
+                        
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="bgl-endpoint" readonly value="novascript.site/encrypt/topupgl" class="w-full bg-black border border-zinc-700 text-green-400 font-mono text-xs px-3 py-2.5 rounded-md focus:outline-none selection:bg-green-900">
+                            <button onclick="copyEndpoint(this)" class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-md transition-colors text-sm font-semibold whitespace-nowrap border border-zinc-700">
+                                Copy
+                            </button>
+                        </div>
+
+                        <p class="mt-2 text-xs text-yellow-500">
+                            ⚠️ In-game command: <code class="text-gray-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">/setuser <span id="bgl-username" class="font-bold text-white"></span></code>
+                        </p>
+                        <p class="text-[10px] text-gray-500 leading-tight">Your web balance will automatically update once you purchase the item from the designated Vending Machine in-game.</p>
                     </div>
+                </div>
+
+                <div id="section-qris" class="hidden text-center">
+                    <p class="text-sm text-gray-400 mb-4">Scan using any E-Wallet or Bank App</p>
+                    <div class="bg-white p-2 rounded-xl inline-block mb-4">
+                        <img src="https://media.discordapp.net/attachments/1408185563944718438/1453987119780462683/qr_ID1025376739336_26.12.25_176672247_1766722476960.jpg?ex=696f1687&is=696dc507&hm=ebfef12a286f2ae9b01df0917257524d54626302054d232ac5d8f88bf3d560ea&=&format=webp&width=639&height=900" class="w-40 h-auto rounded-lg">
+                    </div>
+                    <p class="text-xs text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 py-2 px-3 rounded-lg inline-block">
+                        Send proof of payment to Discord Admin manually.
+                    </p>
                 </div>
             </div>
         </div>
@@ -96,9 +134,15 @@
             if (userStr) {
                 const user = JSON.parse(userStr);
                 document.getElementById('display-username').innerText = user.username;
-                document.getElementById('bgl-username').innerText = `(${user.username})`;
-                document.getElementById('display-wallet').innerText = `Rp ${parseInt(user.wallet || 0).toLocaleString('id-ID')}`;
+                
+                // Set username di kotak warning topup biar user gampang liat
+                const bglUsernameSpan = document.getElementById('bgl-username');
+                if(bglUsernameSpan) bglUsernameSpan.innerText = user.username;
+                
+                // Format saldo BGL
+                document.getElementById('display-wallet').innerText = `${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
 
+                // Tampilkan tombol TopUp kalau bukan guest
                 if (role !== 'guest') {
                     document.getElementById('btn-topup').classList.remove('hidden');
                 }
@@ -107,62 +151,136 @@
         }
 
         async function loadScripts() {
-            const container = document.getElementById('script-list');
+            const freeContainer = document.getElementById('free-scripts');
+            const paidContainer = document.getElementById('paid-scripts');
+            
             try {
                 const res = await fetch('/.netlify/functions/get-scripts');
                 const result = await res.json();
-                container.innerHTML = ''; 
+                
+                freeContainer.innerHTML = ''; 
+                paidContainer.innerHTML = '';
 
                 if (result.success && result.scripts.length > 0) {
                     result.scripts.forEach((script) => {
+                        const isFree = !script.price || script.price === 0;
                         const card = document.createElement('div');
-                        card.className = 'card-item p-6 rounded-xl cursor-pointer flex flex-col justify-between';
+                        card.className = 'card-item p-5 rounded-xl flex flex-col justify-between h-full';
+                        
+                        let actionButton = '';
+                        if (isFree) {
+                            actionButton = `<button onclick="executeScript('${script.id}')" class="text-sm font-semibold text-blue-500 hover:text-blue-400 bg-blue-500/10 px-4 py-1.5 rounded-lg border border-blue-500/20 transition-colors">Execute</button>`;
+                        } else {
+                            actionButton = `<button onclick="buyScript('${script.id}', ${script.price})" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-md">Buy - ${script.price} BGL</button>`;
+                        }
+
                         card.innerHTML = `
                             <div>
-                                <h2 class="text-lg font-bold text-white mb-2">${script.title}</h2>
-                                <p class="text-sm text-gray-400 line-clamp-2">${script.description}</p>
+                                <div class="flex justify-between items-start mb-3">
+                                    <h2 class="text-lg font-bold text-white leading-tight">${script.title}</h2>
+                                    ${isFree 
+                                        ? '<span class="text-[10px] font-bold tracking-wider bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">FREE</span>' 
+                                        : '<span class="text-[10px] font-bold tracking-wider bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded border border-yellow-500/20">PREMIUM</span>'}
+                                </div>
+                                <p class="text-sm text-gray-400 line-clamp-3 mb-4">${script.description}</p>
                             </div>
-                            <div class="mt-6 flex justify-between items-center">
-                                <span class="text-xs text-gray-500">v${script.version || '1.0.0'}</span>
-                                <span class="text-sm font-semibold text-blue-500">Execute</span>
+                            <div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-4">
+                                <span class="text-xs font-mono text-gray-500">v${script.version || '1.0.0'}</span>
+                                ${actionButton}
                             </div>
                         `;
-                        container.appendChild(card);
+                        
+                        if (isFree) {
+                            freeContainer.appendChild(card);
+                        } else {
+                            paidContainer.appendChild(card);
+                        }
                     });
                 } else {
-                    container.innerHTML = '<p class="text-gray-500">No scripts available.</p>';
+                    freeContainer.innerHTML = '<p class="text-gray-500 text-sm">No free scripts available.</p>';
+                    paidContainer.innerHTML = '<p class="text-gray-500 text-sm">No premium scripts available.</p>';
                 }
             } catch (error) {
-                container.innerHTML = '<p class="text-red-400">Connection failed.</p>';
+                freeContainer.innerHTML = '<p class="text-red-400 text-sm">Failed to load scripts.</p>';
+                paidContainer.innerHTML = '<p class="text-red-400 text-sm">Failed to load scripts.</p>';
             }
         }
 
+        // Functions untuk interaksi Dummy (Bisa kamu sambungin ke backend nanti)
+        function executeScript(scriptId) {
+            alert('Executing script ID: ' + scriptId);
+            // Logika menampilkan source code modal kayak sebelumnya ditaruh sini
+        }
+
+        function buyScript(scriptId, price) {
+            const userStr = localStorage.getItem('nova_user');
+            if(!userStr) return;
+            const user = JSON.parse(userStr);
+            
+            if(user.wallet < price) {
+                alert(`Insufficient balance! You need ${price} BGL.`);
+                openTopup();
+            } else {
+                if(confirm(`Are you sure you want to buy this script for ${price} BGL?`)) {
+                    // Tembak endpoint Netlify untuk proses pembelian di database
+                    alert('Purchase request sent! (Integrate with backend)');
+                }
+            }
+        }
+
+        // Modal Topup Logic
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
         function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
 
         function switchTopup(type) {
-            const tabQris = document.getElementById('tab-qris');
             const tabBgl = document.getElementById('tab-bgl');
-            const secQris = document.getElementById('section-qris');
+            const tabQris = document.getElementById('tab-qris');
             const secBgl = document.getElementById('section-bgl');
+            const secQris = document.getElementById('section-qris');
 
-            if(type === 'qris') {
-                tabQris.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white';
-                tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secQris.classList.remove('hidden'); secBgl.classList.add('hidden');
-            } else {
-                tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white';
+            if(type === 'bgl') {
+                tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
                 tabQris.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secBgl.classList.remove('hidden'); secQris.classList.add('hidden');
+                secBgl.classList.remove('hidden'); 
+                secQris.classList.add('hidden');
+            } else {
+                tabQris.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
+                tabBgl.className = 'flex-1 py-1.5 text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
+                secQris.classList.remove('hidden'); 
+                secBgl.classList.add('hidden');
             }
         }
 
+        // Copy Endpoint Logic
+        function copyEndpoint(btn) {
+            const inputField = document.getElementById('bgl-endpoint');
+            navigator.clipboard.writeText(inputField.value).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = 'Copied!';
+                btn.classList.replace('text-white', 'text-green-400');
+                btn.classList.replace('border-zinc-700', 'border-green-500');
+                
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.classList.replace('text-green-400', 'text-white');
+                    btn.classList.replace('border-green-500', 'border-zinc-700');
+                }, 2000);
+            });
+        }
+
+        // Close modal jika klik background
+        document.getElementById('topup-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('topup-modal')) closeTopup();
+        });
+
+        // Logout
         function logout() {
             localStorage.removeItem('nova_user');
             localStorage.removeItem('nova_role');
             window.location.href = '/login'; 
         }
 
+        // Run On Load
         initApp();
     </script>
 </body>
