@@ -24,6 +24,9 @@
         pre::-webkit-scrollbar, textarea::-webkit-scrollbar { height: 6px; width: 6px; }
         pre::-webkit-scrollbar-track, textarea::-webkit-scrollbar-track { background: #09090b; }
         pre::-webkit-scrollbar-thumb, textarea::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        
+        /* Tambahan untuk tag animation */
+        .filter-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
     </style>
 </head>
 <body class="text-gray-300 min-h-screen">
@@ -58,6 +61,18 @@
             <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">Script Library</h1>
             <p class="text-gray-400 text-xs md:text-sm">GTFY First Automation Script Services</p>
         </header>
+
+        <div class="mb-10 space-y-4">
+            <div class="relative">
+                <input type="text" id="script-search" placeholder="Search scripts, tags, or authors..." 
+                       class="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-12 py-3 text-sm focus:border-blue-500 outline-none transition-all">
+                <svg class="w-5 h-5 absolute left-4 top-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <div id="tag-filters" class="flex flex-wrap gap-2">
+                </div>
+        </div>
 
         <div class="mb-10 md:mb-12">
             <h2 class="text-lg md:text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -211,8 +226,10 @@ if script then local f = load(script) if f then f() end end</textarea>
 
     <script>
         let allScripts = [];
+        let ownedIds = [];
         let pendingBuy = null;
         let reloadAfterNotif = false;
+        let currentFilter = 'All';
 
         function showNotif(title, msg, isError = false) {
             document.getElementById('notif-title').innerText = title;
@@ -249,60 +266,140 @@ if script then local f = load(script) if f then f() end end</textarea>
                     } catch (err) {}
                 }
             }
-            loadScripts();
+            await loadScripts();
         }
 
         async function loadScripts() {
-            const freeContainer = document.getElementById('free-scripts');
-            const paidContainer = document.getElementById('paid-scripts');
-            const ownedContainer = document.getElementById('owned-scripts');
-            
             try {
                 const resScripts = await fetch('/.netlify/functions/get-scripts');
                 const resultScripts = await resScripts.json();
                 const user = JSON.parse(localStorage.getItem('nova_user') || '{}');
-                let ownedIds = [];
+                
                 if (user.username) {
                     try {
                         const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
                         const resultOwned = await resOwned.json();
-                        if (resultOwned.success) ownedIds = resultOwned.owned_scripts;
+                        if (resultOwned.success) ownedIds = resultOwned.owned_scripts.map(String);
                     } catch(e) {}
                 }
 
-                freeContainer.innerHTML = ''; paidContainer.innerHTML = '';
-                if(ownedIds.length > 0) ownedContainer.innerHTML = ''; 
-
-                if (resultScripts.success && resultScripts.scripts.length > 0) {
+                if (resultScripts.success) {
                     allScripts = resultScripts.scripts; 
-                    resultScripts.scripts.forEach((script) => {
-                        const isFree = !script.price || script.price === 0;
-                        const isOwned = ownedIds.map(String).includes(String(script.id));
-                        const card = document.createElement('div');
-                        card.className = 'card-item p-4 md:p-5 rounded-xl flex flex-col justify-between h-full';
-                        
-                        let actionButton = '';
-                        let badge = '';
-
-                        if (isFree || isOwned) {
-                            card.classList.add('cursor-pointer', 'hover:bg-[#1a1a1f]');
-                            card.onclick = () => executeScript(script.id);
-                            actionButton = `<button class="text-[10px] md:text-xs font-semibold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 shadow-sm pointer-events-none">Open Script</button>`;
-                            badge = isFree ? '<span class="text-[8px] md:text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' : '<span class="text-[8px] md:text-[10px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>';
-                        } else {
-                            actionButton = `<button onclick="triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold relative z-10">Buy - ${script.price} BGL</button>`;
-                            badge = '<span class="text-[8px] md:text-[10px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>';
-                        }
-
-                        card.innerHTML = `<div><div class="flex justify-between items-start mb-2 md:mb-3"><h2 class="text-base md:text-lg font-bold text-white pr-2 leading-tight">${script.title}</h2>${badge}</div><p class="text-xs md:text-sm text-gray-400 line-clamp-2 md:line-clamp-3 mb-4">${script.description}</p></div><div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3 md:pt-4"><span class="text-[10px] md:text-xs font-mono text-gray-500">v${script.version || '1.0'}</span>${actionButton}</div>`;
-                        if (isFree) freeContainer.appendChild(card);
-                        else if (isOwned) ownedContainer.appendChild(card);
-                        else paidContainer.appendChild(card);
-                    });
+                    renderScripts(allScripts);
+                    renderTagFilters(allScripts);
                 }
             } catch (error) {}
         }
 
+        function renderScripts(scriptsToRender) {
+            const freeContainer = document.getElementById('free-scripts');
+            const paidContainer = document.getElementById('paid-scripts');
+            const ownedContainer = document.getElementById('owned-scripts');
+            
+            freeContainer.innerHTML = ''; paidContainer.innerHTML = ''; ownedContainer.innerHTML = ''; 
+
+            scriptsToRender.forEach((script) => {
+                const isFree = !script.price || script.price === 0;
+                const isOwned = ownedIds.includes(String(script.id));
+                
+                // Logic Tags Badge
+                const tagList = script.tags ? script.tags.split(',').map(t => t.trim()) : [];
+                const tagsHtml = tagList.map(tag => 
+                    `<span class="text-[9px] px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">${tag}</span>`
+                ).join('');
+
+                const purchaseBadge = `<span class="flex items-center gap-1 text-[10px] text-gray-500 mt-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1v-2a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8z"></path></svg>
+                    ${script.purchase_count || 0} Sold
+                </span>`;
+
+                const card = document.createElement('div');
+                card.className = 'card-item p-4 md:p-5 rounded-xl flex flex-col justify-between h-full';
+                
+                let actionButton = '';
+                let badge = '';
+
+                if (isFree || isOwned) {
+                    card.classList.add('cursor-pointer', 'hover:bg-[#1a1a1f]');
+                    card.onclick = () => executeScript(script.id);
+                    actionButton = `<button class="text-[10px] md:text-xs font-semibold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 shadow-sm pointer-events-none">Open Script</button>`;
+                    badge = isFree ? '<span class="text-[8px] md:text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' : '<span class="text-[8px] md:text-[10px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>';
+                } else {
+                    actionButton = `<button onclick="event.stopPropagation(); triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold relative z-10">Buy - ${script.price} BGL</button>`;
+                    badge = '<span class="text-[8px] md:text-[10px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>';
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h2 class="text-base font-bold text-white pr-2 leading-tight">${script.title}</h2>
+                            ${badge}
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-3">${tagsHtml}</div>
+                        <p class="text-xs text-gray-400 line-clamp-2 mb-4">${script.description}</p>
+                    </div>
+                    <div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-mono text-gray-500">v${script.version || '1.0'}</span>
+                            ${purchaseBadge}
+                        </div>
+                        ${actionButton}
+                    </div>
+                `;
+
+                if (isOwned) ownedContainer.appendChild(card);
+                else if (isFree) freeContainer.appendChild(card);
+                else paidContainer.appendChild(card);
+            });
+
+            // Re-check empty state
+            if(!ownedContainer.children.length) ownedContainer.innerHTML = '<p class="text-gray-600 text-xs md:text-sm italic">No purchased scripts found.</p>';
+        }
+
+        function renderTagFilters(scripts) {
+            const tagSet = new Set();
+            scripts.forEach(s => {
+                if(s.tags) s.tags.split(',').forEach(t => tagSet.add(t.trim()));
+            });
+
+            const filterContainer = document.getElementById('tag-filters');
+            filterContainer.innerHTML = `<button onclick="filterByTag('All')" class="filter-btn active px-3 py-1.5 text-xs font-bold rounded-full bg-zinc-800 text-white border border-zinc-700">All</button>`;
+            
+            tagSet.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn px-3 py-1.5 text-xs font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 transition-all';
+                btn.innerText = tag;
+                btn.onclick = () => filterByTag(tag);
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        function filterByTag(tag) {
+            currentFilter = tag;
+            const btns = document.querySelectorAll('.filter-btn');
+            btns.forEach(b => {
+                if(b.innerText === tag) b.classList.add('active', 'bg-blue-600', 'text-white');
+                else b.classList.remove('active', 'bg-blue-600', 'text-white');
+            });
+
+            if(tag === 'All') renderScripts(allScripts);
+            else {
+                const filtered = allScripts.filter(s => s.tags && s.tags.includes(tag));
+                renderScripts(filtered);
+            }
+        }
+
+        document.getElementById('script-search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allScripts.filter(s => 
+                s.title.toLowerCase().includes(term) || 
+                (s.tags && s.tags.toLowerCase().includes(term)) ||
+                s.description.toLowerCase().includes(term)
+            );
+            renderScripts(filtered);
+        });
+
+        // SISA LOGIC ASLI (Fungsi Execute, Buy, Topup, dsb)
         function executeScript(scriptId) {
             const script = allScripts.find(s => String(s.id) === String(scriptId));
             if(script) {
@@ -333,80 +430,44 @@ if script then local f = load(script) if f then f() end end</textarea>
 
         function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
 
-document.getElementById('confirm-buy-btn').onclick = async function() {
-    if(!pendingBuy) return;
-    const btn = this;
-    btn.disabled = true; 
-    btn.innerText = 'Processing...';
+        document.getElementById('confirm-buy-btn').onclick = async function() {
+            if(!pendingBuy) return;
+            const btn = this;
+            btn.disabled = true; btn.innerText = 'Processing...';
+            const boughtTitle = pendingBuy.title; 
+            const currentUser = pendingBuy.user;
 
-    // Simpan judul ke variabel lokal agar tidak hilang saat pendingBuy dikosongkan
-    const boughtTitle = pendingBuy.title; 
-    const currentUser = pendingBuy.user;
+            try {
+                const res = await fetch('/.netlify/functions/buy-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: currentUser.username, 
+                        script_id: String(pendingBuy.scriptId), 
+                        price: Number(pendingBuy.price) 
+                    })
+                });
 
-    try {
-        const res = await fetch('/.netlify/functions/buy-script', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                username: currentUser.username, 
-                script_id: String(pendingBuy.scriptId), 
-                price: Number(pendingBuy.price) 
-            })
-        });
-
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.message || 'Transaction failed');
-        }
-
-        const data = await res.json();
-        
-        if(data.success) {
-            // 1. Update saldo di local storage
-            const newBalance = Number(data.new_balance);
-            currentUser.wallet = newBalance;
-            localStorage.setItem('nova_user', JSON.stringify(currentUser));
-            
-            // 2. Tandai agar refresh setelah notif ditutup
-            reloadAfterNotif = true;
-            
-            // 3. Tutup modal (ini akan mereset pendingBuy jadi null)
-            closeBuyModal();
-            
-            // 4. Tampilkan notifikasi menggunakan variabel boughtTitle yang sudah kita simpan tadi
-            showNotif('Purchase Successful!', `"${boughtTitle}" has been added to your library. Remaining: ${newBalance} BGL`);
-        } else {
-            showNotif('Failed', data.message || "Unknown error", true);
-        }
-    } catch(e) { 
-        console.error("Buy Error:", e);
-        showNotif('Error', e.message || 'Connection failed', true); 
-    } finally { 
-        btn.disabled = false; 
-        btn.innerText = 'Purchase'; 
-    }
-};
+                if (!res.ok) throw new Error('Transaction failed');
+                const data = await res.json();
+                
+                if(data.success) {
+                    currentUser.wallet = Number(data.new_balance);
+                    localStorage.setItem('nova_user', JSON.stringify(currentUser));
+                    reloadAfterNotif = true;
+                    closeBuyModal();
+                    showNotif('Purchase Successful!', `"${boughtTitle}" added. Balance: ${data.new_balance} BGL`);
+                } else showNotif('Failed', data.message || "Unknown error", true);
+            } catch(e) { showNotif('Error', e.message, true); } 
+            finally { btn.disabled = false; btn.innerText = 'Purchase'; }
+        };
 
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
-        function closeTopup() { 
-            document.getElementById('topup-modal').classList.remove('active'); 
-            const ifGl = document.getElementById('iframe-gl'), ifGp = document.getElementById('iframe-gpai');
-            const sGl = ifGl.src, sGp = ifGp.src;
-            ifGl.src = ''; ifGl.src = sGl; ifGp.src = ''; ifGp.src = sGp;
-        }
-
+        function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
         function switchTopup(type) {
-            const tabGl = document.getElementById('tab-gl'), tabGpai = document.getElementById('tab-gpai');
             const secGl = document.getElementById('section-gl'), secGpai = document.getElementById('section-gpai');
-            if(type === 'gl') {
-                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
-                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secGl.classList.remove('hidden'); secGpai.classList.add('hidden');
-            } else {
-                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
-                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
-                secGpai.classList.remove('hidden'); secGl.classList.add('hidden');
-            }
+            if(type === 'gl') { secGl.classList.remove('hidden'); secGpai.classList.add('hidden'); }
+            else { secGpai.classList.remove('hidden'); secGl.classList.add('hidden'); }
         }
 
         function copyScriptText(elementId, btn) {
