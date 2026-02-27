@@ -16,7 +16,7 @@
         .nav-glass { background: rgba(9, 9, 11, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #27272a; }
         .card-item { background-color: #18181b; border: 1px solid #27272a; transition: border-color 0.2s; }
         .card-item:hover { border-color: #3b82f6; }
-        .modal { opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; }
+        .modal { opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; z-index: 50; }
         .modal.active { opacity: 1; pointer-events: auto; }
         .modal-box { transform: scale(0.95); transition: all 0.2s ease-in-out; }
         .modal.active .modal-box { transform: scale(1); }
@@ -87,7 +87,7 @@
         </div>
     </main>
 
-    <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="topup-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="modal-box w-full max-w-xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-5 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
                 <h3 class="font-bold text-white">Top Up Wallet</h3>
@@ -107,50 +107,51 @@
                 </div>
 
                 <div class="flex gap-2 mb-4 bg-[#09090b] p-1 rounded-lg border border-[#27272a]">
-                    <button onclick="switchTopup('gl')" id="tab-gl" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors">TopUp GL</button>
-                    <button onclick="switchTopup('gpai')" id="tab-gpai" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors">TopUp GrowPai</button>
+                    <button onclick="switchTopup('gl')" id="tab-gl" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-all">TopUp GL</button>
+                    <button onclick="switchTopup('gpai')" id="tab-gpai" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200">TopUp GrowPai</button>
                 </div>
 
-                <div id="section-gl" class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
-                    <p class="text-white font-semibold mb-2">Growlauncher Loader:</p>
-                    <div class="relative">
-                        <textarea id="gl-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
+                <div id="section-gl" class="space-y-4">
+                    <div class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                        <p class="text-white font-semibold mb-2">Growlauncher Loader:</p>
+                        <div class="relative">
+                            <textarea id="gl-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
 if not res then LogToConsole(err) return end
 local chunk, loadErr = load(res)
 if not chunk then LogToConsole(loadErr) return end
 chunk()</textarea>
-                        <button onclick="copyScriptText('gl-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
+                            <button onclick="copyScriptText('gl-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700">Copy</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                            <svg class="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 .6-.03 1.29-.1 2.09-.06.8-.15 1.43-.28 1.9-.13.47-.45.83-.9 1.13-.44.3-.94.47-1.51.54-1.12.13-2.31.2-3.56.2s-2.44-.07-3.56-.2c-.57-.07-1.07-.24-1.51-.54-.45-.3-.77-.66-.9-1.13-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L8 12c0-.6.03-1.29.1-2.09.06-.8.15-1.43.28-1.9.13-.47.45-.83.9-1.13.44-.3.94-.47 1.51-.54 1.12-.13 2.31-.2 3.56-.2s2.44.07 3.56.2c.57.07 1.07.24 1.51.54.45.3.77.66.9 1.13z"/></svg>
+                            Tutorial Top Up GL
+                        </span>
+                        <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
+                            <iframe id="iframe-gl" class="w-full h-full" src="https://www.youtube.com/embed/VIDEO_ID_GL" frameborder="0" allowfullscreen></iframe>
+                        </div>
                     </div>
                 </div>
 
-                <div id="section-gpai" class="hidden text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
-                    <p class="text-white font-semibold mb-2">GrowPai Loader:</p>
-                    <div class="relative">
-                        <textarea id="gpai-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
+                <div id="section-gpai" class="hidden space-y-4">
+                    <div class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                        <p class="text-white font-semibold mb-2">GrowPai Loader:</p>
+                        <div class="relative">
+                            <textarea id="gpai-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
 local script = handle and handle:read("*a") or nil
 if handle then handle:close() end
 if script then local f = load(script) if f then f() end end</textarea>
-                        <button onclick="copyScriptText('gpai-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
-                    </div>
-                </div>
-
-                <div class="mt-6 border-t border-[#27272a] pt-5">
-                    <p class="text-white font-semibold mb-4 text-xs md:text-sm flex items-center gap-2">
-                        <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 .6-.03 1.29-.1 2.09-.06.8-.15 1.43-.28 1.9-.13.47-.45.83-.9 1.13-.44.3-.94.47-1.51.54-1.12.13-2.31.2-3.56.2s-2.44-.07-3.56-.2c-.57-.07-1.07-.24-1.51-.54-.45-.3-.77-.66-.9-1.13-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L8 12c0-.6.03-1.29.1-2.09.06-.8.15-1.43.28-1.9.13-.47.45-.83.9-1.13.44-.3.94-.47 1.51-.54 1.12-.13 2.31-.2 3.56-.2s2.44.07 3.56.2c.57.07 1.07.24 1.51.54.45.3.77.66.9 1.13z"/></svg>
-                        Tutorial Cara Top Up
-                    </p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="space-y-2">
-                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Tutorial Growlauncher</span>
-                            <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
-                                <iframe class="w-full h-full" src="https://www.youtube.com/embed/VIDEO_ID_GL" frameborder="0" allowfullscreen></iframe>
-                            </div>
+                            <button onclick="copyScriptText('gpai-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700">Copy</button>
                         </div>
-                        <div class="space-y-2">
-                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Tutorial GrowPai</span>
-                            <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
-                                <iframe class="w-full h-full" src="https://www.youtube.com/embed/VIDEO_ID_GROWPAI" frameborder="0" allowfullscreen></iframe>
-                            </div>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                            <svg class="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 .6-.03 1.29-.1 2.09-.06.8-.15 1.43-.28 1.9-.13.47-.45.83-.9 1.13-.44.3-.94.47-1.51.54-1.12.13-2.31.2-3.56.2s-2.44-.07-3.56-.2c-.57-.07-1.07-.24-1.51-.54-.45-.3-.77-.66-.9-1.13-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L8 12c0-.6.03-1.29.1-2.09.06-.8.15-1.43.28-1.9.13-.47.45-.83.9-1.13.44-.3.94-.47 1.51-.54 1.12-.13 2.31-.2 3.56-.2s2.44.07 3.56.2c.57.07 1.07.24 1.51.54.45.3.77.66.9 1.13z"/></svg>
+                            Tutorial Top Up GrowPai
+                        </span>
+                        <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
+                            <iframe id="iframe-gpai" class="w-full h-full" src="https://www.youtube.com/embed/VIDEO_ID_GPAI" frameborder="0" allowfullscreen></iframe>
                         </div>
                     </div>
                 </div>
@@ -193,7 +194,7 @@ if script then local f = load(script) if f then f() end end</textarea>
                 <pre><code id="script-code-content" class="text-xs font-mono text-green-400 whitespace-pre-wrap break-all">Loading...</code></pre>
             </div>
             <div class="p-4 border-t border-[#27272a] flex justify-end bg-[#121214]">
-                <button onclick="copyScriptCode(this)" class="bg-white text-black px-6 py-2 rounded-lg text-xs font-bold transition-colors">Copy to Clipboard</button>
+                <button onclick="copyScriptCode(this)" class="bg-white text-black px-6 py-2 rounded-lg text-xs font-bold">Copy to Clipboard</button>
             </div>
         </div>
     </div>
@@ -296,19 +297,58 @@ if script then local f = load(script) if f then f() end end</textarea>
             });
         }
 
+        function triggerBuy(id, price, title) {
+            pendingBuy = { id, price };
+            document.getElementById('buy-title').innerText = title;
+            document.getElementById('buy-price').innerText = price + ' BGL';
+            document.getElementById('buy-modal').classList.add('active');
+        }
+
+        function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
+
+        document.getElementById('confirm-buy-btn').onclick = async function() {
+            if(!pendingBuy) return;
+            const btn = this;
+            const user = JSON.parse(localStorage.getItem('nova_user'));
+            btn.disabled = true; btn.innerText = 'Processing...';
+            try {
+                const res = await fetch('/.netlify/functions/buy-script', {
+                    method: 'POST',
+                    body: JSON.stringify({ username: user.username, script_id: pendingBuy.id })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    reloadAfterNotif = true;
+                    showNotif('Success!', 'Script purchased successfully! It is now in your library.');
+                } else {
+                    showNotif('Failed', data.message || 'Purchase failed', true);
+                }
+            } catch (err) {
+                showNotif('Error', 'Connection error', true);
+            } finally {
+                btn.disabled = false; btn.innerText = 'Purchase';
+                closeBuyModal();
+            }
+        };
+
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
-        function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
+        function closeTopup() { 
+            document.getElementById('topup-modal').classList.remove('active'); 
+            const ifGl = document.getElementById('iframe-gl'), ifGpai = document.getElementById('iframe-gpai');
+            const sGl = ifGl.src, sGp = ifGpai.src;
+            ifGl.src = ''; ifGl.src = sGl; ifGpai.src = ''; ifGpai.src = sGp;
+        }
 
         function switchTopup(type) {
             const tabGl = document.getElementById('tab-gl'), tabGpai = document.getElementById('tab-gpai');
             const secGl = document.getElementById('section-gl'), secGpai = document.getElementById('section-gpai');
             if(type === 'gl') {
-                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow';
-                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400';
+                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow transition-all';
+                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400 hover:text-gray-200';
                 secGl.classList.remove('hidden'); secGpai.classList.add('hidden');
             } else {
-                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow';
-                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400';
+                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow transition-all';
+                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400 hover:text-gray-200';
                 secGpai.classList.remove('hidden'); secGl.classList.add('hidden');
             }
         }
@@ -321,8 +361,8 @@ if script then local f = load(script) if f then f() end end</textarea>
             });
         }
 
-        function logout() { localStorage.removeItem('nova_user'); localStorage.removeItem('nova_role'); window.location.href = '/login'; }
-        initApp();
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+        window.onload = initApp;
     </script>
 </body>
 </html>
