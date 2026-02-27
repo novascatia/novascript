@@ -2,10 +2,15 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
-    // Pastikan headers JSON selalu ada untuk mencegah error parsing di client
     const responseHeaders = {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type"
     };
+
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers: responseHeaders, body: '' };
+    }
 
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, headers: responseHeaders, body: JSON.stringify({ success: false, message: 'Method Not Allowed' }) };
@@ -22,7 +27,7 @@ exports.handler = async (event) => {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
     try {
-        // 1. Ambil saldo user dengan Number casting untuk mencegah NaN
+        // 1. Ambil data user
         const { data: user, error: userErr } = await supabase.from('users').select('wallet_balance').eq('username', username).single();
         if (userErr || !user) throw new Error('User not found');
         
@@ -31,16 +36,22 @@ exports.handler = async (event) => {
 
         if (currentBalance < itemPrice) throw new Error('Insufficient BGL Balance');
 
-        // 2. Hitung saldo baru (Numeric Operation)
+        // 2. Cek apakah sudah punya script ini
+        const { data: existingPurchase } = await supabase.from('purchases').select('id').eq('user_username', username).eq('script_id', String(script_id)).single();
+        if (existingPurchase) throw new Error('You already own this script');
+
+        // 3. Potong saldo
         const newBalance = currentBalance - itemPrice;
-
-        // 3. Update database
         const { error: updateErr } = await supabase.from('users').update({ wallet_balance: newBalance }).eq('username', username);
-        if (updateErr) throw updateErr;
+        if (updateErr) throw new Error('Failed to update balance');
 
-        // 4. Catat kepemilikan di tabel purchases
+        // 4. Catat pembelian
         const { error: purchaseErr } = await supabase.from('purchases').insert([{ user_username: username, script_id: String(script_id) }]);
-        if (purchaseErr) throw new Error('Failed to record purchase: ' + purchaseErr.message);
+        if (purchaseErr) {
+            // Rollback saldo jika gagal mencatat pembelian
+            await supabase.from('users').update({ wallet_balance: currentBalance }).eq('username', username);
+            throw new Error('Failed to record purchase');
+        }
 
         return { 
             statusCode: 200, 
