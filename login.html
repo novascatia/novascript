@@ -9,9 +9,27 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #09090b; }
         .glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid #27272a; }
+        .modal-warning { opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 100; }
+        .modal-warning.active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body class="text-gray-300 flex items-center justify-center min-h-screen p-4">
+
+    <div id="warning-modal" class="modal-warning fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 active">
+        <div class="bg-[#18181b] border border-red-500/50 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2 uppercase">Penting!</h2>
+            <p class="text-sm text-gray-400 mb-6 leading-relaxed">
+                Kredensial yang Anda isi di sini adalah untuk <span class="text-red-400 font-bold uppercase underline">WEBSITE NOVASCRIPT</span>.<br><br>
+                Ini <span class="text-red-400 font-bold">BUKAN</span> kredensial untuk <span class="text-white font-semibold italic">Private Server</span> manapun!
+            </p>
+            <button id="btn-continue" disabled class="w-full bg-zinc-800 text-zinc-500 py-3 rounded-xl font-bold transition-all cursor-not-allowed">
+                Tunggu <span id="timer">5</span> detik...
+            </button>
+        </div>
+    </div>
 
     <div class="glass w-full max-w-md rounded-2xl overflow-hidden shadow-2xl">
         <div class="flex border-b border-zinc-800">
@@ -75,6 +93,31 @@
     </div>
 
     <script>
+        // LOGIKA TIMER WARNING
+        let timeLeft = 5;
+        const btnContinue = document.getElementById('btn-continue');
+        const timerSpan = document.getElementById('timer');
+        const warningModal = document.getElementById('warning-modal');
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                timerSpan.innerText = timeLeft;
+            } else {
+                clearInterval(countdown);
+                btnContinue.disabled = false;
+                btnContinue.innerText = "Lanjutkan";
+                btnContinue.classList.remove('bg-zinc-800', 'text-zinc-500', 'cursor-not-allowed');
+                btnContinue.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+            }
+        }, 1000);
+
+        btnContinue.onclick = () => {
+            warningModal.classList.remove('active');
+            setTimeout(() => warningModal.style.display = 'none', 300);
+        };
+
+        // LOGIKA TAB
         function switchTab(tab) {
             const isLogin = tab === 'login';
             document.getElementById('form-login').classList.toggle('hidden', !isLogin);
@@ -89,20 +132,18 @@
                 : 'flex-1 py-4 text-sm font-bold text-gray-500 hover:text-gray-300 transition-colors';
         }
 
-        // Fitur Reveal Password
         function togglePassword() {
             const passwordInput = document.getElementById('reg-password');
             const eyeIcon = document.getElementById('eye-icon');
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                eyeIcon.classList.replace('text-gray-500', 'text-blue-500');
+                eyeIcon.style.color = '#3b82f6';
             } else {
                 passwordInput.type = 'password';
-                eyeIcon.classList.replace('text-blue-500', 'text-gray-500');
+                eyeIcon.style.color = '#6b7280';
             }
         }
 
-        // Validasi Minimal 8 Karakter
         function validatePassword() {
             const pass = document.getElementById('reg-password').value;
             const errorMsg = document.getElementById('pass-error');
@@ -114,7 +155,6 @@
                 submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 errorMsg.classList.add('hidden');
-                // Tombol hanya aktif jika panjang cukup (minimal 8)
                 if (pass.length >= 8) {
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
