@@ -333,45 +333,59 @@ if script then local f = load(script) if f then f() end end</textarea>
 
         function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
 
-        document.getElementById('confirm-buy-btn').onclick = async function() {
-            if(!pendingBuy) return;
-            const btn = this; btn.disabled = true; btn.innerText = 'Processing...';
-            try {
-                const res = await fetch('/.netlify/functions/buy-script', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        username: pendingBuy.user.username, 
-                        script_id: String(pendingBuy.scriptId), 
-                        price: Number(pendingBuy.price) 
-                    })
-                });
+document.getElementById('confirm-buy-btn').onclick = async function() {
+    if(!pendingBuy) return;
+    const btn = this;
+    btn.disabled = true; 
+    btn.innerText = 'Processing...';
 
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.message || 'Server error');
-                }
+    // Simpan judul ke variabel lokal agar tidak hilang saat pendingBuy dikosongkan
+    const boughtTitle = pendingBuy.title; 
+    const currentUser = pendingBuy.user;
 
-                const data = await res.json();
-                
-                if(data.success) {
-                    const newBalance = Number(data.new_balance);
-                    pendingBuy.user.wallet = newBalance;
-                    localStorage.setItem('nova_user', JSON.stringify(pendingBuy.user));
-                    
-                    closeBuyModal();
-                    reloadAfterNotif = true;
-                    showNotif('Purchase Successful!', `"${pendingBuy.title}" has been added to your library.`);
-                } else {
-                    showNotif('Purchase Failed', data.message || "Unknown error", true);
-                }
-            } catch(e) { 
-                console.error("Buy Error:", e);
-                showNotif('Error', e.message || 'Connection failed', true); 
-            } finally { 
-                btn.disabled = false; btn.innerText = 'Purchase'; 
-            }
-        };
+    try {
+        const res = await fetch('/.netlify/functions/buy-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                username: currentUser.username, 
+                script_id: String(pendingBuy.scriptId), 
+                price: Number(pendingBuy.price) 
+            })
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Transaction failed');
+        }
+
+        const data = await res.json();
+        
+        if(data.success) {
+            // 1. Update saldo di local storage
+            const newBalance = Number(data.new_balance);
+            currentUser.wallet = newBalance;
+            localStorage.setItem('nova_user', JSON.stringify(currentUser));
+            
+            // 2. Tandai agar refresh setelah notif ditutup
+            reloadAfterNotif = true;
+            
+            // 3. Tutup modal (ini akan mereset pendingBuy jadi null)
+            closeBuyModal();
+            
+            // 4. Tampilkan notifikasi menggunakan variabel boughtTitle yang sudah kita simpan tadi
+            showNotif('Purchase Successful!', `"${boughtTitle}" has been added to your library. Remaining: ${newBalance} BGL`);
+        } else {
+            showNotif('Failed', data.message || "Unknown error", true);
+        }
+    } catch(e) { 
+        console.error("Buy Error:", e);
+        showNotif('Error', e.message || 'Connection failed', true); 
+    } finally { 
+        btn.disabled = false; 
+        btn.innerText = 'Purchase'; 
+    }
+};
 
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
         function closeTopup() { 
