@@ -47,11 +47,30 @@ exports.handler = async (event) => {
 
         // 4. Catat pembelian
         const { error: purchaseErr } = await supabase.from('purchases').insert([{ user_username: username, script_id: String(script_id) }]);
+        
         if (purchaseErr) {
             // Rollback saldo jika gagal mencatat pembelian
             await supabase.from('users').update({ wallet_balance: currentBalance }).eq('username', username);
             throw new Error('Failed to record purchase');
         }
+
+        // --- TAMBAHAN BARU: UPDATE PURCHASE COUNT ---
+        // Ambil data script saat ini untuk mendapatkan jumlah sold lama
+        const { data: scriptData } = await supabase
+            .from('scripts')
+            .select('purchase_count')
+            .eq('id', script_id)
+            .single();
+
+        if (scriptData) {
+            // Tambahkan 1 ke jumlah sold saat ini
+            const newCount = (scriptData.purchase_count || 0) + 1;
+            await supabase
+                .from('scripts')
+                .update({ purchase_count: newCount })
+                .eq('id', script_id);
+        }
+        // --------------------------------------------
 
         return { 
             statusCode: 200, 
