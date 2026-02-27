@@ -138,7 +138,7 @@
     </div>
 
     <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-w-xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="modal-box w-full max-w-lg bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-5 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
                 <h3 class="font-bold text-white">Top Up Wallet</h3>
                 <button onclick="closeTopup()" class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -340,21 +340,37 @@ if script then local f = load(script) if f then f() end end</textarea>
                 const res = await fetch('/.netlify/functions/buy-script', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: pendingBuy.user.username, script_id: String(pendingBuy.scriptId), price: Number(pendingBuy.price) })
+                    body: JSON.stringify({ 
+                        username: pendingBuy.user.username, 
+                        script_id: String(pendingBuy.scriptId), 
+                        price: Number(pendingBuy.price) 
+                    })
                 });
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || 'Server error');
+                }
+
                 const data = await res.json();
+                
                 if(data.success) {
                     const newBalance = Number(data.new_balance);
                     pendingBuy.user.wallet = newBalance;
                     localStorage.setItem('nova_user', JSON.stringify(pendingBuy.user));
+                    
                     closeBuyModal();
                     reloadAfterNotif = true;
-                    showNotif('Success!', `"${pendingBuy.title}" owned. Balance: ${newBalance} BGL`);
+                    showNotif('Purchase Successful!', `"${pendingBuy.title}" has been added to your library.`);
                 } else {
-                    showNotif('Failed', data.message || "Error", true);
+                    showNotif('Purchase Failed', data.message || "Unknown error", true);
                 }
-            } catch(e) { showNotif('Error', 'Failed to process.', true); }
-            finally { btn.disabled = false; btn.innerText = 'Purchase'; }
+            } catch(e) { 
+                console.error("Buy Error:", e);
+                showNotif('Error', e.message || 'Connection failed', true); 
+            } finally { 
+                btn.disabled = false; btn.innerText = 'Purchase'; 
+            }
         };
 
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
