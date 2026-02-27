@@ -16,7 +16,7 @@
         .nav-glass { background: rgba(9, 9, 11, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #27272a; }
         .card-item { background-color: #18181b; border: 1px solid #27272a; transition: border-color 0.2s; }
         .card-item:hover { border-color: #3b82f6; }
-        .modal { opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; z-index: 50; }
+        .modal { opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; }
         .modal.active { opacity: 1; pointer-events: auto; }
         .modal-box { transform: scale(0.95); transition: all 0.2s ease-in-out; }
         .modal.active .modal-box { transform: scale(1); }
@@ -87,7 +87,57 @@
         </div>
     </main>
 
-    <div id="topup-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="notif-modal" class="modal fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-sm bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl text-center p-6">
+            <h3 id="notif-title" class="font-bold text-white text-lg mb-2">Notice</h3>
+            <p id="notif-msg" class="text-gray-400 text-sm mb-6"></p>
+            <button onclick="closeNotif()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-bold transition-colors">Okay</button>
+        </div>
+    </div>
+
+    <div id="buy-modal" class="modal fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-sm bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-[#27272a] bg-[#121214]">
+                <h3 class="font-bold text-white text-lg">Confirm Purchase</h3>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-400 text-sm mb-4">You are about to purchase <span id="buy-title" class="text-white font-bold"></span>.</p>
+                <div class="flex justify-between items-center bg-[#09090b] p-3 rounded-lg border border-[#27272a] mb-6">
+                    <span class="text-gray-400 text-sm font-semibold">Price</span>
+                    <span id="buy-price" class="text-yellow-500 font-bold font-mono"></span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeBuyModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors">Cancel</button>
+                    <button id="confirm-buy-btn" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black py-2.5 rounded-lg text-sm font-bold transition-colors">Purchase</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="code-modal" class="modal fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
+        <div class="modal-box w-full max-w-3xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="p-4 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
+                <h3 class="font-bold text-white text-sm md:text-base flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Script Execution Code
+                </h3>
+                <button onclick="closeCodeModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 md:p-5 overflow-y-auto bg-[#09090b] flex-1">
+                <pre><code id="script-code-content" class="text-xs md:text-sm font-mono text-green-400 whitespace-pre-wrap break-all">Loading...</code></pre>
+            </div>
+            <div class="p-4 border-t border-[#27272a] flex flex-col sm:flex-row justify-between items-center bg-[#121214] gap-3">
+                <span class="text-[10px] md:text-xs text-gray-500 text-center sm:text-left">Paste this code into your executor.</span>
+                <button onclick="copyScriptCode(this)" class="w-full sm:w-auto bg-white hover:bg-gray-200 text-black px-6 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors">
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="modal-box w-full max-w-xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-5 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
                 <h3 class="font-bold text-white">Top Up Wallet</h3>
@@ -107,27 +157,25 @@
                 </div>
 
                 <div class="flex gap-2 mb-4 bg-[#09090b] p-1 rounded-lg border border-[#27272a]">
-                    <button onclick="switchTopup('gl')" id="tab-gl" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-all">TopUp GL</button>
-                    <button onclick="switchTopup('gpai')" id="tab-gpai" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200">TopUp GrowPai</button>
+                    <button onclick="switchTopup('gl')" id="tab-gl" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors">TopUp GL</button>
+                    <button onclick="switchTopup('gpai')" id="tab-gpai" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors">TopUp GrowPai</button>
                 </div>
 
                 <div id="section-gl" class="space-y-4">
                     <div class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
                         <p class="text-white font-semibold mb-2">Growlauncher Loader:</p>
                         <div class="relative">
-                            <textarea id="gl-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
+                            <textarea id="gl-script" readonly class="w-full h-32 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
 if not res then LogToConsole(err) return end
 local chunk, loadErr = load(res)
 if not chunk then LogToConsole(loadErr) return end
 chunk()</textarea>
-                            <button onclick="copyScriptText('gl-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700">Copy</button>
+                            <button onclick="copyScriptText('gl-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
                         </div>
                     </div>
                     <div class="space-y-2">
                         <span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest flex items-center gap-2">
-                            <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-                            </svg>
+                            <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
                             Tutorial Top Up GL
                         </span>
                         <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
@@ -140,65 +188,23 @@ chunk()</textarea>
                     <div class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
                         <p class="text-white font-semibold mb-2">GrowPai Loader:</p>
                         <div class="relative">
-                            <textarea id="gpai-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
+                            <textarea id="gpai-script" readonly class="w-full h-32 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
 local script = handle and handle:read("*a") or nil
 if handle then handle:close() end
 if script then local f = load(script) if f then f() end end</textarea>
-                            <button onclick="copyScriptText('gpai-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700">Copy</button>
+                            <button onclick="copyScriptText('gpai-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
                         </div>
                     </div>
                     <div class="space-y-2">
                         <span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest flex items-center gap-2">
-                            <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-                            </svg>
+                            <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
                             Tutorial Top Up GrowPai
                         </span>
                         <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
-                            <iframe id="iframe-gpai" class="w-full h-full" src="https://www.youtube.com/embed/ddbTD565lds" frameborder="0" allowfullscreen></iframe>
+                            <iframe id="iframe-gpai" class="w-full h-full" src="https://www.youtube.com/embed/VIDEO_ID_GPAI" frameborder="0" allowfullscreen></iframe>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="notif-modal" class="modal fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-sm bg-[#18181b] border border-[#27272a] rounded-xl text-center p-6">
-            <h3 id="notif-title" class="font-bold text-white text-lg mb-2">Notice</h3>
-            <p id="notif-msg" class="text-gray-400 text-sm mb-6"></p>
-            <button onclick="closeNotif()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold">Okay</button>
-        </div>
-    </div>
-
-    <div id="buy-modal" class="modal fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-sm bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
-            <div class="p-5 border-b border-[#27272a] bg-[#121214]"><h3 class="font-bold text-white text-lg">Confirm Purchase</h3></div>
-            <div class="p-6">
-                <p class="text-gray-400 text-sm mb-4">You are about to purchase <span id="buy-title" class="text-white font-bold"></span>.</p>
-                <div class="flex justify-between items-center bg-[#09090b] p-3 rounded-lg border border-[#27272a] mb-6">
-                    <span class="text-gray-400 text-sm font-semibold">Price</span>
-                    <span id="buy-price" class="text-yellow-500 font-bold font-mono"></span>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="closeBuyModal()" class="flex-1 bg-zinc-800 text-white py-2.5 rounded-lg text-sm font-semibold">Cancel</button>
-                    <button id="confirm-buy-btn" class="flex-1 bg-yellow-500 text-black py-2.5 rounded-lg text-sm font-bold">Purchase</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="code-modal" class="modal fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-w-2xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div class="p-4 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
-                <h3 class="font-bold text-white text-sm">Script Execution Code</h3>
-                <button onclick="closeCodeModal()" class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <div class="p-4 overflow-y-auto bg-[#09090b] flex-1">
-                <pre><code id="script-code-content" class="text-xs font-mono text-green-400 whitespace-pre-wrap break-all">Loading...</code></pre>
-            </div>
-            <div class="p-4 border-t border-[#27272a] flex justify-end bg-[#121214]">
-                <button onclick="copyScriptCode(this)" class="bg-white text-black px-6 py-2 rounded-lg text-xs font-bold">Copy to Clipboard</button>
             </div>
         </div>
     </div>
@@ -225,8 +231,10 @@ if script then local f = load(script) if f then f() end end</textarea>
             if (userStr) {
                 let user = JSON.parse(userStr);
                 document.getElementById('display-username').innerText = user.username;
-                document.getElementById('topup-username-badge').innerText = user.username;
-                document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
+                const topupBadge = document.getElementById('topup-username-badge');
+                if(topupBadge) topupBadge.innerText = user.username;
+                
+                document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" id="live-indicator"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
 
                 if (localStorage.getItem('nova_role') !== 'guest') {
                     document.getElementById('btn-topup').classList.remove('hidden');
@@ -248,37 +256,48 @@ if script then local f = load(script) if f then f() end end</textarea>
             const freeContainer = document.getElementById('free-scripts');
             const paidContainer = document.getElementById('paid-scripts');
             const ownedContainer = document.getElementById('owned-scripts');
+            
             try {
                 const resScripts = await fetch('/.netlify/functions/get-scripts');
                 const resultScripts = await resScripts.json();
                 const user = JSON.parse(localStorage.getItem('nova_user') || '{}');
                 let ownedIds = [];
                 if (user.username) {
-                    const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
-                    const resultOwned = await resOwned.json();
-                    if (resultOwned.success) ownedIds = resultOwned.owned_scripts;
+                    try {
+                        const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
+                        const resultOwned = await resOwned.json();
+                        if (resultOwned.success) ownedIds = resultOwned.owned_scripts;
+                    } catch(e) {}
                 }
-                freeContainer.innerHTML = ''; paidContainer.innerHTML = ''; if(ownedIds.length > 0) ownedContainer.innerHTML = '';
-                if (resultScripts.success) {
-                    allScripts = resultScripts.scripts;
+
+                freeContainer.innerHTML = ''; paidContainer.innerHTML = '';
+                if(ownedIds.length > 0) ownedContainer.innerHTML = ''; 
+
+                if (resultScripts.success && resultScripts.scripts.length > 0) {
+                    allScripts = resultScripts.scripts; 
                     resultScripts.scripts.forEach((script) => {
                         const isFree = !script.price || script.price === 0;
                         const isOwned = ownedIds.map(String).includes(String(script.id));
                         const card = document.createElement('div');
-                        card.className = 'card-item p-4 rounded-xl flex flex-col justify-between h-full';
+                        card.className = 'card-item p-4 md:p-5 rounded-xl flex flex-col justify-between h-full';
+                        
                         let actionButton = '';
                         let badge = '';
+
                         if (isFree || isOwned) {
                             card.classList.add('cursor-pointer', 'hover:bg-[#1a1a1f]');
                             card.onclick = () => executeScript(script.id);
-                            actionButton = `<button class="text-[10px] font-semibold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 pointer-events-none">Open Script</button>`;
-                            badge = isFree ? '<span class="text-[8px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' : '<span class="text-[8px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>';
+                            actionButton = `<button class="text-[10px] md:text-xs font-semibold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 shadow-sm pointer-events-none">Open Script</button>`;
+                            badge = isFree ? '<span class="text-[8px] md:text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' : '<span class="text-[8px] md:text-[10px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>';
                         } else {
-                            actionButton = `<button onclick="triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 text-black px-3 py-1.5 rounded-lg text-[10px] font-bold">Buy - ${script.price} BGL</button>`;
-                            badge = '<span class="text-[8px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>';
+                            actionButton = `<button onclick="triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold relative z-10">Buy - ${script.price} BGL</button>`;
+                            badge = '<span class="text-[8px] md:text-[10px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>';
                         }
-                        card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><h2 class="text-base font-bold text-white">${script.title}</h2>${badge}</div><p class="text-xs text-gray-400 mb-4">${script.description}</p></div><div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3"><span class="text-[10px] font-mono text-gray-500">v${script.version || '1.0'}</span>${actionButton}</div>`;
-                        if (isFree) freeContainer.appendChild(card); else if (isOwned) ownedContainer.appendChild(card); else paidContainer.appendChild(card);
+
+                        card.innerHTML = `<div><div class="flex justify-between items-start mb-2 md:mb-3"><h2 class="text-base md:text-lg font-bold text-white pr-2 leading-tight">${script.title}</h2>${badge}</div><p class="text-xs md:text-sm text-gray-400 line-clamp-2 md:line-clamp-3 mb-4">${script.description}</p></div><div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3 md:pt-4"><span class="text-[10px] md:text-xs font-mono text-gray-500">v${script.version || '1.0'}</span>${actionButton}</div>`;
+                        if (isFree) freeContainer.appendChild(card);
+                        else if (isOwned) ownedContainer.appendChild(card);
+                        else paidContainer.appendChild(card);
                     });
                 }
             } catch (error) {}
@@ -301,8 +320,12 @@ if script then local f = load(script) if f then f() end end</textarea>
             });
         }
 
-        function triggerBuy(id, price, title) {
-            pendingBuy = { id, price };
+        function triggerBuy(scriptId, price, title) {
+            const userStr = localStorage.getItem('nova_user');
+            if(!userStr) return showNotif('Error', 'Please login first.', true);
+            const user = JSON.parse(userStr);
+            if(Number(user.wallet) < Number(price)) return showNotif('Insufficient Balance', `You need ${price} BGL.`, true);
+            pendingBuy = { scriptId, price, title, user };
             document.getElementById('buy-title').innerText = title;
             document.getElementById('buy-price').innerText = price + ' BGL';
             document.getElementById('buy-modal').classList.add('active');
@@ -310,68 +333,48 @@ if script then local f = load(script) if f then f() end end</textarea>
 
         function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
 
-document.getElementById('confirm-buy-btn').onclick = async function() {
-    if(!pendingBuy) return;
-    const btn = this;
-    btn.disabled = true; btn.innerText = 'Processing...';
-
-    try {
-        const res = await fetch('/.netlify/functions/buy-script', {
-            method: 'POST',
-            body: JSON.stringify({ 
-                username: pendingBuy.user.username, 
-                script_id: String(pendingBuy.scriptId), 
-                price: Number(pendingBuy.price) // Memastikan dikirim sebagai angka
-            })
-        });
-        
-        const data = await res.json();
-        
-        if(data.success) {
-            // Perbaikan NaN: Pastikan saldo baru adalah angka sebelum disimpan
-            const updatedBalance = Number(data.new_balance);
-            
-            if (!isNaN(updatedBalance)) {
-                pendingBuy.user.wallet = updatedBalance;
-                localStorage.setItem('nova_user', JSON.stringify(pendingBuy.user));
-                
-                reloadAfterNotif = true;
-                showNotif('Purchase Successful!', `"${pendingBuy.title}" has been moved to your library.`);
-                closeBuyModal(); 
-            } else {
-                throw new Error("Invalid balance data received.");
-            }
-        } else {
-            showNotif('Purchase Failed', data.message || "Transaction error.", true);
-            closeBuyModal();
-        }
-    } catch(e) { 
-        console.error("System Error:", e);
-        showNotif('Syncing', 'Updating your local data...', false); 
-        setTimeout(() => location.reload(), 1500);
-    } finally {
-        btn.disabled = false; btn.innerText = 'Purchase';
-    }
-};
+        document.getElementById('confirm-buy-btn').onclick = async function() {
+            if(!pendingBuy) return;
+            const btn = this; btn.disabled = true; btn.innerText = 'Processing...';
+            try {
+                const res = await fetch('/.netlify/functions/buy-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: pendingBuy.user.username, script_id: String(pendingBuy.scriptId), price: Number(pendingBuy.price) })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    const newBalance = Number(data.new_balance);
+                    pendingBuy.user.wallet = newBalance;
+                    localStorage.setItem('nova_user', JSON.stringify(pendingBuy.user));
+                    closeBuyModal();
+                    reloadAfterNotif = true;
+                    showNotif('Success!', `"${pendingBuy.title}" owned. Balance: ${newBalance} BGL`);
+                } else {
+                    showNotif('Failed', data.message || "Error", true);
+                }
+            } catch(e) { showNotif('Error', 'Failed to process.', true); }
+            finally { btn.disabled = false; btn.innerText = 'Purchase'; }
+        };
 
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
         function closeTopup() { 
             document.getElementById('topup-modal').classList.remove('active'); 
-            const ifGl = document.getElementById('iframe-gl'), ifGpai = document.getElementById('iframe-gpai');
-            const sGl = ifGl.src, sGp = ifGpai.src;
-            ifGl.src = ''; ifGl.src = sGl; ifGpai.src = ''; ifGpai.src = sGp;
+            const ifGl = document.getElementById('iframe-gl'), ifGp = document.getElementById('iframe-gpai');
+            const sGl = ifGl.src, sGp = ifGp.src;
+            ifGl.src = ''; ifGl.src = sGl; ifGp.src = ''; ifGp.src = sGp;
         }
 
         function switchTopup(type) {
             const tabGl = document.getElementById('tab-gl'), tabGpai = document.getElementById('tab-gpai');
             const secGl = document.getElementById('section-gl'), secGpai = document.getElementById('section-gpai');
             if(type === 'gl') {
-                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow transition-all';
-                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400 hover:text-gray-200';
+                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
+                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
                 secGl.classList.remove('hidden'); secGpai.classList.add('hidden');
             } else {
-                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow transition-all';
-                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400 hover:text-gray-200';
+                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow';
+                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200';
                 secGpai.classList.remove('hidden'); secGl.classList.add('hidden');
             }
         }
@@ -379,13 +382,13 @@ document.getElementById('confirm-buy-btn').onclick = async function() {
         function copyScriptText(elementId, btn) {
             const textArea = document.getElementById(elementId);
             navigator.clipboard.writeText(textArea.value).then(() => {
-                const ori = btn.innerText; btn.innerText = 'Copied!';
+                const ori = btn.innerText; btn.innerText = 'Copied!'; 
                 setTimeout(() => { btn.innerText = ori; }, 2000);
             });
         }
 
         function logout() { localStorage.clear(); window.location.href = '/login'; }
-        window.onload = initApp;
+        initApp();
     </script>
 </body>
 </html>
