@@ -310,30 +310,49 @@ if script then local f = load(script) if f then f() end end</textarea>
 
         function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
 
-        document.getElementById('confirm-buy-btn').onclick = async function() {
-            if(!pendingBuy) return;
-            const btn = this;
-            const user = JSON.parse(localStorage.getItem('nova_user'));
-            btn.disabled = true; btn.innerText = 'Processing...';
-            try {
-                const res = await fetch('/.netlify/functions/buy-script', {
-                    method: 'POST',
-                    body: JSON.stringify({ username: user.username, script_id: pendingBuy.id })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    reloadAfterNotif = true;
-                    showNotif('Success!', 'Script purchased successfully! It is now in your library.');
-                } else {
-                    showNotif('Failed', data.message || 'Purchase failed', true);
-                }
-            } catch (err) {
-                showNotif('Error', 'Connection error', true);
-            } finally {
-                btn.disabled = false; btn.innerText = 'Purchase';
-                closeBuyModal();
+document.getElementById('confirm-buy-btn').onclick = async function() {
+    if(!pendingBuy) return;
+    const btn = this;
+    btn.disabled = true; btn.innerText = 'Processing...';
+
+    try {
+        const res = await fetch('/.netlify/functions/buy-script', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                username: pendingBuy.user.username, 
+                script_id: String(pendingBuy.scriptId), 
+                price: Number(pendingBuy.price) // Memastikan dikirim sebagai angka
+            })
+        });
+        
+        const data = await res.json();
+        
+        if(data.success) {
+            // Perbaikan NaN: Pastikan saldo baru adalah angka sebelum disimpan
+            const updatedBalance = Number(data.new_balance);
+            
+            if (!isNaN(updatedBalance)) {
+                pendingBuy.user.wallet = updatedBalance;
+                localStorage.setItem('nova_user', JSON.stringify(pendingBuy.user));
+                
+                reloadAfterNotif = true;
+                showNotif('Purchase Successful!', `"${pendingBuy.title}" has been moved to your library.`);
+                closeBuyModal(); 
+            } else {
+                throw new Error("Invalid balance data received.");
             }
-        };
+        } else {
+            showNotif('Purchase Failed', data.message || "Transaction error.", true);
+            closeBuyModal();
+        }
+    } catch(e) { 
+        console.error("System Error:", e);
+        showNotif('Syncing', 'Updating your local data...', false); 
+        setTimeout(() => location.reload(), 1500);
+    } finally {
+        btn.disabled = false; btn.innerText = 'Purchase';
+    }
+};
 
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
         function closeTopup() { 
