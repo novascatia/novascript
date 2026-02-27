@@ -1,135 +1,131 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaScript | Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>NovaScript | Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #09090b; } /* Zinc 950 */
-        .card-auth { background-color: #18181b; border: 1px solid #27272a; } /* Zinc 900 & 800 */
-        .input-clean { background-color: #09090b; border: 1px solid #27272a; transition: border-color 0.2s; }
-        .input-clean:focus { border-color: #3b82f6; outline: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; }
+        .modal { opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 100; }
+        .modal.active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
-<body class="text-gray-300 min-h-screen flex items-center justify-center p-4">
+<body class="flex items-center justify-center min-h-screen p-4 text-gray-300">
 
-    <div class="card-auth w-full max-w-md rounded-2xl p-8 shadow-xl">
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-white tracking-tight">NovaScript</h1>
-            <p class="text-sm text-gray-400 mt-1">Sign in to your account</p>
-        </div>
-
-        <div id="alert-box" class="hidden mb-6 p-3 rounded-lg text-sm text-center font-medium"></div>
-
-        <div class="flex gap-4 mb-6 border-b border-zinc-800">
-            <button onclick="switchTab('login')" id="tab-login" class="pb-2 text-sm font-semibold border-b-2 border-blue-500 text-white transition-colors">Login</button>
-            <button onclick="switchTab('register')" id="tab-register" class="pb-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors">Register</button>
-        </div>
-
-        <form id="auth-form" onsubmit="handleAuth(event)">
-            <input type="hidden" id="auth-action" value="login">
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Username</label>
-                    <input type="text" id="username" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="Enter username">
-                </div>
-                
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Password</label>
-                    <input type="password" id="password" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="••••••••">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Verification PIN</label>
-                    <input type="password" id="secret-pin" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="Enter your secret PIN">
-                    <p id="pin-hint" class="text-xs text-gray-500 mt-1 hidden">Create a custom PIN to verify your future logins.</p>
-                </div>
+    <div id="warning-modal" class="modal fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 active">
+        <div class="bg-[#18181b] border border-red-500/50 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
-
-            <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg mt-8 transition-colors">
-                Continue
-            </button>
-        </form>
-
-        <div class="mt-6">
-            <button onclick="loginAsGuest()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-medium py-2.5 rounded-lg transition-colors">
-                Continue as Guest
+            <h2 class="text-xl font-bold text-white mb-2">PENTING!</h2>
+            <p class="text-sm text-gray-400 mb-6 leading-relaxed">
+                Kredensial yang Anda isi di halaman ini adalah untuk <span class="text-red-400 font-bold uppercase underline">WEBSITE NOVASCRIPT</span> saja.<br><br>
+                Ini <span class="text-red-400 font-bold">BUKAN</span> kredensial untuk <span class="text-white font-semibold italic">Growtopia Private Server</span> manapun!
+            </p>
+            <button id="btn-continue" disabled class="w-full bg-zinc-800 text-zinc-500 py-3 rounded-xl font-bold transition-all cursor-not-allowed">
+                Tunggu <span id="timer">5</span> detik...
             </button>
         </div>
     </div>
 
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-3xl font-bold shadow-[0_0_30px_rgba(37,99,235,0.4)] mx-auto mb-6">N</div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Welcome Back</h1>
+            <p class="text-gray-500 mt-2">Enter your NovaScript credentials</p>
+        </div>
+
+        <div class="bg-[#18181b] border border-[#27272a] rounded-3xl p-8 shadow-2xl">
+            <div id="error-msg" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-3 px-4 rounded-xl mb-6 text-center"></div>
+            
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-1">Username</label>
+                    <input type="text" id="username" required class="w-full bg-[#09090b] border border-[#27272a] rounded-xl px-4 py-3.5 text-white focus:border-blue-500 outline-none transition-all placeholder:text-zinc-700" placeholder="Username website">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-1">Password</label>
+                    <input type="password" id="password" required class="w-full bg-[#09090b] border border-[#27272a] rounded-xl px-4 py-3.5 text-white focus:border-blue-500 outline-none transition-all placeholder:text-zinc-700" placeholder="••••••••">
+                </div>
+                <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98] mt-4">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-zinc-800/50 text-center">
+                <p class="text-gray-500 text-sm">Belum punya akun? <a href="https://t.me/novascatia" target="_blank" class="text-blue-400 hover:underline font-semibold">Hubungi Admin</a></p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function switchTab(tab) {
-            document.getElementById('auth-action').value = tab;
-            document.getElementById('alert-box').classList.add('hidden');
-            
-            const btnLogin = document.getElementById('tab-login');
-            const btnRegister = document.getElementById('tab-register');
-            const pinHint = document.getElementById('pin-hint');
-            
-            if (tab === 'login') {
-                btnLogin.classList.add('border-blue-500', 'text-white');
-                btnLogin.classList.remove('border-transparent', 'text-gray-500');
-                btnRegister.classList.remove('border-blue-500', 'text-white');
-                btnRegister.classList.add('border-transparent', 'text-gray-500');
-                pinHint.classList.add('hidden');
-                document.getElementById('submit-btn').innerText = 'Continue';
+        // LOGIKA TIMER POPUP LOGIN
+        let timeLeft = 5;
+        const btnContinue = document.getElementById('btn-continue');
+        const timerSpan = document.getElementById('timer');
+        const modal = document.getElementById('warning-modal');
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                timerSpan.innerText = timeLeft;
             } else {
-                btnRegister.classList.add('border-blue-500', 'text-white');
-                btnRegister.classList.remove('border-transparent', 'text-gray-500');
-                btnLogin.classList.remove('border-blue-500', 'text-white');
-                btnLogin.classList.add('border-transparent', 'text-gray-500');
-                pinHint.classList.remove('hidden');
-                document.getElementById('submit-btn').innerText = 'Create Account';
+                clearInterval(countdown);
+                btnContinue.disabled = false;
+                btnContinue.innerText = "Lanjutkan Ke Login";
+                btnContinue.classList.remove('bg-zinc-800', 'text-zinc-500', 'cursor-not-allowed');
+                btnContinue.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
             }
-        }
+        }, 1000);
 
-        function showAlert(msg, isSuccess = false) {
-            const box = document.getElementById('alert-box');
-            box.className = `mb-6 p-3 rounded-lg text-sm text-center font-medium ${isSuccess ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`;
-            box.innerText = msg;
-        }
+        btnContinue.onclick = () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        };
 
-        async function handleAuth(e) {
+        // LOGIKA LOGIN
+        const loginForm = document.getElementById('login-form');
+        const errorMsg = document.getElementById('error-msg');
+        const submitBtn = document.getElementById('submit-btn');
+
+        loginForm.onsubmit = async (e) => {
             e.preventDefault();
-            const action = document.getElementById('auth-action').value;
+            errorMsg.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Verifying...';
+
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const secretPin = document.getElementById('secret-pin').value;
-            const btn = document.getElementById('submit-btn');
-
-            btn.disabled = true; btn.innerText = 'Processing...';
 
             try {
                 const res = await fetch('/.netlify/functions/auth', {
-                    method: 'POST', body: JSON.stringify({ action, username, password, secretPin })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
                 });
-                const data = await res.json();
 
+                const data = await res.json();
                 if (data.success) {
-                    localStorage.setItem('nova_user', JSON.stringify(data.user));
-                    localStorage.setItem('nova_role', 'member');
-                    showAlert('Success! Redirecting...', true);
-                    // Pindah ke index (root)
-                    setTimeout(() => window.location.href = '/', 1000); 
+                    localStorage.setItem('nova_user', JSON.stringify({
+                        username: data.username,
+                        wallet: data.wallet_balance || 0
+                    }));
+                    localStorage.setItem('nova_role', data.role || 'user');
+                    window.location.href = '/';
                 } else {
-                    showAlert(data.message);
+                    errorMsg.innerText = data.message || 'Login failed';
+                    errorMsg.classList.remove('hidden');
                 }
             } catch (err) {
-                showAlert('Connection error. Please try again.');
+                errorMsg.innerText = 'Connection error. Try again.';
+                errorMsg.classList.remove('hidden');
             } finally {
-                btn.disabled = false; btn.innerText = action === 'login' ? 'Continue' : 'Create Account';
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Sign In';
             }
-        }
-
-        function loginAsGuest() {
-            localStorage.setItem('nova_user', JSON.stringify({ username: 'Guest_' + Math.floor(Math.random() * 9999), wallet: 0 }));
-            localStorage.setItem('nova_role', 'guest');
-            window.location.href = '/'; 
-        }
+        };
     </script>
 </body>
 </html>
