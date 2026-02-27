@@ -21,7 +21,6 @@
         .modal-box { transform: scale(0.95); transition: all 0.2s ease-in-out; }
         .modal.active .modal-box { transform: scale(1); }
         
-        /* Custom Scrollbar */
         pre::-webkit-scrollbar, textarea::-webkit-scrollbar { height: 6px; width: 6px; }
         pre::-webkit-scrollbar-track, textarea::-webkit-scrollbar-track { background: #09090b; }
         pre::-webkit-scrollbar-thumb, textarea::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
@@ -88,58 +87,8 @@
         </div>
     </main>
 
-    <div id="notif-modal" class="modal fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-w-sm bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl text-center p-6">
-            <h3 id="notif-title" class="font-bold text-white text-lg mb-2">Notice</h3>
-            <p id="notif-msg" class="text-gray-400 text-sm mb-6"></p>
-            <button onclick="closeNotif()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-bold transition-colors">Okay</button>
-        </div>
-    </div>
-
-    <div id="buy-modal" class="modal fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-w-sm bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
-            <div class="p-5 border-b border-[#27272a] bg-[#121214]">
-                <h3 class="font-bold text-white text-lg">Confirm Purchase</h3>
-            </div>
-            <div class="p-6">
-                <p class="text-gray-400 text-sm mb-4">You are about to purchase <span id="buy-title" class="text-white font-bold"></span>.</p>
-                <div class="flex justify-between items-center bg-[#09090b] p-3 rounded-lg border border-[#27272a] mb-6">
-                    <span class="text-gray-400 text-sm font-semibold">Price</span>
-                    <span id="buy-price" class="text-yellow-500 font-bold font-mono"></span>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="closeBuyModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors">Cancel</button>
-                    <button id="confirm-buy-btn" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black py-2.5 rounded-lg text-sm font-bold transition-colors">Purchase</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="code-modal" class="modal fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
-        <div class="modal-box w-full max-w-3xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="p-4 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
-                <h3 class="font-bold text-white text-sm md:text-base flex items-center gap-2">
-                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                    Script Execution Code
-                </h3>
-                <button onclick="closeCodeModal()" class="text-gray-400 hover:text-white transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-4 md:p-5 overflow-y-auto bg-[#09090b] flex-1">
-                <pre><code id="script-code-content" class="text-xs md:text-sm font-mono text-green-400 whitespace-pre-wrap break-all">Loading...</code></pre>
-            </div>
-            <div class="p-4 border-t border-[#27272a] flex flex-col sm:flex-row justify-between items-center bg-[#121214] gap-3">
-                <span class="text-[10px] md:text-xs text-gray-500 text-center sm:text-left">Paste this code into your executor.</span>
-                <button onclick="copyScriptCode(this)" class="w-full sm:w-auto bg-white hover:bg-gray-200 text-black px-6 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors">
-                    Copy to Clipboard
-                </button>
-            </div>
-        </div>
-    </div>
-
     <div id="topup-modal" class="modal fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-box w-full max-w-lg bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
+        <div class="modal-box w-full max-w-xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-5 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
                 <h3 class="font-bold text-white">Top Up Wallet</h3>
                 <button onclick="closeTopup()" class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -165,19 +114,10 @@
                 <div id="section-gl" class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
                     <p class="text-white font-semibold mb-2">Growlauncher Loader:</p>
                     <div class="relative">
-                        <textarea id="gl-script" readonly class="w-full h-40 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
-
-if not res then
-    LogToConsole(err)
-    return
-end
-
+                        <textarea id="gl-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
+if not res then LogToConsole(err) return end
 local chunk, loadErr = load(res)
-if not chunk then
-    LogToConsole(loadErr)
-    return
-end
-
+if not chunk then LogToConsole(loadErr) return end
 chunk()</textarea>
                         <button onclick="copyScriptText('gl-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
                     </div>
@@ -186,13 +126,74 @@ chunk()</textarea>
                 <div id="section-gpai" class="hidden text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
                     <p class="text-white font-semibold mb-2">GrowPai Loader:</p>
                     <div class="relative">
-                        <textarea id="gpai-script" readonly class="w-full h-32 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
+                        <textarea id="gpai-script" readonly class="w-full h-24 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
 local script = handle and handle:read("*a") or nil
 if handle then handle:close() end
 if script then local f = load(script) if f then f() end end</textarea>
                         <button onclick="copyScriptText('gpai-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
                     </div>
                 </div>
+
+                <div class="mt-6 border-t border-[#27272a] pt-5">
+                    <p class="text-white font-semibold mb-4 text-xs md:text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 .6-.03 1.29-.1 2.09-.06.8-.15 1.43-.28 1.9-.13.47-.45.83-.9 1.13-.44.3-.94.47-1.51.54-1.12.13-2.31.2-3.56.2s-2.44-.07-3.56-.2c-.57-.07-1.07-.24-1.51-.54-.45-.3-.77-.66-.9-1.13-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L8 12c0-.6.03-1.29.1-2.09.06-.8.15-1.43.28-1.9.13-.47.45-.83.9-1.13.44-.3.94-.47 1.51-.54 1.12-.13 2.31-.2 3.56-.2s2.44.07 3.56.2c.57.07 1.07.24 1.51.54.45.3.77.66.9 1.13z"/></svg>
+                        Tutorial Cara Top Up
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Tutorial Growlauncher</span>
+                            <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
+                                <iframe class="w-full h-full" src="https://www.youtube.com/embed/VIDEO_ID_GL" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Tutorial GrowPai</span>
+                            <div class="aspect-video w-full rounded-lg overflow-hidden border border-zinc-800 bg-black">
+                                <iframe class="w-full h-full" src="https://www.youtube.com/embed/VIDEO_ID_GROWPAI" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notif-modal" class="modal fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-sm bg-[#18181b] border border-[#27272a] rounded-xl text-center p-6">
+            <h3 id="notif-title" class="font-bold text-white text-lg mb-2">Notice</h3>
+            <p id="notif-msg" class="text-gray-400 text-sm mb-6"></p>
+            <button onclick="closeNotif()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold">Okay</button>
+        </div>
+    </div>
+
+    <div id="buy-modal" class="modal fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-sm bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-[#27272a] bg-[#121214]"><h3 class="font-bold text-white text-lg">Confirm Purchase</h3></div>
+            <div class="p-6">
+                <p class="text-gray-400 text-sm mb-4">You are about to purchase <span id="buy-title" class="text-white font-bold"></span>.</p>
+                <div class="flex justify-between items-center bg-[#09090b] p-3 rounded-lg border border-[#27272a] mb-6">
+                    <span class="text-gray-400 text-sm font-semibold">Price</span>
+                    <span id="buy-price" class="text-yellow-500 font-bold font-mono"></span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeBuyModal()" class="flex-1 bg-zinc-800 text-white py-2.5 rounded-lg text-sm font-semibold">Cancel</button>
+                    <button id="confirm-buy-btn" class="flex-1 bg-yellow-500 text-black py-2.5 rounded-lg text-sm font-bold">Purchase</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="code-modal" class="modal fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-2xl bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 border-b border-[#27272a] flex justify-between items-center bg-[#121214]">
+                <h3 class="font-bold text-white text-sm">Script Execution Code</h3>
+                <button onclick="closeCodeModal()" class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-4 overflow-y-auto bg-[#09090b] flex-1">
+                <pre><code id="script-code-content" class="text-xs font-mono text-green-400 whitespace-pre-wrap break-all">Loading...</code></pre>
+            </div>
+            <div class="p-4 border-t border-[#27272a] flex justify-end bg-[#121214]">
+                <button onclick="copyScriptCode(this)" class="bg-white text-black px-6 py-2 rounded-lg text-xs font-bold transition-colors">Copy to Clipboard</button>
             </div>
         </div>
     </div>
@@ -219,12 +220,8 @@ if script then local f = load(script) if f then f() end end</textarea>
             if (userStr) {
                 let user = JSON.parse(userStr);
                 document.getElementById('display-username').innerText = user.username;
-                
-                // Set Auto-link Username badge in Top Up modal
-                const topupBadge = document.getElementById('topup-username-badge');
-                if(topupBadge) topupBadge.innerText = user.username;
-                
-                document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" id="live-indicator"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
+                document.getElementById('topup-username-badge').innerText = user.username;
+                document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
 
                 if (localStorage.getItem('nova_role') !== 'guest') {
                     document.getElementById('btn-topup').classList.remove('hidden');
@@ -237,8 +234,6 @@ if script then local f = load(script) if f then f() end end</textarea>
                             localStorage.setItem('nova_user', JSON.stringify(user));
                         }
                     } catch (err) {}
-                } else {
-                    document.getElementById('display-wallet').innerText = '0 BGL'; 
                 }
             }
             loadScripts();
@@ -248,72 +243,40 @@ if script then local f = load(script) if f then f() end end</textarea>
             const freeContainer = document.getElementById('free-scripts');
             const paidContainer = document.getElementById('paid-scripts');
             const ownedContainer = document.getElementById('owned-scripts');
-            
             try {
                 const resScripts = await fetch('/.netlify/functions/get-scripts');
                 const resultScripts = await resScripts.json();
-                
                 const user = JSON.parse(localStorage.getItem('nova_user') || '{}');
                 let ownedIds = [];
                 if (user.username) {
-                    try {
-                        const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
-                        const resultOwned = await resOwned.json();
-                        if (resultOwned.success) ownedIds = resultOwned.owned_scripts;
-                    } catch(e) {}
+                    const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
+                    const resultOwned = await resOwned.json();
+                    if (resultOwned.success) ownedIds = resultOwned.owned_scripts;
                 }
-
-                freeContainer.innerHTML = ''; paidContainer.innerHTML = '';
-                if(ownedIds.length > 0) ownedContainer.innerHTML = ''; 
-
-                if (resultScripts.success && resultScripts.scripts.length > 0) {
-                    allScripts = resultScripts.scripts; 
-                    
+                freeContainer.innerHTML = ''; paidContainer.innerHTML = ''; if(ownedIds.length > 0) ownedContainer.innerHTML = '';
+                if (resultScripts.success) {
+                    allScripts = resultScripts.scripts;
                     resultScripts.scripts.forEach((script) => {
                         const isFree = !script.price || script.price === 0;
                         const isOwned = ownedIds.map(String).includes(String(script.id));
-                        
                         const card = document.createElement('div');
-                        card.className = 'card-item p-4 md:p-5 rounded-xl flex flex-col justify-between h-full';
-                        
+                        card.className = 'card-item p-4 rounded-xl flex flex-col justify-between h-full';
                         let actionButton = '';
                         let badge = '';
-
                         if (isFree || isOwned) {
                             card.classList.add('cursor-pointer', 'hover:bg-[#1a1a1f]');
                             card.onclick = () => executeScript(script.id);
-                            actionButton = `<button class="text-[10px] md:text-xs font-semibold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 shadow-sm pointer-events-none">Open Script</button>`;
-                            badge = isFree 
-                                ? '<span class="text-[8px] md:text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' 
-                                : '<span class="text-[8px] md:text-[10px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>';
+                            actionButton = `<button class="text-[10px] font-semibold text-blue-500 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 pointer-events-none">Open Script</button>`;
+                            badge = isFree ? '<span class="text-[8px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' : '<span class="text-[8px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>';
                         } else {
-                            actionButton = `<button onclick="triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold relative z-10">Buy - ${script.price} BGL</button>`;
-                            badge = '<span class="text-[8px] md:text-[10px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>';
+                            actionButton = `<button onclick="triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="bg-yellow-500 text-black px-3 py-1.5 rounded-lg text-[10px] font-bold">Buy - ${script.price} BGL</button>`;
+                            badge = '<span class="text-[8px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>';
                         }
-
-                        card.innerHTML = `
-                            <div>
-                                <div class="flex justify-between items-start mb-2 md:mb-3">
-                                    <h2 class="text-base md:text-lg font-bold text-white pr-2 leading-tight">${script.title}</h2>
-                                    ${badge}
-                                </div>
-                                <p class="text-xs md:text-sm text-gray-400 line-clamp-2 md:line-clamp-3 mb-4">${script.description}</p>
-                            </div>
-                            <div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3 md:pt-4">
-                                <span class="text-[10px] md:text-xs font-mono text-gray-500">v${script.version || '1.0'}</span>
-                                ${actionButton}
-                            </div>
-                        `;
-                        
-                        if (isFree) freeContainer.appendChild(card);
-                        else if (isOwned) ownedContainer.appendChild(card);
-                        else paidContainer.appendChild(card);
+                        card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><h2 class="text-base font-bold text-white">${script.title}</h2>${badge}</div><p class="text-xs text-gray-400 mb-4">${script.description}</p></div><div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3"><span class="text-[10px] font-mono text-gray-500">v${script.version || '1.0'}</span>${actionButton}</div>`;
+                        if (isFree) freeContainer.appendChild(card); else if (isOwned) ownedContainer.appendChild(card); else paidContainer.appendChild(card);
                     });
                 }
-            } catch (error) {
-                freeContainer.innerHTML = '<p class="text-red-400 text-sm">Failed to load.</p>';
-                paidContainer.innerHTML = '<p class="text-red-400 text-sm">Failed to load.</p>';
-            }
+            } catch (error) {}
         }
 
         function executeScript(scriptId) {
@@ -325,87 +288,14 @@ if script then local f = load(script) if f then f() end end</textarea>
         }
 
         function closeCodeModal() { document.getElementById('code-modal').classList.remove('active'); }
-
         function copyScriptCode(btn) {
             const code = document.getElementById('script-code-content').innerText;
             navigator.clipboard.writeText(code).then(() => {
-                const ori = btn.innerText;
-                btn.innerText = 'Copied!'; btn.classList.add('bg-green-400', 'text-white'); btn.classList.remove('bg-white', 'text-black');
-                setTimeout(() => { btn.innerText = ori; btn.classList.remove('bg-green-400', 'text-white'); btn.classList.add('bg-white', 'text-black'); }, 2000);
+                const ori = btn.innerText; btn.innerText = 'Copied!';
+                setTimeout(() => { btn.innerText = ori; }, 2000);
             });
         }
 
-        // --- Logic Custom Buy Modal ---
-        function triggerBuy(scriptId, price, title) {
-            const userStr = localStorage.getItem('nova_user');
-            if(!userStr) { showNotif('Error', 'Please login first.', true); return; }
-            const user = JSON.parse(userStr);
-            
-            if(user.wallet < price) {
-                showNotif('Insufficient Balance', `You need ${price} BGL to buy "${title}".`, true);
-                return;
-            } 
-            
-            pendingBuy = { scriptId, price, title, user };
-            document.getElementById('buy-title').innerText = title;
-            document.getElementById('buy-price').innerText = price + ' BGL';
-            document.getElementById('buy-modal').classList.add('active');
-        }
-
-        function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
-
-document.getElementById('confirm-buy-btn').onclick = async function() {
-            if(!pendingBuy) return;
-            const btn = this;
-            btn.disabled = true; btn.innerText = 'Processing...';
-
-            try {
-                const res = await fetch('/.netlify/functions/buy-script', {
-                    method: 'POST',
-                    body: JSON.stringify({ 
-                        username: pendingBuy.user.username, 
-                        script_id: String(pendingBuy.scriptId), 
-                        price: parseInt(pendingBuy.price) 
-                    })
-                });
-                
-                const rawText = await res.text(); 
-                let data;
-                
-                try {
-                    data = JSON.parse(rawText);
-                } catch(parseError) {
-                    closeBuyModal();
-                    showNotif('Processing...', 'Verifying your transaction...');
-                    setTimeout(() => location.reload(), 1500); 
-                    return;
-                }
-                
-                if(data.success) {
-                    // Update saldo lokal
-                    pendingBuy.user.wallet = data.new_balance;
-                    localStorage.setItem('nova_user', JSON.stringify(pendingBuy.user));
-                    
-                    // Tampilkan notifikasi DULU sebelum modal ditutup
-                    reloadAfterNotif = true;
-                    showNotif('Purchase Successful!', `"${pendingBuy.title}" has been moved to your Owned tab.`);
-                    
-                    // Baru tutup modal buy-nya
-                    closeBuyModal(); 
-                } else {
-                    showNotif('Purchase Failed', data.message || "Transaction error.", true);
-                    closeBuyModal();
-                }
-            } catch(e) { 
-                console.error("System Error:", e);
-                showNotif('Notice', 'Syncing your data...'); 
-                setTimeout(() => location.reload(), 1500);
-            } finally {
-                btn.disabled = false; btn.innerText = 'Purchase';
-            }
-        };
-
-        // --- Logic Top Up & Utils ---
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
         function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
 
@@ -413,43 +303,23 @@ document.getElementById('confirm-buy-btn').onclick = async function() {
             const tabGl = document.getElementById('tab-gl'), tabGpai = document.getElementById('tab-gpai');
             const secGl = document.getElementById('section-gl'), secGpai = document.getElementById('section-gpai');
             if(type === 'gl') {
-                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors';
-                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors';
+                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow';
+                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400';
                 secGl.classList.remove('hidden'); secGpai.classList.add('hidden');
             } else {
-                tabGpai.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors';
-                tabGl.className = 'flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors';
+                tabGpai.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-zinc-800 text-white shadow';
+                tabGl.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400';
                 secGpai.classList.remove('hidden'); secGl.classList.add('hidden');
             }
         }
 
-        // Fungsi copy untuk textarea multi-line di modal TopUp
         function copyScriptText(elementId, btn) {
             const textArea = document.getElementById(elementId);
             navigator.clipboard.writeText(textArea.value).then(() => {
-                const ori = btn.innerText;
-                btn.innerText = 'Copied!'; 
-                btn.classList.replace('text-white', 'text-green-400');
-                btn.classList.replace('border-zinc-700', 'border-green-500');
-                setTimeout(() => { 
-                    btn.innerText = ori; 
-                    btn.classList.replace('text-green-400', 'text-white'); 
-                    btn.classList.replace('border-green-500', 'border-zinc-700');
-                }, 2000);
+                const ori = btn.innerText; btn.innerText = 'Copied!';
+                setTimeout(() => { btn.innerText = ori; }, 2000);
             });
         }
-
-        // Tutup modal kalau klik area luar
-        ['notif-modal', 'buy-modal', 'code-modal', 'topup-modal'].forEach(id => {
-            document.getElementById(id).addEventListener('click', (e) => {
-                if (e.target === document.getElementById(id)) {
-                    if(id === 'notif-modal') closeNotif();
-                    else if(id === 'buy-modal') closeBuyModal();
-                    else if(id === 'code-modal') closeCodeModal();
-                    else closeTopup();
-                }
-            });
-        });
 
         function logout() { localStorage.removeItem('nova_user'); localStorage.removeItem('nova_role'); window.location.href = '/login'; }
         initApp();
