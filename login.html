@@ -11,9 +11,37 @@
         .card-auth { background-color: #18181b; border: 1px solid #27272a; } /* Zinc 900 & 800 */
         .input-clean { background-color: #09090b; border: 1px solid #27272a; transition: border-color 0.2s; }
         .input-clean:focus { border-color: #3b82f6; outline: none; }
+        
+        /* Modal Animation */
+        #warning-modal { transition: opacity 0.3s ease; }
     </style>
 </head>
 <body class="text-gray-300 min-h-screen flex items-center justify-center p-4">
+
+    <div id="warning-modal" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-[#18181b] border border-zinc-800 w-full max-w-md rounded-2xl p-8 shadow-2xl text-center">
+            <div class="w-16 h-16 bg-yellow-500/10 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            
+            <h2 class="text-xl font-bold text-white mb-4">PENTING / IMPORTANT</h2>
+            
+            <div class="space-y-4 text-sm leading-relaxed text-gray-300">
+                <p class="italic border-b border-zinc-800 pb-4 text-yellow-500/90">
+                    "Yang akan kamu masukan adalah Username dan Password untuk <strong>novascript.site</strong> dan <strong>BUKAN</strong> untuk Private Server manapun, harap membedakan password Ingame dan Website untuk menghindari hal yang tidak di inginkan!"
+                </p>
+                <p class="text-gray-400">
+                    "The credentials you enter are for <strong>novascript.site</strong> and <strong>NOT</strong> for any Private Server. Please use a different password from your in-game account to prevent unwanted issues!"
+                </p>
+            </div>
+
+            <button id="close-warning-btn" disabled class="w-full bg-zinc-700 text-gray-400 font-bold py-3 rounded-lg mt-8 transition-all cursor-not-allowed">
+                Wait (<span id="warn-timer">5</span>s)
+            </button>
+        </div>
+    </div>
 
     <div class="card-auth w-full max-w-md rounded-2xl p-8 shadow-xl">
         <div class="text-center mb-8">
@@ -62,6 +90,34 @@
     </div>
 
     <script>
+        // Warning Modal Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const warningModal = document.getElementById('warning-modal');
+            const closeBtn = document.getElementById('close-warning-btn');
+            const timerDisplay = document.getElementById('warn-timer');
+            let timeLeft = 5;
+
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    closeBtn.disabled = false;
+                    closeBtn.innerText = "Okay!";
+                    closeBtn.classList.remove('bg-zinc-700', 'text-gray-400', 'cursor-not-allowed');
+                    closeBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+                }
+            }, 1000);
+
+            closeBtn.addEventListener('click', () => {
+                warningModal.style.opacity = '0';
+                setTimeout(() => {
+                    warningModal.style.display = 'none';
+                }, 300);
+            });
+        });
+
         function switchTab(tab) {
             document.getElementById('auth-action').value = tab;
             document.getElementById('alert-box').classList.add('hidden');
@@ -113,7 +169,6 @@
                     localStorage.setItem('nova_user', JSON.stringify(data.user));
                     localStorage.setItem('nova_role', 'member');
                     showAlert('Success! Redirecting...', true);
-                    // Pindah ke index (root)
                     setTimeout(() => window.location.href = '/', 1000); 
                 } else {
                     showAlert(data.message);
