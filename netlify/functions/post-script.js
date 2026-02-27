@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 exports.handler = async function(event, context) {
-    // [DIPERBAIKI] Tambahkan 'price' di dalam kurung kurawal ini
-    const { title, description, version, price, loader_script } = JSON.parse(event.body);
+    const { title, description, version, price, loader_script, tags } = JSON.parse(event.body);
     
     if (!title || !description || !loader_script) {
         return {
@@ -15,21 +14,29 @@ exports.handler = async function(event, context) {
     const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // [DIPERBAIKI] Masukkan 'price' ke dalam perintah insert ke Supabase
+    // Memasukkan data ke Supabase termasuk kolom tags dan purchase_count
     const { data, error } = await supabase
         .from('scripts')
-        .insert([{ title, description, version, price, loader_script }])
+        .insert([{ 
+            title, 
+            description, 
+            version, 
+            price, 
+            loader_script, 
+            tags, // Kolom tags baru
+            purchase_count: 0 // Inisialisasi jumlah pembelian 0
+        }])
         .select();
 
     if (error) {
         return { 
             statusCode: 500, 
-            body: JSON.stringify({ success: false, message: error.message }) 
+            body: JSON.stringify({ success: false, message: error.message })
         };
     }
 
     return { 
         statusCode: 200, 
-        body: JSON.stringify({ success: true, postedScript: data[0] }) 
+        body: JSON.stringify({ success: true, postedScript: data[0] })
     };
 };
