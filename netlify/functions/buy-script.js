@@ -8,21 +8,36 @@ exports.handler = async (event) => {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
     try {
-        // 1. Cek saldo user
+        // 1. Ambil data user
         const { data: user, error: userErr } = await supabase.from('users').select('wallet_balance').eq('username', username).single();
         if (userErr || !user) throw new Error('User not found');
-        if (parseInt(user.wallet_balance) < parseInt(price)) throw new Error('Insufficient BGL Balance');
 
-        // 2. Potong saldo
-        const newBalance = parseInt(user.wallet_balance) - parseInt(price);
-        await supabase.from('users').update({ wallet_balance: newBalance }).eq('username', username);
+        // Pastikan konversi ke angka aman (Default 0 jika null)
+        const currentBalance = Number(user.wallet_balance || 0);
+        const itemPrice = Number(price || 0);
 
-        // 3. Catat kepemilikan di tabel purchases
-        const { error: purchaseErr } = await supabase.from('purchases').insert([{ user_username: username, script_id: script_id }]);
-        if (purchaseErr) throw purchaseErr;
+        if (currentBalance < itemPrice) throw new Error('Insufficient BGL Balance');
 
-        return { statusCode: 200, body: JSON.stringify({ success: true, new_balance: newBalance }) };
+        // 2. Hitung saldo baru
+        const newBalance = currentBalance - itemPrice;
+
+        // 3. Update database
+        const { error: updateErr } = await supabase.from('users').update({ wallet_balance: newBalance }).eq('username', username);
+        if (updateErr) throw updateErr;
+
+        // 4. Catat pembelian
+        await supabase.from('purchases').insert([{ user_username: username, script_id: script_id }]);
+
+        return { 
+            statusCode: 200, 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ success: true, new_balance: newBalance }) 
+        };
     } catch (err) {
-        return { statusCode: 400, body: JSON.stringify({ success: false, message: err.message }) };
+        return { 
+            statusCode: 400, 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ success: false, message: err.message }) 
+        };
     }
 };
