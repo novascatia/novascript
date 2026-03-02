@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaScript | Transaction History</title>
+    
+    <script>
+        // Proteksi Halaman: Hanya user login yang bisa masuk
+        if (!localStorage.getItem('nova_user')) { window.location.href = '/login'; }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #d4d4d8; }
+        .glass-card { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid #27272a; }
+        .tab-btn.active { border-color: #3b82f6; color: #fff; background: rgba(59, 130, 246, 0.1); }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <nav class="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <a href="/" class="font-bold text-white flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <div class="w-6 h-6 rounded bg-blue-600 text-white flex items-center justify-center text-xs">N</div>
+                    NovaScript
+                </a>
+            </div>
+            <div class="text-right">
+                <p id="user-display" class="text-xs font-bold text-white uppercase tracking-widest">Guest</p>
+                <p id="balance-display" class="text-[10px] text-blue-400 font-mono">0 BGL</p>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto mt-12 px-6">
+        <header class="mb-10">
+            <h1 class="text-3xl font-bold text-white mb-2">Riwayat Transaksi</h1>
+            <p class="text-gray-500 text-sm">Pantau log pembelian script dan riwayat top-up saldo Anda.</p>
+        </header>
+
+        <div class="flex gap-4 mb-8 border-b border-zinc-800">
+            <button onclick="switchTab('purchases')" id="tab-purchases" class="tab-btn active px-4 py-2 text-sm font-semibold border-b-2 border-transparent transition-all">
+                📦 Pembelian Script
+            </button>
+            <button onclick="switchTab('topups')" id="tab-topups" class="tab-btn px-4 py-2 text-sm font-semibold border-b-2 border-transparent transition-all text-gray-500 hover:text-gray-300">
+                ⚡ Riwayat Top Up
+            </button>
+        </div>
+
+        <div id="container-purchases" class="space-y-4">
+            <div class="animate-pulse flex flex-col gap-4">
+                <div class="h-16 bg-zinc-900 rounded-xl border border-zinc-800"></div>
+                <div class="h-16 bg-zinc-900 rounded-xl border border-zinc-800"></div>
+            </div>
+        </div>
+
+        <div id="container-topups" class="hidden space-y-4">
+            <p class="text-center py-10 text-gray-600 italic text-sm">Belum ada riwayat pengisian saldo.</p>
+        </div>
+    </main>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('nova_user') || '{}');
+        
+        async function init() {
+            if (!user.username) return;
+            document.getElementById('user-display').innerText = user.username;
+            updateBalance();
+            loadPurchaseHistory();
+        }
+
+        async function updateBalance() {
+            try {
+                const res = await fetch(`/.netlify/functions/get-balance?username=${user.username}`);
+                const data = await res.json();
+                if (data.balance !== undefined) {
+                    document.getElementById('balance-display').innerText = `${parseInt(data.balance).toLocaleString('id-ID')} BGL`;
+                }
+            } catch (err) {}
+        }
+
+        async function loadPurchaseHistory() {
+            const container = document.getElementById('container-purchases');
+            try {
+                // Fetch data dari database pembelian
+                const res = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
+                const data = await res.json();
+                
+                // Fetch all scripts info to match names
+                const resScripts = await fetch('/.netlify/functions/get-scripts');
+                const scriptData = await resScripts.json();
+                
+                if (data.success && data.owned_scripts.length > 0) {
+                    container.innerHTML = '';
+                    data.owned_scripts.forEach(scriptId => {
+                        const scriptInfo = scriptData.scripts.find(s => String(s.id) === String(scriptId));
+                        
+                        const item = document.createElement('div');
+                        item.className = 'glass-card p-5 rounded-xl flex justify-between items-center group hover:border-blue-500/50 transition-all';
+                        item.innerHTML = `
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold border border-blue-500/20">
+                                    ${scriptInfo ? 'S' : '?'}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white">${scriptInfo ? scriptInfo.title : 'Unknown Script (ID: '+scriptId+')'}</h3>
+                                    <p class="text-[10px] text-gray-500 font-mono">TX-ID: NS-${Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-green-400 bg-green-400/10 px-3 py-1 rounded-full border border-green-400/20">SUCCESS</span>
+                                <p class="text-[10px] text-gray-500 mt-2 italic">Purchased Asset</p>
+                            </div>
+                        `;
+                        container.appendChild(item);
+                    });
+                } else {
+                    container.innerHTML = `<div class="text-center py-20 bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-800">
+                        <p class="text-gray-500 text-sm">Belum ada script premium yang dibeli.</p>
+                        <a href="/" class="text-blue-500 text-xs mt-2 inline-block hover:underline">Kunjungi Marketplace →</a>
+                    </div>`;
+                }
+            } catch (err) {
+                container.innerHTML = '<p class="text-red-400 text-xs">Gagal memuat log pembelian.</p>';
+            }
+        }
+
+        function switchTab(tab) {
+            const tabs = ['purchases', 'topups'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+                document.getElementById(`tab-${t}`).classList.toggle('text-gray-500', t !== tab);
+                document.getElementById(`container-${t}`).classList.toggle('hidden', t !== tab);
+            });
+        }
+
+        // Mock Data untuk Topup (Karena biasanya log topup disimpan di tabel terpisah/webhook)
+        // Jika Anda memiliki endpoint get-topups, ganti fungsi ini
+        function loadTopupHistory() {
+            const container = document.getElementById('container-topups');
+            // Log topup biasanya dipicu oleh webhook-donation.js atau auto-topup.js
+            // Untuk saat ini menampilkan placeholder sistem otomatis
+            container.innerHTML = `
+                <div class="bg-blue-500/5 border border-blue-500/10 p-4 rounded-lg flex items-center gap-3">
+                    <div class="text-blue-400">ℹ️</div>
+                    <p class="text-[11px] text-blue-300">Log top-up sinkron otomatis dengan GrowLauncher melalui endpoint <strong>/auto-topup</strong>.</p>
+                </div>
+            `;
+        }
+
+        init();
+        loadTopupHistory();
+    </script>
+</body>
+</html>
