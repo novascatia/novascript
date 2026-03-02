@@ -25,6 +25,11 @@
                 <textarea id="desc" required rows="3" class="w-full bg-[#09090b] border border-zinc-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none text-white"></textarea>
             </div>
 
+            <div>
+                <label class="block text-xs font-semibold text-blue-400 uppercase mb-1">Cara Pemakaian (How to Use)</label>
+                <textarea id="how_to_use" rows="3" class="w-full bg-[#09090b] border border-zinc-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none text-white" placeholder="Contoh: 1. Inject executor, 2. Eksekusi loader ini"></textarea>
+            </div>
+
             <div class="flex gap-4">
                 <div class="flex-1">
                     <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Version</label>
@@ -61,10 +66,11 @@
             const payload = {
                 title: document.getElementById('title').value,
                 description: document.getElementById('desc').value,
+                how_to_use: document.getElementById('how_to_use').value,
                 version: document.getElementById('version').value,
                 price: parseInt(document.getElementById('price').value),
                 loader_script: document.getElementById('code').value,
-                tags: document.getElementById('tags').value // Menambahkan tags ke payload
+                tags: document.getElementById('tags').value
             };
 
             try {
