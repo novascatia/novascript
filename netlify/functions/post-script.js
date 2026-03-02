@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 exports.handler = async function(event, context) {
-    const { title, description, version, price, loader_script, tags } = JSON.parse(event.body);
+    const { title, description, version, price, loader_script, tags, how_to_use } = JSON.parse(event.body);
     
     if (!title || !description || !loader_script) {
         return {
@@ -14,7 +14,6 @@ exports.handler = async function(event, context) {
     const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Memasukkan data ke Supabase termasuk kolom tags dan purchase_count
     const { data, error } = await supabase
         .from('scripts')
         .insert([{ 
@@ -23,8 +22,9 @@ exports.handler = async function(event, context) {
             version, 
             price, 
             loader_script, 
-            tags, // Kolom tags baru
-            purchase_count: 0 // Inisialisasi jumlah pembelian 0
+            tags,
+            how_to_use, 
+            purchase_count: 0 
         }])
         .select();
 
