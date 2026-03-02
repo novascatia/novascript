@@ -503,7 +503,7 @@
             const script = allScripts.find(s => String(s.id) === String(scriptId));
             if(script) {
                 // Set isi how_to_use (Panduan)
-                document.getElementById('how-to-use-content').innerText = script.how_to_use || 'Tidak ada panduan khusus untuk script ini. Langsung jalankan kode loader di bawah pada executor kamu.';
+                document.getElementById('how-to-use-content').innerText = script.how_to_use || 'nova belum membuat cara pakai script ini! sabar ya lagi dibuat satu per satu kok!';
                 // Set isi kode loader
                 document.getElementById('script-code-content').innerText = script.loader_script || '-- No code --';
                 document.getElementById('code-modal').classList.add('active');
