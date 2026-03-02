@@ -12,6 +12,8 @@
         .stat-card { background: #18181b; border: 1px solid #27272a; transition: all 0.2s; }
         .stat-card:hover { border-color: #3b82f6; }
         .buyer-badge { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); }
+        .loading-shimmer { background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body class="min-h-screen p-8">
@@ -31,11 +33,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             <div class="stat-card p-8 rounded-2xl">
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Total Script Terjual (Active)</p>
-                <h2 id="total-sold" class="text-5xl font-bold text-white">0</h2>
+                <h2 id="total-sold" class="text-5xl font-bold text-white tracking-tighter">0</h2>
             </div>
             <div class="stat-card p-8 rounded-2xl">
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Total Revenue (Active)</p>
-                <h2 id="total-bgl" class="text-5xl font-bold text-yellow-500">0 <span class="text-sm font-normal">BGL</span></h2>
+                <h2 id="total-bgl" class="text-5xl font-bold text-yellow-500 tracking-tighter">0 <span class="text-sm font-normal">BGL</span></h2>
             </div>
         </div>
 
@@ -55,7 +57,10 @@
                         </tr>
                     </thead>
                     <tbody id="stats-body">
-                        </tbody>
+                        <tr>
+                            <td colspan="4" class="p-12 text-center text-gray-500 italic">Initializing admin session...</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -65,15 +70,19 @@
         let excludedIds = JSON.parse(localStorage.getItem('excluded_scripts') || '[]');
 
         async function fetchStats() {
+            const body = document.getElementById('stats-body');
             try {
-                // Fetch data scripts dan data pembelian secara bersamaan
-                const [resScripts, resPurchases] = await Promise.all([
-                    fetch('/.netlify/functions/get-scripts'),
-                    fetch('/.netlify/functions/get-purchases?all=true') 
-                ]);
+                // Mendapatkan username admin dari localStorage untuk bypass "Missing username"
+                const adminData = JSON.parse(localStorage.getItem('nova_user') || '{}');
+                const adminUser = adminData.username || 'admin';
 
+                // Fetch data scripts
+                const resScripts = await fetch('/.netlify/functions/get-scripts');
                 const scriptResult = await resScripts.json();
-                const purchaseResult = await resPurchases.json();
+
+                // Fetch data keys (Karena get-keys.js memberikan relasi user-script yang lebih lengkap untuk admin)
+                const resKeys = await fetch(`/.netlify/functions/get-keys?username=${adminUser}`);
+                const keysResult = await resKeys.json();
 
                 if (scriptResult.success) {
                     // 1. URUTKAN (SCALING): Paling banyak terjual ke paling sedikit
@@ -81,14 +90,16 @@
                         (b.purchase_count || 0) - (a.purchase_count || 0)
                     );
 
-                    renderTable(sortedScripts, purchaseResult.owned_scripts || []);
+                    // Gunakan data keys sebagai referensi pembeli jika get-purchases bermasalah
+                    renderTable(sortedScripts, keysResult.keys || []);
                 }
             } catch (err) {
                 console.error("Critical Error:", err);
+                body.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-500">Error loading data. Check console.</td></tr>`;
             }
         }
 
-        function renderTable(scripts, allPurchases) {
+        function renderTable(scripts, allKeys) {
             const body = document.getElementById('stats-body');
             let totalSold = 0;
             let totalRevenue = 0;
@@ -96,16 +107,19 @@
 
             scripts.forEach((script, index) => {
                 const isExcluded = excludedIds.includes(String(script.id));
-                const sold = script.purchase_count || 0;
-                const revenue = sold * (script.price || 0);
+                const sold = parseInt(script.purchase_count) || 0;
+                const price = parseInt(script.price) || 0;
+                const revenue = sold * price;
 
                 if (!isExcluded) {
                     totalSold += sold;
                     totalRevenue += revenue;
                 }
 
-                // Filter pembeli yang memiliki script_id ini
-                const buyers = allPurchases.filter(p => String(p.script_id) === String(script.id));
+                // Ambil daftar user unik yang memiliki script ini dari tabel keys
+                const scriptBuyers = [...new Set(allKeys
+                    .filter(k => String(k.script_id) === String(script.id))
+                    .map(k => k.user_username))];
 
                 const row = document.createElement('tr');
                 row.className = `border-t border-zinc-800 transition-all ${isExcluded ? 'opacity-30 grayscale' : 'hover:bg-white/[0.02]'}`;
@@ -113,14 +127,14 @@
                 row.innerHTML = `
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-4">
-                            <span class="text-lg font-black text-zinc-700">#${index + 1}</span>
+                            <span class="text-lg font-black ${index === 0 ? 'text-yellow-500' : 'text-zinc-700'}">#${index + 1}</span>
                             <div class="flex flex-col">
                                 <span class="font-bold text-white">${script.title}</span>
                                 <span class="text-[10px] text-zinc-500 font-mono italic">ID: ${script.id}</span>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-center font-mono text-zinc-400">${script.price || 0} BGL</td>
+                    <td class="px-6 py-4 text-center font-mono text-zinc-400">${price.toLocaleString()} BGL</td>
                     <td class="px-6 py-4 text-center">
                         <button onclick="toggleExpand(${script.id})" class="bg-zinc-800 px-3 py-1 rounded-md text-xs font-bold hover:bg-zinc-700 transition-colors border border-zinc-700">
                             ${sold} Users ▾
@@ -133,22 +147,21 @@
                     </td>
                 `;
 
-                // Sub-row untuk Expandable Buyer List
                 const expandRow = document.createElement('tr');
                 expandRow.id = `expand-${script.id}`;
                 expandRow.className = "hidden bg-black/50";
                 
-                const buyerChips = buyers.length > 0 
-                    ? buyers.map(b => `<div class="buyer-badge text-[11px] text-blue-400 px-3 py-2 rounded-lg flex items-center gap-2">
-                        <span class="opacity-50">👤</span> ${b.user_username || 'Unknown'}
+                const buyerChips = scriptBuyers.length > 0 
+                    ? scriptBuyers.map(username => `<div class="buyer-badge text-[11px] text-blue-400 px-3 py-2 rounded-lg flex items-center gap-2">
+                        <span class="opacity-50">👤</span> ${username}
                       </div>`).join('')
-                    : '<p class="text-xs text-zinc-600 italic py-2">Tidak ada data pembeli ditemukan di database.</p>';
+                    : `<p class="text-xs text-zinc-600 italic py-2">No buyer names found for ID ${script.id}</p>`;
 
                 expandRow.innerHTML = `
                     <td colspan="4" class="px-10 py-6 border-l-2 border-blue-500">
                         <div class="mb-3 flex items-center gap-2">
                             <span class="h-px w-8 bg-blue-500/30"></span>
-                            <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Authorized Buyers</span>
+                            <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest tracking-widest">Database Buyers</span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             ${buyerChips}
@@ -160,7 +173,6 @@
                 body.appendChild(expandRow);
             });
 
-            // Update Header Stats
             document.getElementById('total-sold').innerText = totalSold.toLocaleString();
             document.getElementById('total-bgl').innerText = totalRevenue.toLocaleString();
         }
@@ -171,10 +183,11 @@
         }
 
         function toggleExclude(id) {
-            if (excludedIds.includes(String(id))) {
-                excludedIds = excludedIds.filter(i => i !== String(id));
+            id = String(id);
+            if (excludedIds.includes(id)) {
+                excludedIds = excludedIds.filter(i => i !== id);
             } else {
-                excludedIds.push(String(id));
+                excludedIds.push(id);
             }
             localStorage.setItem('excluded_scripts', JSON.stringify(excludedIds));
             fetchStats();
@@ -186,7 +199,6 @@
             fetchStats();
         }
 
-        // Inisialisasi
         fetchStats();
     </script>
 </body>
