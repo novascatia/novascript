@@ -3,118 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Only | Global Statistics</title>
+    <title>Admin Dashboard | NovaScript Stats</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #d4d4d8; }
-        .stat-card { background: #18181b; border: 1px solid #27272a; transition: border-color 0.2s; }
+        .stat-card { background: #18181b; border: 1px solid #27272a; transition: all 0.2s; }
         .stat-card:hover { border-color: #3b82f6; }
+        .row-hidden { display: none; }
+        .expandable-content { transition: max-height 0.3s ease-out; overflow: hidden; }
     </style>
 </head>
 <body class="min-h-screen p-8">
 
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <header class="mb-10 flex justify-between items-end">
             <div>
                 <h1 class="text-3xl font-bold text-white mb-2">Global Market Overview</h1>
-                <p class="text-gray-500 text-sm">Data statistik seluruh transaksi dan saldo pengguna di NovaScript.</p>
+                <p class="text-gray-500 text-sm">Monitor penjualan dan daftar pembeli secara detail.</p>
             </div>
-            <a href="/admin.html" class="text-xs text-blue-400 hover:underline mb-1">← Kembali ke Admin Hub</a>
+            <div class="flex gap-4">
+                <button onclick="resetFilters()" class="text-xs text-gray-500 hover:text-white transition-colors">Show All Excluded</button>
+                <a href="/admin.html" class="text-xs text-blue-400 hover:underline">← Admin Hub</a>
+            </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             <div class="stat-card p-8 rounded-2xl">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Total Script Terjual</p>
-                <div class="flex items-baseline gap-2">
-                    <h2 id="total-sold" class="text-5xl font-bold text-white">0</h2>
-                    <span class="text-blue-500 font-medium text-sm">Scripts</span>
-                </div>
-                <p class="text-[10px] text-gray-600 mt-4">Akumulasi dari kolom purchase_count di tabel scripts.</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Total Terjual (Active)</p>
+                <h2 id="total-sold" class="text-5xl font-bold text-white">0</h2>
             </div>
-
             <div class="stat-card p-8 rounded-2xl">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Total BGL Terkumpul</p>
-                <div class="flex items-baseline gap-2">
-                    <h2 id="total-bgl" class="text-5xl font-bold text-yellow-500">0</h2>
-                    <span class="text-yellow-500/50 font-medium text-sm">BGL</span>
-                </div>
-                <p class="text-[10px] text-gray-600 mt-4">Total seluruh saldo wallet_balance dari semua user.</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Estimasi Revenue (Active)</p>
+                <h2 id="total-bgl" class="text-5xl font-bold text-yellow-500">0 <span class="text-sm font-normal">BGL</span></h2>
             </div>
         </div>
 
         <div class="stat-card rounded-2xl overflow-hidden">
-            <div class="p-6 border-b border-zinc-800 flex justify-between items-center">
-                <h3 class="font-bold text-white">Performa Marketplace</h3>
-                <button onclick="fetchStats()" class="text-[10px] bg-zinc-800 hover:bg-zinc-700 px-3 py-1 rounded-md transition-colors">Refresh Data</button>
+            <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/30">
+                <h3 class="font-bold text-white">Marketplace Performance</h3>
+                <button onclick="fetchStats()" class="text-[10px] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-all">REFRESH DATA</button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead class="bg-zinc-900/50 text-gray-400 uppercase text-[10px] font-bold">
                         <tr>
-                            <th class="px-6 py-4">Nama Script</th>
-                            <th class="px-6 py-4 text-center">Harga</th>
-                            <th class="px-6 py-4 text-center">Total Terjual</th>
-                            <th class="px-6 py-4 text-right">Estimasi Revenue</th>
+                            <th class="px-6 py-4">Script Details</th>
+                            <th class="px-6 py-4 text-center">Price</th>
+                            <th class="px-6 py-4 text-center">Sales</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="script-table-body">
-                        <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-gray-600 italic">Memuat data statistik...</td>
-                        </tr>
-                    </tbody>
+                    <tbody id="stats-body">
+                        </tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
+        let excludedIds = JSON.parse(localStorage.getItem('excluded_scripts') || '[]');
+
         async function fetchStats() {
             try {
-                // 1. Ambil semua data script untuk total penjualan global
                 const resScripts = await fetch('/.netlify/functions/get-scripts');
                 const scriptResult = await resScripts.json();
                 
-                // 2. Simulasi/Ambil data user untuk total BGL (Anda memerlukan fungsi admin untuk ini)
-                // Karena belum ada fungsi global-balance, kita asumsikan hitung dari scripts terjual atau logic database.
+                // Ambil semua data pembelian untuk memetakan user per script
+                // Catatan: Anda mungkin butuh endpoint khusus admin untuk mendapatkan data relasi ini secara global
+                const resPurchases = await fetch('/.netlify/functions/get-keys'); // Contoh pengambilan data kunci/user
                 
                 if (scriptResult.success) {
-                    let totalSoldGlobal = 0;
-                    let totalRevenueGlobal = 0;
-                    const tableBody = document.getElementById('script-table-body');
-                    tableBody.innerHTML = '';
-
-                    scriptResult.scripts.forEach(script => {
-                        const sold = script.purchase_count || 0;
-                        const price = script.price || 0;
-                        const revenue = sold * price;
-
-                        totalSoldGlobal += sold;
-                        totalRevenueGlobal += revenue;
-
-                        const row = `
-                            <tr class="border-t border-zinc-800 hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4 font-medium text-white">${script.title}</td>
-                                <td class="px-6 py-4 text-center font-mono text-gray-400">${price.toLocaleString()} BGL</td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs font-bold">${sold}</span>
-                                </td>
-                                <td class="px-6 py-4 text-right font-bold text-green-400">${revenue.toLocaleString()} BGL</td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
-                    });
-
-                    document.getElementById('total-sold').innerText = totalSoldGlobal.toLocaleString();
-                    document.getElementById('total-bgl').innerText = totalRevenueGlobal.toLocaleString();
+                    renderTable(scriptResult.scripts);
                 }
             } catch (err) {
-                console.error("Gagal memuat statistik:", err);
+                console.error("Error fetching stats:", err);
             }
         }
 
-        // Jalankan saat load
+        function renderTable(scripts) {
+            const body = document.getElementById('stats-body');
+            let totalSold = 0;
+            let totalRevenue = 0;
+            body.innerHTML = '';
+
+            scripts.forEach(script => {
+                const isExcluded = excludedIds.includes(String(script.id));
+                const sold = script.purchase_count || 0;
+                const revenue = sold * (script.price || 0);
+
+                if (!isExcluded) {
+                    totalSold += sold;
+                    totalRevenue += revenue;
+                }
+
+                const row = document.createElement('tr');
+                row.className = `border-t border-zinc-800 transition-colors ${isExcluded ? 'opacity-30 bg-black/20' : 'hover:bg-white/[0.02]'}`;
+                row.id = `row-${script.id}`;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-white">${script.title}</span>
+                            <span class="text-[10px] text-gray-500 font-mono">ID: ${script.id}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center font-mono">${script.price || 0} BGL</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="toggleExpand(${script.id})" class="bg-zinc-800 px-3 py-1 rounded text-xs hover:bg-zinc-700 transition-colors">
+                            ${sold} Users ▾
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="toggleExclude('${script.id}')" class="text-[10px] font-bold ${isExcluded ? 'text-green-500' : 'text-red-500'} uppercase hover:underline">
+                            ${isExcluded ? 'Include' : 'Exclude'}
+                        </button>
+                    </td>
+                `;
+
+                // Sub-row untuk daftar pembeli (Expandable)
+                const expandRow = document.createElement('tr');
+                expandRow.id = `expand-${script.id}`;
+                expandRow.className = "hidden bg-black/40 border-t border-zinc-900";
+                expandRow.innerHTML = `
+                    <td colspan="4" class="px-10 py-6">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="col-span-full mb-2 text-[10px] font-bold text-blue-400 uppercase tracking-widest">Buyer List</div>
+                            <div class="text-xs text-gray-400 p-2 border border-zinc-800 rounded bg-zinc-900/50">Memuat data pembeli...</div>
+                        </div>
+                    </td>
+                `;
+
+                body.appendChild(row);
+                body.appendChild(expandRow);
+            });
+
+            document.getElementById('total-sold').innerText = totalSold.toLocaleString();
+            document.getElementById('total-bgl').innerText = totalRevenue.toLocaleString();
+        }
+
+        function toggleExpand(id) {
+            const el = document.getElementById(`expand-${id}`);
+            el.classList.toggle('hidden');
+        }
+
+        function toggleExclude(id) {
+            if (excludedIds.includes(id)) {
+                excludedIds = excludedIds.filter(i => i !== id);
+            } else {
+                excludedIds.push(id);
+            }
+            localStorage.setItem('excluded_scripts', JSON.stringify(excludedIds));
+            fetchStats(); // Re-render
+        }
+
+        function resetFilters() {
+            excludedIds = [];
+            localStorage.setItem('excluded_scripts', '[]');
+            fetchStats();
+        }
+
         fetchStats();
     </script>
 </body>
