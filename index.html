@@ -111,10 +111,10 @@
             <div class="w-16 h-16 bg-yellow-500/10 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
             </div>
-            <h3 class="font-bold text-white text-lg mb-2">Review Script Dulu yuk!</h3>
-            <p class="text-gray-400 text-sm mb-6">Novascript sekarang memiliki review dan comments. Bantu berikan pendapatmu untuk membantu orang lain untuk membeli kedepannya!</p>
+            <h3 class="font-bold text-white text-lg mb-2">Review Script Kamu!</h3>
+            <p class="text-gray-400 text-sm mb-6">Kamu mempunyai Script yang sudah dibeli tapi belum di-review. Yuk berikan pendapatmu!</p>
             <button id="btn-review-now" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2.5 rounded-lg text-sm font-bold transition-colors mb-2">Review Sekarang</button>
-            <button onclick="closeUnreviewedModal()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-gray-400 py-2.5 rounded-lg text-sm font-semibold transition-colors">Nanti Deh..</button>
+            <button onclick="closeUnreviewedModal()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-gray-400 py-2.5 rounded-lg text-sm font-semibold transition-colors">Nanti Saja</button>
         </div>
     </div>
 
@@ -263,6 +263,27 @@
         let pendingBuy = null;
         let reloadAfterNotif = false;
         let currentFilter = 'All';
+
+        // --- NEW TIME FORMATTER ---
+        function timeAgo(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return "baru saja";
+            
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) return `${diffInMinutes} menit yang lalu`;
+            
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) return `${diffInHours} jam yang lalu`;
+            
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
 
         function showNotif(title, msg, isError = false) {
             document.getElementById('notif-title').innerText = title;
@@ -449,10 +470,14 @@
                 const res = await fetch(`/.netlify/functions/get-comments?script_id=${scriptId}`);
                 const data = await res.json();
                 if (data.success && data.comments.length > 0) {
+                    // MODIFIED TO INCLUDE timeAgo
                     container.innerHTML = data.comments.map(c => `
                         <div class="bg-black/40 p-3 rounded-lg border border-zinc-800">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-xs font-bold text-gray-200">${c.username}</span>
+                                <span class="text-xs font-bold text-gray-200">
+                                    ${c.username} 
+                                    <span class="text-gray-500 font-normal font-mono text-[10px] opacity-75 ml-1">• ${timeAgo(c.created_at)}</span>
+                                </span>
                                 <span class="text-yellow-500 text-[11px] tracking-widest">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</span>
                             </div>
                             <p class="text-[11px] md:text-xs text-gray-400 mt-1">${c.comment}</p>
@@ -499,12 +524,10 @@
         }
 
         function executeScript(scriptId) {
-            closeDetailModal(); // Tutup detail modal
+            closeDetailModal(); 
             const script = allScripts.find(s => String(s.id) === String(scriptId));
             if(script) {
-                // Set isi how_to_use (Panduan)
-                document.getElementById('how-to-use-content').innerText = script.how_to_use || 'nova belum membuat cara pakai script ini! sabar ya lagi dibuat satu per satu kok!';
-                // Set isi kode loader
+                document.getElementById('how-to-use-content').innerText = script.how_to_use || 'Belum ada panduan :( Sabar ya.. Nova lagi nambahin satu satu kok';
                 document.getElementById('script-code-content').innerText = script.loader_script || '-- No code --';
                 document.getElementById('code-modal').classList.add('active');
             }
@@ -521,7 +544,7 @@
         }
 
         function triggerBuy(scriptId, price, title) {
-            closeDetailModal(); // Tutup detail agar fokus ke konfirmasi pembelian
+            closeDetailModal(); 
             const userStr = localStorage.getItem('nova_user');
             if(!userStr) return showNotif('Error', 'Please login first.', true);
             const user = JSON.parse(userStr);
