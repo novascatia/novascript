@@ -215,6 +215,7 @@
                 <h3 class="font-bold text-white">Top Up Wallet</h3>
                 <button onclick="closeTopup()" class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
+            
             <div class="p-5 md:p-6">
                 <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg mb-5 flex justify-between items-center">
                     <div>
@@ -224,6 +225,44 @@
                     <div class="text-right">
                         <p class="text-[10px] md:text-xs text-yellow-500 mb-1">Auto-link Account</p>
                         <code class="text-white bg-black px-2 py-1 rounded border border-zinc-700 font-bold text-xs" id="topup-username-badge"></code>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mb-4 bg-[#09090b] p-1 rounded-lg border border-[#27272a]">
+                    <button onclick="switchTopup('gl')" id="tab-gl" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md bg-zinc-800 text-white shadow transition-colors">TopUp GL</button>
+                    <button onclick="switchTopup('gpai')" id="tab-gpai" class="flex-1 py-1.5 text-xs md:text-sm font-semibold rounded-md text-gray-400 hover:text-gray-200 transition-colors">TopUp GrowPai</button>
+                </div>
+
+                <div id="section-gl" class="space-y-4">
+                    <div class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                        <p class="text-white font-semibold mb-2">Growlauncher Loader:</p>
+                        <div class="relative">
+                            <textarea id="gl-script" readonly class="w-full h-32 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local res, err = fetch("https://novascript.site/encrypt/topupgl")
+if not res then LogToConsole(err) return end
+local chunk, loadErr = load(res)
+if not chunk then LogToConsole(loadErr) return end
+chunk()</textarea>
+                            <button onclick="copyScriptText('gl-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
+                        </div>
+                    </div>
+                    <div class="mt-4 rounded-lg overflow-hidden border border-zinc-800">
+                        <iframe class="w-full aspect-video" src="https://www.youtube.com/embed/ddbTD565lds" title="Tutorial GrowLauncher" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <div id="section-gpai" class="hidden space-y-4">
+                    <div class="text-left text-xs md:text-sm text-gray-400 space-y-2 bg-[#09090b] p-4 rounded-lg border border-[#27272a]">
+                        <p class="text-white font-semibold mb-2">GrowPai Loader:</p>
+                        <div class="relative">
+                            <textarea id="gpai-script" readonly class="w-full h-32 bg-black border border-zinc-700 text-green-400 font-mono text-[10px] md:text-xs p-3 rounded-md outline-none resize-none">local handle = io.popen('powershell -Command "(New-Object Net.WebClient).DownloadString(\'https://novascript.site/encrypt/topupgpai\')"')
+local script = handle and handle:read("*a") or nil
+if handle then handle:close() end
+if script then local f = load(script) if f then f() end end</textarea>
+                            <button onclick="copyScriptText('gpai-script', this)" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold border border-zinc-700 transition-colors shadow-md">Copy</button>
+                        </div>
+                    </div>
+                    <div class="mt-4 rounded-lg overflow-hidden border border-zinc-800">
+                        <iframe class="w-full aspect-video" src="https://www.youtube.com/embed/ddbTD565lds" title="Tutorial GrowPai" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                     </div>
                 </div>
             </div>
@@ -264,21 +303,16 @@
         let reloadAfterNotif = false;
         let currentFilter = 'All';
 
-        // --- NEW TIME FORMATTER ---
         function timeAgo(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
             const now = new Date();
             const diffInSeconds = Math.floor((now - date) / 1000);
-            
             if (diffInSeconds < 60) return "baru saja";
-            
             const diffInMinutes = Math.floor(diffInSeconds / 60);
             if (diffInMinutes < 60) return `${diffInMinutes} menit yang lalu`;
-            
             const diffInHours = Math.floor(diffInMinutes / 60);
             if (diffInHours < 24) return `${diffInHours} jam yang lalu`;
-            
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = date.getFullYear();
@@ -299,6 +333,27 @@
 
         function closeUnreviewedModal() {
             document.getElementById('unreviewed-modal').classList.remove('active');
+        }
+
+        // Logic Switch Tab Topup
+        function switchTopup(type) {
+            const secGl = document.getElementById('section-gl'), secGpai = document.getElementById('section-gpai');
+            const tabGl = document.getElementById('tab-gl'), tabGpai = document.getElementById('tab-gpai');
+            const rateLabel = document.getElementById('topup-rate-label');
+            
+            if(type === 'gl') {
+                secGl.classList.remove('hidden');
+                secGpai.classList.add('hidden');
+                tabGl.classList.add('bg-zinc-800', 'text-white');
+                tabGpai.classList.remove('bg-zinc-800', 'text-white');
+                rateLabel.innerText = "GTFY BGL Rate";
+            } else {
+                secGpai.classList.remove('hidden');
+                secGl.classList.add('hidden');
+                tabGpai.classList.add('bg-zinc-800', 'text-white');
+                tabGl.classList.remove('bg-zinc-800', 'text-white');
+                rateLabel.innerText = "GROWPAI BGL Rate";
+            }
         }
 
         async function initApp() {
@@ -340,25 +395,20 @@
                         const resultOwned = await resOwned.json();
                         if (resultOwned.success) {
                             ownedIds = resultOwned.owned_scripts.map(String);
-                            
-                            // LOGIKA UNREVIEWED NOTIFICATION MODAL
                             if (ownedIds.length > 0) {
                                 const resReviews = await fetch(`/.netlify/functions/get-user-reviews?username=${user.username}`);
                                 const resultReviews = await resReviews.json();
                                 if (resultReviews.success) {
                                     const reviewedIds = resultReviews.reviewed_scripts.map(String);
-                                    
-                                    // Cari script yang dimiliki tapi belum di-review
                                     const unreviewedIds = ownedIds.filter(id => !reviewedIds.includes(id));
-                                    
                                     if (unreviewedIds.length > 0) {
                                         setTimeout(() => {
                                             document.getElementById('unreviewed-modal').classList.add('active');
                                             document.getElementById('btn-review-now').onclick = () => {
                                                 closeUnreviewedModal();
-                                                openDetailModal(unreviewedIds[0]); // Buka script pertama yang belum direview
+                                                openDetailModal(unreviewedIds[0]);
                                             };
-                                        }, 1500); // Tunda 1.5 detik agar smooth saat baru buka web
+                                        }, 1500);
                                     }
                                 }
                             }
@@ -378,90 +428,42 @@
             const freeContainer = document.getElementById('free-scripts');
             const paidContainer = document.getElementById('paid-scripts');
             const ownedContainer = document.getElementById('owned-scripts');
-            
             freeContainer.innerHTML = ''; paidContainer.innerHTML = ''; ownedContainer.innerHTML = ''; 
 
             scriptsToRender.forEach((script) => {
                 const isFree = !script.price || script.price === 0;
                 const isOwned = ownedIds.includes(String(script.id));
-                
                 const tagList = script.tags ? script.tags.split(',').map(t => t.trim()) : [];
-                const tagsHtml = tagList.map(tag => 
-                    `<span class="text-[9px] px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">${tag}</span>`
-                ).join('');
-
-                const purchaseBadge = `<span class="flex items-center gap-1 text-[10px] text-gray-500 mt-1">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1v-2a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8z"></path></svg>
-                    ${script.purchase_count || 0} Sold
-                </span>`;
-
+                const tagsHtml = tagList.map(tag => `<span class="text-[9px] px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">${tag}</span>`).join('');
+                const purchaseBadge = `<span class="flex items-center gap-1 text-[10px] text-gray-500 mt-1"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1v-2a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8z"></path></svg>${script.purchase_count || 0} Sold</span>`;
                 const card = document.createElement('div');
                 card.className = 'card-item p-4 md:p-5 rounded-xl flex flex-col justify-between h-full';
-                // Membuat seluruh card klik-able memanggil modal detail
                 card.onclick = () => openDetailModal(script.id);
-                
-                let badge = isFree ? '<span class="text-[8px] md:text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' : 
-                            (isOwned ? '<span class="text-[8px] md:text-[10px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>' : 
-                                       '<span class="text-[8px] md:text-[10px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>');
-
-                card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h2 class="text-base font-bold text-white pr-2 leading-tight">${script.title}</h2>
-                            ${badge}
-                        </div>
-                        <div class="flex flex-wrap gap-1 mb-3">${tagsHtml}</div>
-                        <p class="text-xs text-gray-400 line-clamp-2 mb-4">${script.description}</p>
-                    </div>
-                    <div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-mono text-gray-500">v${script.version || '1.0'}</span>
-                            ${purchaseBadge}
-                        </div>
-                        <button class="bg-zinc-800 text-white px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-semibold pointer-events-none">Details</button>
-                    </div>
-                `;
-
-                if (isOwned) ownedContainer.appendChild(card);
-                else if (isFree) freeContainer.appendChild(card);
-                else paidContainer.appendChild(card);
+                let badge = isFree ? '<span class="text-[8px] md:text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-1 rounded">FREE</span>' : (isOwned ? '<span class="text-[8px] md:text-[10px] font-bold bg-purple-500/10 text-purple-400 px-2 py-1 rounded">OWNED</span>' : '<span class="text-[8px] md:text-[10px] font-bold bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">PREMIUM</span>');
+                card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><h2 class="text-base font-bold text-white pr-2 leading-tight">${script.title}</h2>${badge}</div><div class="flex flex-wrap gap-1 mb-3">${tagsHtml}</div><p class="text-xs text-gray-400 line-clamp-2 mb-4">${script.description}</p></div><div class="mt-auto flex justify-between items-center border-t border-zinc-800 pt-3"><div class="flex flex-col"><span class="text-[10px] font-mono text-gray-500">v${script.version || '1.0'}</span>${purchaseBadge}</div><button class="bg-zinc-800 text-white px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-semibold pointer-events-none">Details</button></div>`;
+                if (isOwned) ownedContainer.appendChild(card); else if (isFree) freeContainer.appendChild(card); else paidContainer.appendChild(card);
             });
-
             if(!ownedContainer.children.length) ownedContainer.innerHTML = '<p class="text-gray-600 text-xs md:text-sm italic">No purchased scripts found.</p>';
         }
 
-        // --- NEW DETAIL MODAL & COMMENTS LOGIC ---
         function openDetailModal(scriptId) {
             const script = allScripts.find(s => String(s.id) === String(scriptId));
             if(!script) return;
-
             document.getElementById('detail-title').innerText = script.title;
             document.getElementById('detail-desc').innerText = script.description;
-            
             const tagList = script.tags ? script.tags.split(',').map(t => t.trim()) : [];
             document.getElementById('detail-tags').innerHTML = tagList.map(tag => `<span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">${tag}</span>`).join('');
-
             const isFree = !script.price || script.price === 0;
             const isOwned = ownedIds.includes(String(script.id));
             const actionContainer = document.getElementById('detail-action-container');
             const reviewBtn = document.getElementById('review-btn-container');
-
-            if (isFree || isOwned) {
-                actionContainer.innerHTML = `<button onclick="executeScript('${script.id}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-colors">Open Loader & Guide</button>`;
-                reviewBtn.classList.remove('hidden');
-            } else {
-                actionContainer.innerHTML = `<button onclick="triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-3 rounded-xl font-bold transition-colors shadow-[0_0_15px_rgba(234,179,8,0.2)]">Buy for ${script.price} BGL</button>`;
-                reviewBtn.classList.add('hidden');
-            }
-
+            if (isFree || isOwned) { actionContainer.innerHTML = `<button onclick="executeScript('${script.id}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-colors">Open Loader & Guide</button>`; reviewBtn.classList.remove('hidden'); } else { actionContainer.innerHTML = `<button onclick="triggerBuy('${script.id}', ${script.price}, '${script.title}')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-3 rounded-xl font-bold transition-colors shadow-[0_0_15px_rgba(234,179,8,0.2)]">Buy for ${script.price} BGL</button>`; reviewBtn.classList.add('hidden'); }
             document.getElementById('review-script-id').value = script.id;
             loadComments(script.id);
             document.getElementById('detail-modal').classList.add('active');
         }
 
-        function closeDetailModal() {
-            document.getElementById('detail-modal').classList.remove('active');
-        }
+        function closeDetailModal() { document.getElementById('detail-modal').classList.remove('active'); }
 
         async function loadComments(scriptId) {
             const container = document.getElementById('comments-list');
@@ -470,25 +472,9 @@
                 const res = await fetch(`/.netlify/functions/get-comments?script_id=${scriptId}`);
                 const data = await res.json();
                 if (data.success && data.comments.length > 0) {
-                    // MODIFIED TO INCLUDE timeAgo
-                    container.innerHTML = data.comments.map(c => `
-                        <div class="bg-black/40 p-3 rounded-lg border border-zinc-800">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-xs font-bold text-gray-200">
-                                    ${c.username} 
-                                    <span class="text-gray-500 font-normal font-mono text-[10px] opacity-75 ml-1">• ${timeAgo(c.created_at)}</span>
-                                </span>
-                                <span class="text-yellow-500 text-[11px] tracking-widest">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</span>
-                            </div>
-                            <p class="text-[11px] md:text-xs text-gray-400 mt-1">${c.comment}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p class="text-xs text-gray-500 italic">No comments yet. Be the first to review!</p>';
-                }
-            } catch(e) {
-                container.innerHTML = '<p class="text-xs text-red-500">Failed to load comments.</p>';
-            }
+                    container.innerHTML = data.comments.map(c => `<div class="bg-black/40 p-3 rounded-lg border border-zinc-800"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-gray-200">${c.username} <span class="text-gray-500 font-normal font-mono text-[10px] opacity-75 ml-1">• ${timeAgo(c.created_at)}</span></span><span class="text-yellow-500 text-[11px] tracking-widest">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</span></div><p class="text-[11px] md:text-xs text-gray-400 mt-1">${c.comment}</p></div>`).join('');
+                } else { container.innerHTML = '<p class="text-xs text-gray-500 italic">No comments yet. Be the first to review!</p>'; }
+            } catch(e) { container.innerHTML = '<p class="text-xs text-red-500">Failed to load comments.</p>'; }
         }
 
         function openReviewModal() { document.getElementById('review-modal').classList.add('active'); }
@@ -499,28 +485,16 @@
             const btn = document.getElementById('submit-review-btn');
             const userStr = localStorage.getItem('nova_user');
             if(!userStr) return showNotif('Error', 'Please login to review', true);
-            
             const user = JSON.parse(userStr);
             const scriptId = document.getElementById('review-script-id').value;
             const ratingInput = document.querySelector('input[name="rating"]:checked');
             if(!ratingInput) return alert('Please select a star rating');
-            
             btn.innerText = 'Posting...'; btn.disabled = true;
             try {
-                const res = await fetch('/.netlify/functions/post-comment', {
-                    method: 'POST',
-                    body: JSON.stringify({ script_id: scriptId, username: user.username, rating: Number(ratingInput.value), comment: document.getElementById('review-text').value })
-                });
+                const res = await fetch('/.netlify/functions/post-comment', { method: 'POST', body: JSON.stringify({ script_id: scriptId, username: user.username, rating: Number(ratingInput.value), comment: document.getElementById('review-text').value }) });
                 const data = await res.json();
-                if(data.success) {
-                    closeReviewModal();
-                    document.getElementById('review-text').value = '';
-                    ratingInput.checked = false;
-                    loadComments(scriptId);
-                    showNotif('Success', 'Thanks for your feedback!');
-                } else { showNotif('Error', data.message, true); }
-            } catch(err) { showNotif('Error', err.message, true); }
-            finally { btn.innerText = 'Post Review'; btn.disabled = false; }
+                if(data.success) { closeReviewModal(); document.getElementById('review-text').value = ''; ratingInput.checked = false; loadComments(scriptId); showNotif('Success', 'Thanks for your feedback!'); } else { showNotif('Error', data.message, true); }
+            } catch(err) { showNotif('Error', err.message, true); } finally { btn.innerText = 'Post Review'; btn.disabled = false; }
         }
 
         function executeScript(scriptId) {
@@ -534,7 +508,7 @@
         }
 
         function closeCodeModal() { document.getElementById('code-modal').classList.remove('active'); }
-        
+
         function copyScriptCode(btn) {
             const code = document.getElementById('script-code-content').innerText;
             navigator.clipboard.writeText(code).then(() => {
@@ -549,7 +523,6 @@
             if(!userStr) return showNotif('Error', 'Please login first.', true);
             const user = JSON.parse(userStr);
             if(Number(user.wallet) < Number(price)) return showNotif('Insufficient Balance', `You need ${price} BGL.`, true);
-            
             pendingBuy = { scriptId, price, title, user };
             document.getElementById('buy-title').innerText = title;
             document.getElementById('buy-price').innerText = price + ' BGL';
@@ -562,30 +535,16 @@
             btn.disabled = true; btn.innerText = 'Processing...';
             const boughtTitle = pendingBuy.title; 
             const currentUser = pendingBuy.user;
-
             try {
-                const res = await fetch('/.netlify/functions/buy-script', {
-                    method: 'POST',
-                    body: JSON.stringify({ username: currentUser.username, script_id: String(pendingBuy.scriptId), price: Number(pendingBuy.price) })
-                });
-
+                const res = await fetch('/.netlify/functions/buy-script', { method: 'POST', body: JSON.stringify({ username: currentUser.username, script_id: String(pendingBuy.scriptId), price: Number(pendingBuy.price) }) });
                 if (!res.ok) throw new Error('Transaction failed');
                 const data = await res.json();
-                
-                if(data.success) {
-                    currentUser.wallet = Number(data.new_balance);
-                    localStorage.setItem('nova_user', JSON.stringify(currentUser));
-                    reloadAfterNotif = true;
-                    closeBuyModal();
-                    showNotif('Purchase Successful!', `"${boughtTitle}" added to your library. Balance: ${data.new_balance} BGL`);
-                } else showNotif('Failed', data.message || "Unknown error", true);
-            } catch(e) { showNotif('Error', e.message, true); } 
-            finally { btn.disabled = false; btn.innerText = 'Purchase'; }
+                if(data.success) { currentUser.wallet = Number(data.new_balance); localStorage.setItem('nova_user', JSON.stringify(currentUser)); reloadAfterNotif = true; closeBuyModal(); showNotif('Purchase Successful!', `"${boughtTitle}" added to your library. Balance: ${data.new_balance} BGL`); } else showNotif('Failed', data.message || "Unknown error", true);
+            } catch(e) { showNotif('Error', e.message, true); } finally { btn.disabled = false; btn.innerText = 'Purchase'; }
         };
 
         function closeBuyModal() { document.getElementById('buy-modal').classList.remove('active'); pendingBuy = null; }
 
-        // --- FILTER & UTILS ---
         function renderTagFilters(scripts) {
             const tagSet = new Set();
             scripts.forEach(s => { if(s.tags) s.tags.split(',').forEach(t => tagSet.add(t.trim())); });
@@ -603,23 +562,21 @@
         function filterByTag(tag) {
             currentFilter = tag;
             const btns = document.querySelectorAll('.filter-btn');
-            btns.forEach(b => {
-                if(b.innerText === tag) b.classList.add('active', 'bg-blue-600', 'text-white');
-                else b.classList.remove('active', 'bg-blue-600', 'text-white');
-            });
-            if(tag === 'All') renderScripts(allScripts);
-            else renderScripts(allScripts.filter(s => s.tags && s.tags.includes(tag)));
+            btns.forEach(b => { if(b.innerText === tag) b.classList.add('active', 'bg-blue-600', 'text-white'); else b.classList.remove('active', 'bg-blue-600', 'text-white'); });
+            if(tag === 'All') renderScripts(allScripts); else renderScripts(allScripts.filter(s => s.tags && s.tags.includes(tag)));
         }
-
-        document.getElementById('script-search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            renderScripts(allScripts.filter(s => 
-                s.title.toLowerCase().includes(term) || (s.tags && s.tags.toLowerCase().includes(term)) || s.description.toLowerCase().includes(term)
-            ));
-        });
 
         function openTopup() { document.getElementById('topup-modal').classList.add('active'); }
         function closeTopup() { document.getElementById('topup-modal').classList.remove('active'); }
+
+        function copyScriptText(elementId, btn) {
+            const textArea = document.getElementById(elementId);
+            navigator.clipboard.writeText(textArea.value).then(() => {
+                const ori = btn.innerText; btn.innerText = 'Copied!'; 
+                setTimeout(() => { btn.innerText = ori; }, 2000);
+            });
+        }
+
         function logout() { localStorage.clear(); window.location.href = '/login'; }
         initApp();
     </script>
