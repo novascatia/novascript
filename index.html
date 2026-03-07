@@ -106,6 +106,33 @@
         </div>
     </main>
 
+    <div id="tos-modal" class="modal fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-box w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl p-6">
+            <h3 class="font-bold text-white text-lg mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Terms of Service
+            </h3>
+            <div class="text-sm text-gray-400 space-y-4 mb-6 bg-[#09090b] p-4 rounded-lg border border-zinc-800 max-h-48 overflow-y-auto custom-scrollbar">
+                <div>
+                    <strong class="text-white">1. Pembelian adalah final</strong>
+                    <p class="mt-1">Kesalahan pembelian script tidak bisa di refund.</p>
+                </div>
+                <div>
+                    <strong class="text-white">2. Larangan Menjual Ulang</strong>
+                    <p class="mt-1">User di sarankan untuk tidak menjual ulang script ini, jika tertangkap menjual ulang script yang dibeli maka konsekuensinya adalah Blacklist dari pembelian script kedepannya dan kemungkinan Banned akun.</p>
+                </div>
+            </div>
+            <label class="flex items-center gap-3 cursor-pointer mb-6 group" id="tos-label">
+                <input type="checkbox" id="tos-checkbox" class="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                <span class="text-sm text-gray-300 group-hover:text-white transition-colors">Saya Setuju</span>
+            </label>
+            <div class="flex gap-3">
+                <button id="btn-accept-tos" onclick="acceptTos()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>Lanjutkan</button>
+                <button id="btn-close-tos" onclick="closeTosModal()" class="hidden w-full bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg text-sm font-bold transition-colors">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <div id="unreviewed-modal" class="modal fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="modal-box w-full max-w-sm bg-[#18181b] border border-yellow-500/30 rounded-xl overflow-hidden shadow-2xl text-center p-6">
             <div class="w-16 h-16 bg-yellow-500/10 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -284,10 +311,15 @@ if script then local f = load(script) if f then f() end end</textarea>
             </div>
             <div class="p-6">
                 <p class="text-gray-400 text-sm mb-4">You are about to purchase <span id="buy-title" class="text-white font-bold"></span>.</p>
-                <div class="flex justify-between items-center bg-[#09090b] p-3 rounded-lg border border-[#27272a] mb-6">
+                <div class="flex justify-between items-center bg-[#09090b] p-3 rounded-lg border border-[#27272a] mb-4">
                     <span class="text-gray-400 text-sm font-semibold">Price</span>
                     <span id="buy-price" class="text-yellow-500 font-bold font-mono"></span>
                 </div>
+                
+                <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+                    Dengan membeli script ini, kamu paham dan sudah membaca <a href="#" onclick="openTosModal(true); return false;" class="text-blue-500 hover:underline">term</a>.
+                </p>
+
                 <div class="flex gap-3">
                     <button onclick="closeBuyModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors">Cancel</button>
                     <button id="confirm-buy-btn" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black py-2.5 rounded-lg text-sm font-bold transition-colors">Purchase</button>
@@ -302,6 +334,54 @@ if script then local f = load(script) if f then f() end end</textarea>
         let pendingBuy = null;
         let reloadAfterNotif = false;
         let currentFilter = 'All';
+
+        // --- ToS Logic ---
+        document.getElementById('tos-checkbox').addEventListener('change', function() {
+            document.getElementById('btn-accept-tos').disabled = !this.checked;
+        });
+
+        function openTosModal(isViewOnly = false) {
+            const modal = document.getElementById('tos-modal');
+            const btnAccept = document.getElementById('btn-accept-tos');
+            const btnClose = document.getElementById('btn-close-tos');
+            const checkbox = document.getElementById('tos-checkbox');
+            const label = document.getElementById('tos-label');
+
+            if (isViewOnly) {
+                // Dibuka dari link pembelian (review ulang ToS)
+                btnAccept.classList.add('hidden');
+                btnClose.classList.remove('hidden');
+                label.classList.add('hidden'); // Sembunyikan checkbox karena cuma buat baca aja
+            } else {
+                // Muncul pertama kali
+                btnAccept.classList.remove('hidden');
+                btnClose.classList.add('hidden');
+                label.classList.remove('hidden');
+                checkbox.checked = false;
+                btnAccept.disabled = true;
+            }
+            modal.classList.add('active');
+        }
+
+        function closeTosModal() {
+            document.getElementById('tos-modal').classList.remove('active');
+        }
+
+        function acceptTos() {
+            if (document.getElementById('tos-checkbox').checked) {
+                localStorage.setItem('tos_agreed', 'true');
+                closeTosModal();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cek apakah user sudah setuju ToS
+            if (!localStorage.getItem('tos_agreed')) {
+                // Kasih delay dikit biar natural
+                setTimeout(() => openTosModal(false), 800);
+            }
+        });
+        // -----------------
 
         function timeAgo(dateString) {
             if (!dateString) return '';
@@ -335,7 +415,6 @@ if script then local f = load(script) if f then f() end end</textarea>
             document.getElementById('unreviewed-modal').classList.remove('active');
         }
 
-        // Logic Switch Tab Topup
         function switchTopup(type) {
             const secGl = document.getElementById('section-gl'), secGpai = document.getElementById('section-gpai');
             const tabGl = document.getElementById('tab-gl'), tabGpai = document.getElementById('tab-gpai');
