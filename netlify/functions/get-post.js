@@ -50,7 +50,7 @@ exports.handler = async function(event, context) {
                 <body>
                     <div class="badge">Error 404</div>
                     <h1>Script Not Found</h1>
-                    <p>Source script enkripsi dengan ID <strong>"${slug}"</strong> tidak ditemukan. Mungkin sudah dihapus atau link yang kamu tuju salah.</p>
+                    <p>Source script <strong>"${slug}"</strong> tidak ada. Mungkin sudah dihapus.</p>
                     <a href="/" class="btn">Return to Dashboard</a>
                 </body>
                 </html>`;
@@ -101,7 +101,7 @@ exports.handler = async function(event, context) {
                         <h2 style="margin: 0 0 10px 0; font-size: 1.2rem; color: #fff;">Content Protected</h2>
                         <p>This script source is encrypted and cannot be viewed.<br><br>Execute this script via :<br><br><span class="lua-tag">Lua Environment</span></p>
                     </div>
-                    <div class="footer">© 2026 nov4 | <a href="https://discord.gg/B6F7hMVRxp">Join Discord Server</a></div>
+                    <div class="footer">© 2026 nov4 | <a href="https://novascript.site">Dashboard</a></div>
                 </div>
             </body>
             </html>`;
