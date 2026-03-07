@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaScript | Library</title>
     
-    <script>
-        if (!localStorage.getItem('nova_user')) { window.location.href = '/login'; }
-    </script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -43,7 +39,7 @@
         </div>
         
         <div class="flex items-center gap-3 md:gap-5">
-            <div class="flex flex-col text-right">
+            <div id="user-info-container" class="flex flex-col text-right">
                 <span id="display-username" class="text-xs md:text-sm font-semibold text-white">Loading...</span>
                 <span id="display-wallet" class="text-[10px] md:text-xs text-blue-400 font-mono flex items-center gap-1 justify-end">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse hidden" id="live-indicator"></span>
@@ -55,8 +51,12 @@
                 Top Up
             </button>
 
-            <button onclick="logout()" class="text-gray-400 hover:text-red-400 transition-colors p-1" title="Logout">
+            <button id="btn-logout" onclick="logout()" class="text-gray-400 hover:text-red-400 transition-colors p-1" title="Logout">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+
+            <button id="btn-login-nav" onclick="window.location.href='/login'" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg">
+                Login / Register
             </button>
         </div>
     </nav>
@@ -115,7 +115,7 @@
             <div class="text-sm text-gray-400 space-y-4 mb-6 bg-[#09090b] p-4 rounded-lg border border-zinc-800 max-h-48 overflow-y-auto custom-scrollbar">
                 <div>
                     <strong class="text-white">1. Pembelian adalah final</strong>
-                    <p class="mt-1">Kesalahan pembelian script akibat user sendiri bukanlah tanggung jawab kami dan tidak bisa di refund</p>
+                    <p class="mt-1">Kesalahan pembelian script akibat user sendiri TIDAK bisa di-refund</p>
                 </div>
                 <div>
                     <strong class="text-white">2. Larangan Menjual Ulang</strong>
@@ -437,27 +437,39 @@ if script then local f = load(script) if f then f() end end</textarea>
 
         async function initApp() {
             const userStr = localStorage.getItem('nova_user');
-            if (userStr) {
+            const role = localStorage.getItem('nova_role');
+            
+            const userInfoContainer = document.getElementById('user-info-container');
+            const btnLogout = document.getElementById('btn-logout');
+            const btnLoginNav = document.getElementById('btn-login-nav');
+            const btnTopup = document.getElementById('btn-topup');
+
+            if (userStr && role !== 'guest') {
                 let user = JSON.parse(userStr);
                 document.getElementById('display-username').innerText = user.username;
                 const topupBadge = document.getElementById('topup-username-badge');
                 if(topupBadge) topupBadge.innerText = user.username;
                 
                 document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" id="live-indicator"></span> ${parseInt(user.wallet || 0).toLocaleString('id-ID')} BGL`;
+                btnTopup.classList.remove('hidden');
 
-                if (localStorage.getItem('nova_role') !== 'guest') {
-                    document.getElementById('btn-topup').classList.remove('hidden');
-                    try {
-                        const res = await fetch(`/.netlify/functions/get-balance?username=${user.username}`);
-                        const data = await res.json();
-                        if (data.balance !== undefined) {
-                            document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> ${parseInt(data.balance).toLocaleString('id-ID')} BGL`;
-                            user.wallet = data.balance;
-                            localStorage.setItem('nova_user', JSON.stringify(user));
-                        }
-                    } catch (err) {}
-                }
+                try {
+                    const res = await fetch(`/.netlify/functions/get-balance?username=${user.username}`);
+                    const data = await res.json();
+                    if (data.balance !== undefined) {
+                        document.getElementById('display-wallet').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> ${parseInt(data.balance).toLocaleString('id-ID')} BGL`;
+                        user.wallet = data.balance;
+                        localStorage.setItem('nova_user', JSON.stringify(user));
+                    }
+                } catch (err) {}
+            } else {
+                // UI untuk user yang belum login / guest
+                userInfoContainer.classList.add('hidden');
+                btnLogout.classList.add('hidden');
+                btnTopup.classList.add('hidden');
+                btnLoginNav.classList.remove('hidden');
             }
+            
             await loadScripts();
         }
 
@@ -466,9 +478,11 @@ if script then local f = load(script) if f then f() end end</textarea>
                 const resScripts = await fetch('/.netlify/functions/get-scripts');
                 const resultScripts = await resScripts.json();
                 const userStr = localStorage.getItem('nova_user');
+                const role = localStorage.getItem('nova_role');
                 const user = userStr ? JSON.parse(userStr) : {};
                 
-                if (user.username) {
+                // Ambil data personal hanya jika user sudah beneran login
+                if (user.username && role !== 'guest') {
                     try {
                         const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
                         const resultOwned = await resOwned.json();
@@ -563,7 +577,12 @@ if script then local f = load(script) if f then f() end end</textarea>
             e.preventDefault();
             const btn = document.getElementById('submit-review-btn');
             const userStr = localStorage.getItem('nova_user');
-            if(!userStr) return showNotif('Error', 'Please login to review', true);
+            const role = localStorage.getItem('nova_role');
+            
+            if(!userStr || role === 'guest') {
+                return showNotif('Error', 'Kamu harus login terlebih dahulu untuk me-review', true);
+            }
+            
             const user = JSON.parse(userStr);
             const scriptId = document.getElementById('review-script-id').value;
             const ratingInput = document.querySelector('input[name="rating"]:checked');
@@ -599,9 +618,18 @@ if script then local f = load(script) if f then f() end end</textarea>
         function triggerBuy(scriptId, price, title) {
             closeDetailModal(); 
             const userStr = localStorage.getItem('nova_user');
-            if(!userStr) return showNotif('Error', 'Please login first.', true);
+            const role = localStorage.getItem('nova_role');
+            
+            // Redirect ke login jika belum login
+            if(!userStr || role === 'guest') {
+                showNotif('Login Required', 'Kamu harus login atau mendaftar untuk bisa membeli script ini.', true);
+                setTimeout(() => window.location.href = '/login', 2500);
+                return;
+            }
+            
             const user = JSON.parse(userStr);
-            if(Number(user.wallet) < Number(price)) return showNotif('Insufficient Balance', `You need ${price} BGL.`, true);
+            if(Number(user.wallet) < Number(price)) return showNotif('Insufficient Balance', `Saldo kamu kurang. Kamu butuh ${price} BGL.`, true);
+            
             pendingBuy = { scriptId, price, title, user };
             document.getElementById('buy-title').innerText = title;
             document.getElementById('buy-price').innerText = price + ' BGL';
