@@ -29,7 +29,7 @@ exports.handler = async (event) => {
         if (fetchErr || !user) throw new Error('User not found');
 
         // 3. Cap the max balance so abuse is limited
-        const MAX_BALANCE = 500;
+        const MAX_BALANCE = 200;
         const currentBalance = parseInt(user.wallet_balance || 0);
         if (currentBalance >= MAX_BALANCE) {
             return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Balance cap reached' }) };
