@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
     const { data, error, count } = await supabase
       .from('users') 
       .delete({ count: 'exact' })
-      .eq('balance', 999);
+      .eq('wallet_balance', 999);
 
     if (error) throw error;
 
