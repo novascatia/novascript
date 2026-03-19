@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Cleanup - NovaScript</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #2a2a2a; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; }
+        button { background: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #cc0000; }
+        .warning { color: #ffcc00; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cleanup Database</h1>
+        <p class="warning">Tindakan ini akan menghapus SEMUA user dengan balance 999.</p>
+        <button onclick="cleanupUsers()">Hapus User Ilegal (Balance 999)</button>
+    </div>
+
+    <script>
+        async function cleanupUsers() {
+            const confirm = await Swal.fire({
+                title: 'Apakah kamu yakin?',
+                text: "User yang dihapus tidak bisa dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const response = await fetch('/.netlify/functions/cleanup-users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        Swal.fire('Berhasil!', `${result.count} user ilegal telah dihapus.`, 'success');
+                    } else {
+                        Swal.fire('Gagal', result.error, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
