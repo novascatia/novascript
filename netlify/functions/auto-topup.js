@@ -1,74 +1,52 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
-    // Tangkap data dari URL (GET)
     const username = event.queryStringParameters.username;
-    const amount_bgl = event.queryStringParameters.amount_bgl;
     const secret_key = event.queryStringParameters.secret_key;
 
-    console.log(`[TOPUP REQUEST] User: ${username} | Amount: ${amount_bgl} | Key: ${secret_key}`);
-
-    // Cek Kunci Rahasia
-    if (secret_key !== 'NOVA_TOPUP_SECRET_2026') {
-        console.log('[ERROR] Invalid Secret Key!');
+    // 1. Secret key should come from env variable, NOT hardcoded
+    const VALID_SECRET = process.env.TOPUP_SECRET_KEY;
+    if (!VALID_SECRET || secret_key !== VALID_SECRET) {
         return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
     }
 
-    if (!username || !amount_bgl) {
-        console.log('[ERROR] Username atau Amount kosong!');
-        return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Missing parameters' }) };
+    if (!username) {
+        return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Missing username' }) };
     }
 
-    // Sambung ke Supabase
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY; // PASTIKAN INI SERVICE_ROLE KEY, BUKAN ANON!
-    
-    if (!supabaseUrl || !supabaseKey) {
-        console.log('[ERROR] Env Variables Supabase tidak ditemukan!');
-        return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Server Config Error' }) };
-    }
+    // 2. Amount is FIXED server-side — never from client
+    const TOPUP_AMOUNT = 10; // only you control this value
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
     try {
-        console.log(`[DB] Mencari user: ${username}...`);
-        
-        // 1. Ambil saldo terakhir
         const { data: user, error: fetchErr } = await supabase
             .from('users')
             .select('wallet_balance')
             .eq('username', username)
             .single();
 
-        if (fetchErr || !user) {
-            console.log(`[ERROR DB] User tidak ditemukan atau error:`, fetchErr);
-            throw new Error('Web user not found in database');
+        if (fetchErr || !user) throw new Error('User not found');
+
+        // 3. Cap the max balance so abuse is limited
+        const MAX_BALANCE = 500;
+        const currentBalance = parseInt(user.wallet_balance || 0);
+        if (currentBalance >= MAX_BALANCE) {
+            return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Balance cap reached' }) };
         }
 
-        // 2. Tambahkan saldo
-        const newBalance = parseInt(user.wallet_balance || 0) + parseInt(amount_bgl);
-        console.log(`[DB] Saldo lama: ${user.wallet_balance} | Saldo baru: ${newBalance}`);
+        const newBalance = Math.min(currentBalance + TOPUP_AMOUNT, MAX_BALANCE);
 
-        // 3. Update database
-        const { data: updateData, error: updateErr } = await supabase
+        const { error: updateErr } = await supabase
             .from('users')
             .update({ wallet_balance: newBalance })
-            .eq('username', username)
-            .select(); // Tambahkan .select() untuk memastikan data terupdate
+            .eq('username', username);
 
-        if (updateErr) {
-            console.log(`[ERROR DB] Gagal mengupdate saldo:`, updateErr);
-            throw updateErr;
-        }
+        if (updateErr) throw updateErr;
 
-        console.log(`[SUCCESS] Saldo berhasil diupdate untuk ${username}!`);
-        return { 
-            statusCode: 200, 
-            body: JSON.stringify({ success: true, new_balance: newBalance }) 
-        };
+        return { statusCode: 200, body: JSON.stringify({ success: true, new_balance: newBalance }) };
 
     } catch (err) {
-        console.log(`[EXCEPTION] Terjadi kesalahan:`, err.message);
         return { statusCode: 400, body: JSON.stringify({ success: false, message: err.message }) };
     }
 };
