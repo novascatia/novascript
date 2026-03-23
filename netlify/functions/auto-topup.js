@@ -3,8 +3,8 @@ const { createClient } = require('@supabase/supabase-js');
 exports.handler = async (event) => {
     const username = event.queryStringParameters.username;
     const secret_key = event.queryStringParameters.secret_key;
-
-    // 1. Secret key should come from env variable, NOT hardcoded
+    const amount_bgl = parseInt(event.queryStringParameters.amount_bgl) || 0;
+    
     const VALID_SECRET = process.env.TOPUP_SECRET_KEY;
     if (!VALID_SECRET || secret_key !== VALID_SECRET) {
         return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
@@ -14,8 +14,9 @@ exports.handler = async (event) => {
         return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Missing username' }) };
     }
 
-    // 2. Amount is FIXED server-side — never from client
-    const TOPUP_AMOUNT = 10; // only you control this value
+    if (amount_bgl <= 0) {
+        return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid amount' }) };
+    }
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
@@ -28,14 +29,13 @@ exports.handler = async (event) => {
 
         if (fetchErr || !user) throw new Error('User not found');
 
-        // 3. Cap the max balance so abuse is limited
         const MAX_BALANCE = 200;
         const currentBalance = parseInt(user.wallet_balance || 0);
         if (currentBalance >= MAX_BALANCE) {
             return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Balance cap reached' }) };
         }
 
-        const newBalance = Math.min(currentBalance + TOPUP_AMOUNT, MAX_BALANCE);
+        const newBalance = Math.min(currentBalance + amount_bgl, MAX_BALANCE);
 
         const { error: updateErr } = await supabase
             .from('users')
