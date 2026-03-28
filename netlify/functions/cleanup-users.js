@@ -11,19 +11,13 @@ exports.handler = async (event) => {
   try {
     const { action } = JSON.parse(event.body);
     
-    // Kriteria Filter yang diperketat:
-    // 1. Username diawali 'member_' diikuti angka (Regex: ^member_[0-9]+$)
-    // 2. Username mengandung kata kunci breach/mampus
-    // 3. Wallet balance 999
-    const badWords = ['%mampus%', '%tembus%', '%member%', '%pwned%', '%ez%'];
-// Ganti bagian filterParts di cleanup-users.js menjadi seperti ini:
-const filterParts = [
-    'username.ilike.%member_%',     // Menangkap semua yang ada 'member_'
-    'username.ilike.%_%',           // Menangkap semua yang ada underscore (cadangan)
-    'wallet_balance.eq.999',         // Saldo ilegal
-    'username.ilike.%mampus%',
-    'username.ilike.%tembus%'
-];
+    // Kriteria pencarian database yang dipersempit agar tidak 'detect all'
+    const filterParts = [
+      'username.ilike.member_%',      // Hanya yang diawali 'member_'
+      'wallet_balance.eq.999',        // Saldo suntikan ilegal
+      'username.ilike.%mampus%',      // Kata kunci breach
+      'username.ilike.%tembus%'
+    ];
 
     if (action === 'preview') {
       const { data, error } = await supabase
@@ -32,10 +26,18 @@ const filterParts = [
         .or(filterParts.join(','));
 
       if (error) throw error;
-      return { statusCode: 200, body: JSON.stringify({ success: true, users: data }) };
+      
+      // Filter tambahan di server-side untuk memastikan pola member_ANGKA
+      const filteredData = data.filter(u => {
+        const name = u.username.toLowerCase();
+        return /^member_\d+$/.test(name) || u.wallet_balance == 999 || name.includes('mampus') || name.includes('tembus');
+      });
+
+      return { statusCode: 200, body: JSON.stringify({ success: true, users: filteredData }) };
     } 
     
     if (action === 'delete_all') {
+      // Menghapus data berdasarkan kriteria OR yang sudah ditentukan
       const { error, count } = await supabase
         .from('users')
         .delete({ count: 'exact' })
