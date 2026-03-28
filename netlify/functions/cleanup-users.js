@@ -11,14 +11,17 @@ exports.handler = async (event) => {
   try {
     const { action } = JSON.parse(event.body);
     
-    // Mengambil user yang memiliki underscore, saldo mencurigakan, atau kata kunci tertentu
+    // Filter dasar untuk mengambil data yang berpotensi melanggar
     const filterParts = [
-      'username.ilike.%_%', 
-      'wallet_balance.eq.999',
-      'username.ilike.%mampus%',
+      'username.ilike.%_%',           // Semua yang punya underscore
+      'wallet_balance.eq.999',        // Saldo ilegal
+      'username.ilike.%mampus%',      // Kata kunci toksik/breach
       'username.ilike.%tembus%',
       'username.ilike.%makantuhh%'
     ];
+
+    // Regex untuk mendeteksi teks yang diakhiri _ dan angka (Contoh: makantuhh_905)
+    const botRegex = /.*_\d+$/;
 
     if (action === 'preview') {
       const { data, error } = await supabase
@@ -28,28 +31,24 @@ exports.handler = async (event) => {
 
       if (error) throw error;
 
-      // Filter ketat di sisi server: mendeteksi pola 'apapun_angka' di akhir nama
+      // Filter ketat: Hanya tampilkan yang benar-benar bot atau melanggar
       const suspiciousUsers = data.filter(u => {
         const name = u.username.toLowerCase();
-        const isBotPattern = /.*_\d+$/.test(name); 
-        const isBadWord = name.includes('mampus') || name.includes('tembus') || name.includes('makantuhh');
-        const isBadBalance = u.wallet_balance == 999;
-
-        return isBotPattern || isBadWord || isBadBalance;
+        return botRegex.test(name) || u.wallet_balance == 999 || name.includes('makantuhh');
       });
 
       return { statusCode: 200, body: JSON.stringify({ success: true, users: suspiciousUsers }) };
     } 
     
     if (action === 'delete_all') {
-      const { data: allSuspicious } = await supabase
+      const { data: allData } = await supabase
         .from('users')
         .select('username')
         .or(filterParts.join(','));
 
-      // Mencari target yang sesuai dengan pola regex untuk dihapus
-      const targets = allSuspicious
-        .filter(u => /.*_\d+$/.test(u.username) || u.username.includes('makantuhh'))
+      // Tentukan daftar username yang akan dihapus secara spesifik
+      const targets = allData
+        .filter(u => botRegex.test(u.username.toLowerCase()) || u.username.toLowerCase().includes('makantuhh'))
         .map(u => u.username);
 
       if (targets.length === 0) return { statusCode: 200, body: JSON.stringify({ success: true, count: 0 }) };
