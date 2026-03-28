@@ -1,47 +1,41 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Menggunakan Service Role Key agar memiliki izin untuk menghapus data
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY 
 );
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
+  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
 
   try {
     const { action } = JSON.parse(event.body);
     
-    // 1. Ambil semua user untuk dianalisis secara mendalam (Deep Scan)
+    // 1. Ambil seluruh data user dari database
     const { data: allUsers, error: fetchError } = await supabase
       .from('users')
       .select('username, wallet_balance, last_ip');
 
     if (fetchError) throw fetchError;
 
-    /**
-     * LOGIKA DETEKSI OTOMATIS (REGEX)
-     * Pola: Karakter apa pun + Underscore + Angka di akhir
-     * Ini akan menangkap: mantapgasih_1120, member_1, makantuhh_905, dll.
-     */
+    // 2. Definisi Pola Bot Otomatis
+    // Mencari teks apa pun yang diakhiri dengan underscore dan angka (e.g., _2043)
     const botPattern = /.*_\d+$/; 
-    const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh'];
+    const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh', 'mantapgasih'];
 
-    // 2. Filter akun yang memenuhi kriteria bot atau pelanggaran
+    // 3. Filter akun mencurigakan
     const suspiciousUsers = allUsers.filter(user => {
       const name = (user.username || "").toLowerCase();
       const balance = parseInt(user.wallet_balance || 0);
 
-      const isBotPattern = botPattern.test(name); // Deteksi otomatis berdasarkan pola
+      const isBotName = botPattern.test(name);
       const hasBadWord = suspiciousKeywords.some(word => name.includes(word));
-      const isBadBalance = balance === 999; // Deteksi berdasarkan saldo ilegal
+      const isBadBalance = balance === 999;
 
-      return isBotPattern || hasBadWord || isBadBalance;
+      return isBotName || hasBadWord || isBadBalance;
     });
 
-    // --- AKSI: PREVIEW (Melihat Daftar) ---
+    // ACTION: PREVIEW
     if (action === 'preview') {
       return {
         statusCode: 200,
@@ -49,7 +43,7 @@ exports.handler = async (event) => {
       };
     } 
     
-    // --- AKSI: DELETE_ALL (Menghapus Semua Terdeteksi) ---
+    // ACTION: DELETE ALL
     if (action === 'delete_all') {
       if (suspiciousUsers.length === 0) {
         return { statusCode: 200, body: JSON.stringify({ success: true, count: 0 }) };
@@ -69,13 +63,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({ success: true, count: count || 0 })
       };
     }
-
-    return { statusCode: 400, body: "Invalid Action" };
-
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ success: false, error: err.message })
-    };
+    return { statusCode: 500, body: JSON.stringify({ success: false, error: err.message }) };
   }
 };
