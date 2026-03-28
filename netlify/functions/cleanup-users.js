@@ -15,7 +15,7 @@ exports.handler = async (event) => {
     // 1. Username diawali 'member_' diikuti angka (Regex: ^member_[0-9]+$)
     // 2. Username mengandung kata kunci breach/mampus
     // 3. Wallet balance 999
-    const badWords = ['%mampus%', '%tembus%', '%breach%', '%pwned%', '%ez%'];
+    const badWords = ['%mampus%', '%tembus%', '%member%', '%pwned%', '%ez%'];
     const filterParts = badWords.map(p => `username.ilike.${p}`);
     
     // Menambahkan deteksi spesifik untuk pola 'member_angka'
