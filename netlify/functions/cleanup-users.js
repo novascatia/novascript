@@ -11,18 +11,18 @@ exports.handler = async (event) => {
   try {
     const { action } = JSON.parse(event.body);
     
-    // Tarik semua data untuk pengecekan pola yang lebih akurat
+    // 1. Ambil seluruh data user (Tanpa Limit untuk Deep Scan)
     const { data: allUsers, error: fetchError } = await supabase
       .from('users')
       .select('username, wallet_balance, last_ip');
 
     if (fetchError) throw fetchError;
 
-    // REGEX: Mendeteksi karakter apa pun yang diakhiri dengan underscore dan angka (e.g., _2783)
+    // 2. Pola Deteksi Bot
+    // Mendeteksi username yang diakhiri underscore dan angka (e.g., mantapgasih_2783)
     const botPattern = /.*_\d+$/; 
     const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh', 'mantapgasih'];
 
-    // Proses filtering manual
     const suspiciousUsers = allUsers.filter(user => {
       const name = (user.username || "").toLowerCase();
       const balance = parseInt(user.wallet_balance || 0);
@@ -48,6 +48,7 @@ exports.handler = async (event) => {
 
       const targetUsernames = suspiciousUsers.map(u => u.username);
 
+      // Menghapus dalam batch (Supabase mendukung array input untuk filter 'in')
       const { error: deleteError, count } = await supabase
         .from('users')
         .delete({ count: 'exact' })
