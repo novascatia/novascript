@@ -1,13 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Inisialisasi Supabase menggunakan Service Role Key agar memiliki izin penghapusan
+// Menggunakan Service Role Key agar memiliki izin untuk menghapus data
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY 
 );
 
 exports.handler = async (event) => {
-  // Hanya izinkan metode POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -15,52 +14,47 @@ exports.handler = async (event) => {
   try {
     const { action } = JSON.parse(event.body);
     
-    // 1. Ambil semua data user untuk dianalisis (Deep Scan)
-    // Kita mengambil kolom username, balance, dan IP
+    // 1. Ambil semua user untuk dianalisis secara mendalam (Deep Scan)
     const { data: allUsers, error: fetchError } = await supabase
       .from('users')
       .select('username, wallet_balance, last_ip');
 
     if (fetchError) throw fetchError;
 
-    // 2. Definisi Pola Bot dan Pelanggaran
-    // Pola: Karakter apapun + Underscore + Angka di akhir (e.g., mantapgasihbang_51)
-    const botPattern = /.*_\d+$/;
-    const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh', 'mantapgasih'];
+    /**
+     * LOGIKA DETEKSI OTOMATIS (REGEX)
+     * Pola: Karakter apa pun + Underscore + Angka di akhir
+     * Ini akan menangkap: mantapgasih_1120, member_1, makantuhh_905, dll.
+     */
+    const botPattern = /.*_\d+$/; 
+    const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh'];
 
-    // 3. Proses Penyaringan (Logic Filter)
+    // 2. Filter akun yang memenuhi kriteria bot atau pelanggaran
     const suspiciousUsers = allUsers.filter(user => {
       const name = (user.username || "").toLowerCase();
       const balance = parseInt(user.wallet_balance || 0);
 
-      const isBotName = botPattern.test(name);
+      const isBotPattern = botPattern.test(name); // Deteksi otomatis berdasarkan pola
       const hasBadWord = suspiciousKeywords.some(word => name.includes(word));
-      const isBadBalance = balance === 999;
+      const isBadBalance = balance === 999; // Deteksi berdasarkan saldo ilegal
 
-      return isBotName || hasBadWord || isBadBalance;
+      return isBotPattern || hasBadWord || isBadBalance;
     });
 
-    // --- ACTION: PREVIEW ---
+    // --- AKSI: PREVIEW (Melihat Daftar) ---
     if (action === 'preview') {
       return {
         statusCode: 200,
-        body: JSON.stringify({ 
-          success: true, 
-          users: suspiciousUsers 
-        })
+        body: JSON.stringify({ success: true, users: suspiciousUsers })
       };
     } 
     
-    // --- ACTION: DELETE ALL ---
+    // --- AKSI: DELETE_ALL (Menghapus Semua Terdeteksi) ---
     if (action === 'delete_all') {
       if (suspiciousUsers.length === 0) {
-        return { 
-          statusCode: 200, 
-          body: JSON.stringify({ success: true, count: 0 }) 
-        };
+        return { statusCode: 200, body: JSON.stringify({ success: true, count: 0 }) };
       }
 
-      // Ambil hanya daftar username yang akan dihapus
       const targetUsernames = suspiciousUsers.map(u => u.username);
 
       const { error: deleteError, count } = await supabase
@@ -72,17 +66,13 @@ exports.handler = async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ 
-          success: true, 
-          count: count || 0 
-        })
+        body: JSON.stringify({ success: true, count: count || 0 })
       };
     }
 
     return { statusCode: 400, body: "Invalid Action" };
 
   } catch (err) {
-    console.error("Cleanup Error:", err.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ success: false, error: err.message })
