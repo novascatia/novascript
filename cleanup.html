@@ -2,51 +2,109 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Cleanup - NovaScript</title>
+    <title>Admin Cleanup & Overview - NovaScript</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #2a2a2a; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; }
-        button { background: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #cc0000; }
-        .warning { color: #ffcc00; margin-bottom: 20px; }
+        body { background: #09090b; color: #ececec; font-family: 'Inter', sans-serif; }
+        .user-card { background: #18181b; border: 1px solid #27272a; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Cleanup Database</h1>
-        <p class="warning">Tindakan ini akan menghapus SEMUA user dengan balance 999.</p>
-        <button onclick="cleanupUsers()">Hapus User Ilegal (Balance 999)</button>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Database Cleanup</h1>
+                <p class="text-zinc-500 text-sm">Mendeteksi username mencurigakan dan saldo ilegal.</p>
+            </div>
+            <button onclick="fetchPreview()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold text-sm transition-all">
+                Scan Database
+            </button>
+        </header>
+
+        <div id="overview-section" class="hidden">
+            <div class="user-card rounded-xl p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-red-500">Detected Accounts (<span id="detect-count">0</span>)</h2>
+                    <button onclick="confirmDeleteAll()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-widest">
+                        Delete All Detected
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-zinc-500 border-b border-zinc-800">
+                            <tr>
+                                <th class="py-3 px-2">Username</th>
+                                <th class="py-3 px-2">Balance</th>
+                                <th class="py-3 px-2">Last IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list" class="divide-y divide-zinc-800">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="empty-state" class="py-20 text-center text-zinc-600 italic">
+            Klik "Scan Database" untuk mendeteksi user mencurigakan.
+        </div>
     </div>
 
     <script>
-        async function cleanupUsers() {
-            const confirm = await Swal.fire({
-                title: 'Apakah kamu yakin?',
-                text: "User yang dihapus tidak bisa dikembalikan!",
+        async function fetchPreview() {
+            document.getElementById('empty-state').innerText = "Scanning...";
+            try {
+                const res = await fetch('/.netlify/functions/cleanup-users', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'preview' })
+                });
+                const data = await res.json();
+                
+                if(data.success && data.users.length > 0) {
+                    renderUsers(data.users);
+                    document.getElementById('overview-section').classList.remove('hidden');
+                    document.getElementById('empty-state').classList.add('hidden');
+                } else {
+                    Swal.fire('Clean!', 'Tidak ada user mencurigakan ditemukan.', 'success');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Gagal memuat data.', 'error');
+            }
+        }
+
+        function renderUsers(users) {
+            const list = document.getElementById('user-list');
+            document.getElementById('detect-count').innerText = users.length;
+            list.innerHTML = users.map(u => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 px-2 font-mono text-blue-400">${u.username}</td>
+                    <td class="py-3 px-2 text-yellow-500">${u.wallet_balance} BGL</td>
+                    <td class="py-3 px-2 text-zinc-500">${u.last_ip || 'unknown'}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function confirmDeleteAll() {
+            const result = await Swal.fire({
+                title: 'Hapus Semua Terdeteksi?',
+                text: "Akun yang dihapus tidak bisa dikembalikan!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!'
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'Ya, Bersihkan!'
             });
 
-            if (confirm.isConfirmed) {
-                try {
-                    const response = await fetch('/.netlify/functions/cleanup-users', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        Swal.fire('Berhasil!', `${result.count} user ilegal telah dihapus.`, 'success');
-                    } else {
-                        Swal.fire('Gagal', result.error, 'error');
-                    }
-                } catch (error) {
-                    Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+            if (result.isConfirmed) {
+                Swal.showLoading();
+                const res = await fetch('/.netlify/functions/cleanup-users', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete_all' })
+                });
+                const final = await res.json();
+                if(final.success) {
+                    Swal.fire('Berhasil!', `${final.count} user telah dibersihkan.`, 'success');
+                    location.reload();
                 }
             }
         }
