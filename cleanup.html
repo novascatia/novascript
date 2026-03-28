@@ -1,27 +1,185 @@
-<script>
-    function renderUsers(users) {
-        const list = document.getElementById('user-list');
-        document.getElementById('detect-count').innerText = users.length;
-        
-        list.innerHTML = users.map(u => {
-            // Logika sederhana untuk menentukan alasan deteksi di tampilan
-            let reason = "";
-            if (u.wallet_balance == 999) reason = "Ilegal Balance";
-            else if (u.username.includes('_')) reason = "Pattern Underscore";
-            else reason = "Suspicious Keyword";
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Cleanup & Overview - NovaScript</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #09090b; color: #ececec; font-family: 'Inter', sans-serif; }
+        .user-card { background: #18181b; border: 1px solid #27272a; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight">Database Cleanup</h1>
+                <p class="text-zinc-500 text-sm">Mendeteksi username dengan pola angka (underscore), kata kunci breach, dan saldo ilegal.</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/admin" class="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center">← DASHBOARD</a>
+                <button onclick="fetchPreview()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-lg shadow-blue-900/20">
+                    SCAN DATABASE
+                </button>
+            </div>
+        </header>
 
-            return `
-                <tr class="hover:bg-white/5 transition-colors">
-                    <td class="py-3 px-2 font-mono text-blue-400">${u.username}</td>
-                    <td class="py-3 px-2 text-yellow-500">${u.wallet_balance} BGL</td>
-                    <td class="py-3 px-2 text-zinc-500">${u.last_ip || 'unknown'}</td>
-                    <td class="py-3 px-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] bg-red-500/10 text-red-500 border border-red-500/20">
-                            ${reason}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-</script>
+        <div id="overview-section" class="hidden">
+            <div class="user-card rounded-2xl overflow-hidden shadow-2xl border border-zinc-800">
+                <div class="p-6 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Detected Accounts</h2>
+                        <p class="text-xs text-red-500 font-semibold uppercase tracking-widest mt-1">Total: <span id="detect-count">0</span> Users Found</p>
+                    </div>
+                    <button onclick="confirmDeleteAll()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-tighter shadow-lg shadow-red-900/40 transition-all active:scale-95">
+                        BERSIHKAN SEMUA AKUN
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-zinc-500 bg-zinc-900/30 uppercase text-[10px] font-black tracking-widest">
+                            <tr>
+                                <th class="py-4 px-6">Username</th>
+                                <th class="py-4 px-6">Balance</th>
+                                <th class="py-4 px-6">Last IP</th>
+                                <th class="py-4 px-6">Detection Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list" class="divide-y divide-zinc-800/50">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="mt-4 text-[10px] text-zinc-600 italic text-center text-red-400">Pastikan memeriksa daftar di atas sebelum menekan tombol bersihkan.</p>
+        </div>
+
+        <div id="empty-state" class="py-32 text-center">
+            <div class="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-zinc-800">
+                <svg class="w-8 h-8 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <p class="text-zinc-500 text-sm italic">Klik tombol "Scan Database" untuk mendeteksi ancaman atau breach pada sistem.</p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchPreview() {
+            const emptyState = document.getElementById('empty-state');
+            emptyState.innerHTML = `<div class="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>`;
+            
+            try {
+                const res = await fetch('/.netlify/functions/cleanup-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'preview' })
+                });
+                const data = await res.json();
+                
+                if(data.success && data.users.length > 0) {
+                    renderUsers(data.users);
+                    document.getElementById('overview-section').classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                } else {
+                    Swal.fire({
+                        title: 'Database Aman',
+                        text: 'Tidak ada user mencurigakan atau breach yang terdeteksi saat ini.',
+                        icon: 'success',
+                        background: '#18181b',
+                        color: '#fff',
+                        confirmButtonColor: '#2563eb'
+                    });
+                    emptyState.innerHTML = `<p class="text-zinc-500 text-sm italic">Database Bersih.</p>`;
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Gagal memproses permintaan ke server.', 'error');
+            }
+        }
+
+        function renderUsers(users) {
+            const list = document.getElementById('user-list');
+            document.getElementById('detect-count').innerText = users.length;
+            
+            list.innerHTML = users.map(u => {
+                // Penentuan alasan deteksi untuk Overview
+                let reason = "";
+                let badgeClass = "";
+
+                if (u.wallet_balance == 999) {
+                    reason = "Illegal Balance (999)";
+                    badgeClass = "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+                } else if (u.username.includes('_')) {
+                    reason = "Pattern Detection (_ID)";
+                    badgeClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+                } else {
+                    reason = "Suspicious Keyword";
+                    badgeClass = "bg-red-500/10 text-red-500 border-red-500/20";
+                }
+
+                return `
+                    <tr class="hover:bg-white/[0.02] transition-colors">
+                        <td class="py-4 px-6 font-mono font-bold text-white">${u.username}</td>
+                        <td class="py-4 px-6">
+                            <span class="text-zinc-400 font-mono">${u.wallet_balance}</span> <span class="text-[10px] text-zinc-600">BGL</span>
+                        </td>
+                        <td class="py-4 px-6 text-zinc-500 font-mono text-xs">${u.last_ip || '0.0.0.0'}</td>
+                        <td class="py-4 px-6">
+                            <span class="px-2.5 py-1 rounded-md text-[9px] font-bold border uppercase tracking-tighter ${badgeClass}">
+                                ${reason}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function confirmDeleteAll() {
+            const count = document.getElementById('detect-count').innerText;
+            const result = await Swal.fire({
+                title: 'Konfirmasi Penghapusan',
+                text: `Anda akan menghapus ${count} akun secara permanen. Tindakan ini tidak dapat dibatalkan!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#27272a',
+                confirmButtonText: 'YA, HAPUS SEMUA',
+                background: '#18181b',
+                color: '#fff'
+            });
+
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Processing...',
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                try {
+                    const res = await fetch('/.netlify/functions/cleanup-users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'delete_all' })
+                    });
+                    const final = await res.json();
+                    
+                    if(final.success) {
+                        Swal.fire({
+                            title: 'Database Bersih!',
+                            text: `${final.count} akun breach telah berhasil dihapus.`,
+                            icon: 'success',
+                            background: '#18181b',
+                            color: '#fff'
+                        }).then(() => location.reload());
+                    } else {
+                        throw new Error(final.error);
+                    }
+                } catch (e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
