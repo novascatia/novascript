@@ -3,123 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Cleanup - NovaScript</title>
+    <title>NovaAdmin | Unlimited Purge</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #050505; color: #ececec; font-family: 'Inter', sans-serif; }
         .glass-card { background: #0f0f11; border: 1px solid #1f1f22; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+        .count-badge { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
     </style>
 </head>
 <body class="p-8">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <header class="mb-10 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-black text-white tracking-tighter uppercase italic">Nova Cleanup</h1>
-                <p class="text-zinc-500 text-sm">Targeting: Bot Patterns (name_ID), 999 balance, and breach keywords.</p>
+                <h1 class="text-4xl font-black text-white tracking-tighter uppercase italic">Nova <span class="text-red-600">Mass Purge</span></h1>
+                <p class="text-zinc-500 text-sm">Deep Scan aktif: Mendeteksi seluruh pola bot tanpa batasan limit tampilan.</p>
             </div>
-            <div class="flex gap-3">
-                <button onclick="fetchPreview()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg">
-                    SCAN DATABASE
+            <div class="flex gap-4">
+                <a href="/admin" class="px-4 py-2.5 text-xs font-bold text-zinc-500 hover:text-white transition-all border border-zinc-800 rounded-xl">KEMBALI</a>
+                <button onclick="fetchPreview()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-xl shadow-blue-600/20">
+                    MULA SCAN (NO LIMIT)
                 </button>
             </div>
         </header>
 
         <div id="overview-section" class="hidden">
-            <div class="glass-card rounded-2xl overflow-hidden border border-zinc-800">
-                <div class="p-6 bg-zinc-900/30 border-b border-zinc-800 flex justify-between items-center">
-                    <h2 class="text-white font-bold">Terdeteksi: <span id="detect-count" class="text-red-500">0</span> Akun</h2>
-                    <button onclick="confirmDeleteAll()" class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase">Hapus Semua</button>
+            <div class="glass-card rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl">
+                <div class="p-8 bg-zinc-900/30 border-b border-zinc-800 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-white text-xl font-bold mb-1">Daftar Akun Terdeteksi</h2>
+                        <div class="flex items-center gap-2">
+                            <span id="detect-count" class="count-badge px-3 py-0.5 rounded-full text-white text-xs font-black">0</span>
+                            <span class="text-zinc-500 text-xs font-medium uppercase tracking-widest">Akun Bot/Breach Ditemukan</span>
+                        </div>
+                    </div>
+                    <button onclick="confirmDeleteAll()" class="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-600/20">
+                        Wipe All Data
+                    </button>
                 </div>
                 
-                <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                <div class="overflow-x-auto max-h-[70vh] overflow-y-auto custom-scrollbar">
                     <table class="w-full text-left text-xs">
-                        <thead class="text-zinc-600 bg-black/40 font-bold uppercase">
+                        <thead class="text-zinc-600 bg-black/40 font-bold uppercase sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th class="py-4 px-8">Username</th>
-                                <th class="py-4 px-8">Balance</th>
-                                <th class="py-4 px-8">Last IP</th>
-                                <th class="py-4 px-8 text-right">Reason</th>
+                                <th class="py-5 px-10">Target Username</th>
+                                <th class="py-5 px-10">Balance</th>
+                                <th class="py-5 px-10">IP Logs</th>
+                                <th class="py-5 px-10 text-right">Label</th>
                             </tr>
                         </thead>
-                        <tbody id="user-list" class="divide-y divide-zinc-800/50"></tbody>
+                        <tbody id="user-list" class="divide-y divide-zinc-800/50">
+                            </tbody>
                     </table>
                 </div>
             </div>
+            <p class="mt-6 text-center text-[10px] text-zinc-600 italic">Gunakan fitur ini dengan bijak. Seluruh akun yang muncul di atas telah divalidasi oleh sistem pola bot.</p>
         </div>
 
-        <div id="empty-state" class="py-40 text-center text-zinc-600 italic">
-            Klik scan untuk memulai pembersihan bot.
+        <div id="empty-state" class="py-40 text-center">
+            <div class="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-zinc-800">
+                <svg class="w-10 h-10 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </div>
+            <p class="text-zinc-500 text-sm font-medium">Sistem siap melakukan pembersihan massal.</p>
         </div>
     </div>
 
     <script>
         async function fetchPreview() {
-            document.getElementById('empty-state').innerText = "Scanning deep logs...";
+            const empty = document.getElementById('empty-state');
+            const overview = document.getElementById('overview-section');
+            
+            empty.innerHTML = `<div class="flex flex-col items-center"><div class="animate-spin w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div><p class="text-zinc-400 font-bold uppercase text-xs tracking-widest">Scanning All Users...</p></div>`;
+            overview.classList.add('hidden');
+
             try {
                 const res = await fetch('/.netlify/functions/cleanup-users', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'preview' })
                 });
                 const data = await res.json();
                 
                 if(data.success && data.users.length > 0) {
                     renderUsers(data.users);
-                    document.getElementById('overview-section').classList.remove('hidden');
-                    document.getElementById('empty-state').classList.add('hidden');
+                    overview.classList.remove('hidden');
+                    empty.classList.add('hidden');
                 } else {
-                    Swal.fire({ title: 'Aman', text: 'Tidak ada pola bot terdeteksi.', icon: 'success', background: '#0f0f11', color: '#fff' });
+                    Swal.fire({ title: 'Aman!', text: 'Tidak ada bot atau akun mencurigakan ditemukan.', icon: 'success', background: '#0f0f11', color: '#fff' });
+                    empty.innerHTML = `<p class="text-zinc-500 italic text-sm">Database bersih.</p>`;
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+            }
         }
 
         function renderUsers(users) {
             const list = document.getElementById('user-list');
-            document.getElementById('detect-count').innerText = users.length;
+            document.getElementById('detect-count').innerText = users.length.toLocaleString();
             
-            list.innerHTML = users.map(u => {
+            // Menggunakan DocumentFragment untuk efisiensi render ribuan data
+            const fragment = document.createDocumentFragment();
+            
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/[0.02] transition-colors";
+                
                 const name = u.username.toLowerCase();
                 let reason = "BREACH KEYWORD";
                 let badge = "text-red-500 border-red-500/20 bg-red-500/5";
 
                 if (/.*_\d+$/.test(name)) {
-                    reason = "BOT PATTERN (NAME_ID)";
+                    reason = "AUTO BOT PATTERN";
                     badge = "text-purple-400 border-purple-400/20 bg-purple-400/5";
                 } else if (u.wallet_balance == 999) {
                     reason = "ILLEGAL BALANCE";
                     badge = "text-yellow-500 border-yellow-500/20 bg-yellow-500/5";
                 }
 
-                return `
-                    <tr class="hover:bg-white/[0.02]">
-                        <td class="py-4 px-8 font-mono font-bold text-white">${u.username}</td>
-                        <td class="py-4 px-8 text-zinc-400">${u.wallet_balance} BGL</td>
-                        <td class="py-4 px-8 text-zinc-600 font-mono">${u.last_ip || '---'}</td>
-                        <td class="py-4 px-8 text-right">
-                            <span class="px-2 py-1 rounded border text-[9px] font-bold ${badge}">${reason}</span>
-                        </td>
-                    </tr>`;
-            }).join('');
+                tr.innerHTML = `
+                    <td class="py-5 px-10 font-mono font-bold text-white tracking-tight">${u.username}</td>
+                    <td class="py-5 px-10 text-zinc-400 font-mono">${u.wallet_balance} <span class="text-[10px] text-zinc-600">BGL</span></td>
+                    <td class="py-5 px-10 text-zinc-600 font-mono text-[10px]">${u.last_ip || '---'}</td>
+                    <td class="py-5 px-10 text-right">
+                        <span class="px-3 py-1 rounded-lg border text-[9px] font-black tracking-widest ${badge}">
+                            ${reason}
+                        </span>
+                    </td>
+                `;
+                fragment.appendChild(tr);
+            });
+            
+            list.innerHTML = '';
+            list.appendChild(fragment);
         }
 
         async function confirmDeleteAll() {
+            const count = document.getElementById('detect-count').innerText;
             const result = await Swal.fire({
-                title: 'Hapus Semua Terdeteksi?',
+                title: 'Hapus Semua Akun?',
+                text: `Anda akan menghapus ${count} akun bot secara permanen.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
-                confirmButtonText: 'Ya, Bersihkan',
-                background: '#0f0f11', color: '#fff'
+                confirmButtonText: 'YA, BERSIHKAN SEMUA',
+                background: '#0f0f11',
+                color: '#fff'
             });
 
             if (result.isConfirmed) {
-                const res = await fetch('/.netlify/functions/cleanup-users', {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'delete_all' })
-                });
-                const final = await res.json();
-                if(final.success) {
-                    Swal.fire({ title: 'Purged', text: `${final.count} akun dihapus.`, icon: 'success', background: '#0f0f11', color: '#fff' }).then(() => location.reload());
+                Swal.fire({ title: 'Wiping Database...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                try {
+                    const res = await fetch('/.netlify/functions/cleanup-users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'delete_all' })
+                    });
+                    const final = await res.json();
+                    
+                    if(final.success) {
+                        Swal.fire({ title: 'Purged!', text: `${final.count} akun berhasil dihapus.`, icon: 'success', background: '#0f0f11', color: '#fff' }).then(() => location.reload());
+                    } else {
+                        throw new Error(final.error);
+                    }
+                } catch (e) {
+                    Swal.fire('Error', e.message, 'error');
                 }
             }
         }
