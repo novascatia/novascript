@@ -1,6 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Menggunakan Service Role Key agar memiliki izin penghapusan massal
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY 
@@ -31,24 +30,28 @@ exports.handler = async (event) => {
       else rangeStart += rangeStep;
     }
 
-    // --- LOGIKA DETEKSI BOT AGRESIF ---
-    // 1. Pola Username: member_123, novacupu123, makantuhh_123, atau teks+angka panjang
-    const botNamePattern = /(member_|novacupu|makantuhh|mantapgasih).*?\d+$/i;
+    // --- LOGIKA DETEKSI BOT EKSTRIM ---
+    // 1. Pola Username: Kata kunci sombong/bot + angka di akhir (min 3 digit)
+    // Menangkap: novasokberkuasa384, novacupu12345, member_999, dll.
+    const botNamePattern = /(member_|novacupu|novasokberkuasa|makantuhh|mantapgasih|bot|user).*?\d{3,}$/i;
     
-    // 2. Pola Password: Mengandung kata 'noob', 'scam', atau diakhiri angka sangat panjang
-    const suspiciousPwPattern = /(noob|scam|goblok|tolol|noobkali).*?\d+$/i;
+    // 2. Pola Password: Password umum + angka panjang di akhir
+    // Menangkap: password123356, webscamnoob123, dll.
+    const suspiciousPwPattern = /(password|noob|scam|goblok|tolol|admin|12345).*?\d{3,}$/i;
+
+    // 3. Pola Umum: Username apa pun yang diakhiri angka lebih dari 5 digit (Sangat jarang dilakukan user asli)
+    const longNumberPattern = /.*?\d{5,}$/;
 
     const suspiciousUsers = allUsers.filter(user => {
       const name = (user.username || "").toLowerCase();
       const pw = (user.password || "").toLowerCase();
       const balance = parseInt(user.wallet_balance || 0);
 
-      const isBotName = botNamePattern.test(name);
+      const isBotName = botNamePattern.test(name) || longNumberPattern.test(name);
       const isBadPw = suspiciousPwPattern.test(pw);
       const isBadBalance = balance === 999;
       
-      // Tambahan: Deteksi jika username mengandung kata kunci tanpa angka pun tetap kena
-      const hasBadWord = ['mampus', 'tembus', 'breach'].some(word => name.includes(word));
+      const hasBadWord = ['mampus', 'tembus', 'breach', 'sokberkuasa'].some(word => name.includes(word));
 
       return isBotName || isBadPw || isBadBalance || hasBadWord;
     });
@@ -68,7 +71,7 @@ exports.handler = async (event) => {
       const targetUsernames = suspiciousUsers.map(u => u.username);
       let totalDeleted = 0;
 
-      // Hapus dalam batch 100 agar aman dari limit Netlify/Supabase
+      // Batch delete agar tidak crash
       for (let i = 0; i < targetUsernames.length; i += 100) {
         const batch = targetUsernames.slice(i, i + 100);
         const { count, error } = await supabase
