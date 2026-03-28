@@ -1,60 +1,238 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maintenance | NovaScript</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <title>NovaScript | My Library</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ededed; overflow: hidden; }
-        .maintenance-text {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(2rem, 8vw, 5rem);
-            font-weight: 800;
-            background: linear-gradient(180deg, #fff 0%, #3f3f46 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.1;
-        }
-        .spotlight {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80vw; height: 80vh;
-            background: radial-gradient(circle, rgba(239, 68, 68, 0.07) 0%, transparent 70%);
-            pointer-events: none; z-index: -1;
-        }
-        .noise {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%rect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
-            pointer-events: none; z-index: 10;
-        }
-        .glitch { animation: glitch 1s linear infinite; }
-        @keyframes glitch {
-            2%, 64% { transform: translate(2px, 0) skew(0deg); }
-            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
-            62% { transform: translate(0, 0) skew(5deg); }
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ededed; }
+        .nav-glass { background: rgba(9, 9, 11, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #27272a; }
+        .card-item { background-color: #0f0f11; border: 1px solid #1f1f22; transition: all 0.2s ease-in-out; }
+        .card-item:hover { border-color: #3b82f6; transform: translateY(-2px); cursor: pointer; background-color: #16161a;}
+        
+        .modal { opacity: 0; pointer-events: none; transition: all 0.2s ease-in-out; z-index: 100; }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        .modal-box { transform: scale(0.95); transition: all 0.2s ease-in-out; }
+        .modal.active .modal-box { transform: scale(1); }
+        
+        pre::-webkit-scrollbar, .custom-scrollbar::-webkit-scrollbar { height: 4px; width: 4px; }
+        pre::-webkit-scrollbar-thumb, .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+        
+        .maintenance-banner {
+            background: linear-gradient(90deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.05) 100%);
+            border: 1px border-blue-500/20;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center relative px-6 text-center">
-    <div class="noise"></div>
-    <div class="spotlight"></div>
+<body class="min-h-screen">
 
-    <div class="relative z-20 max-w-2xl">
-        <div class="mb-6 inline-flex items-center justify-center px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-mono tracking-widest uppercase">
-            Website is on maintenance right now :p
+    <nav class="nav-glass fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center">
+        <div class="font-bold text-white text-xl tracking-tighter flex items-center gap-2">
+            <div class="w-7 h-7 rounded bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-[0_0_15px_rgba(37,99,235,0.4)]">N</div>
+            <span>NovaScript</span>
         </div>
         
-        <h1 class="maintenance-text mb-6 glitch">UNDER MAINTENANCE</h1>
-        
-        <h2 class="text-xl md:text-2xl font-bold text-gray-300 mb-6 tracking-tight">
-            Terimakasih orang baik yang sudah ngebreach website ini jadi gw bisa tau ada yang bisa ditembus, lov u
-        </h2>
-        
-        <p class="text-sm md:text-base text-gray-500 max-w-md mx-auto mb-10 leading-relaxed">
-            no data loss.
-        </p>
-      
+        <div class="flex items-center gap-4">
+            <div id="user-display" class="hidden flex-col text-right">
+                <span id="display-username" class="text-sm font-bold text-white">---</span>
+                <span id="display-wallet" class="text-[10px] text-blue-400 font-mono">0 BGL</span>
+            </div>
+            <button id="btn-login-nav" onclick="window.location.href='/login'" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-all">
+                Login
+            </button>
+            <button id="btn-logout" onclick="logout()" class="hidden text-gray-500 hover:text-red-500 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto pt-28 pb-20 px-6">
+        <div class="maintenance-banner p-6 rounded-2xl border border-blue-500/20 mb-10">
+            <div class="flex items-start gap-4">
+                <div class="bg-blue-500/20 p-2 rounded-lg text-blue-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-blue-400 font-bold mb-1 text-sm uppercase tracking-wider">Marketplace Information</h2>
+                    <p class="text-gray-300 text-sm leading-relaxed">
+                        Pembelian script sedang di nonaktifkan, tapi kamu masih bisa melihat script yang kamu punya, login dan lihat daftar script mu.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <header class="mb-12">
+            <h1 class="text-3xl font-black text-white mb-2 tracking-tight">Owned Scripts</h1>
+            <p class="text-gray-500 text-sm">Daftar koleksi script premium yang telah kamu beli.</p>
+        </header>
+
+        <div class="mb-8">
+            <div class="relative group">
+                <input type="text" id="script-search" oninput="searchOwned()" placeholder="Cari script di library mu..." 
+                       class="w-full bg-[#0f0f11] border border-zinc-800 rounded-xl px-12 py-3.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
+                <svg class="w-5 h-5 absolute left-4 top-4 text-gray-600 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div id="owned-scripts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="col-span-full py-20 text-center">
+                <div class="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p class="text-gray-500 text-sm animate-pulse">Sinkronisasi database...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="code-modal" class="modal fixed inset-0 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="modal-box w-full max-w-2xl bg-[#0f0f11] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="p-5 border-b border-zinc-800 flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-white tracking-tight">Script Loader</h3>
+                <button onclick="closeCodeModal()" class="text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <div class="mb-6">
+                    <h4 class="text-blue-400 text-[10px] font-black uppercase tracking-widest mb-3">Panduan Penggunaan</h4>
+                    <div id="modal-guide" class="text-gray-300 text-sm bg-blue-500/5 border border-blue-500/10 p-4 rounded-xl whitespace-pre-wrap leading-relaxed"></div>
+                </div>
+
+                <div>
+                    <h4 class="text-green-400 text-[10px] font-black uppercase tracking-widest mb-3">Loader Script (Lua)</h4>
+                    <div class="relative">
+                        <pre class="bg-black p-5 rounded-xl border border-zinc-800 overflow-x-auto"><code id="modal-code" class="text-xs font-mono text-green-400 leading-relaxed"></code></pre>
+                        <button onclick="copyCode(this)" class="absolute top-3 right-3 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] px-3 py-1.5 rounded-lg border border-zinc-700 transition-all">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 bg-[#050505] border-t border-zinc-800 text-center">
+                <p class="text-[10px] text-gray-600">© 2026 NovaScript Security Systems</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myScripts = [];
+        let ownedIds = [];
+
+        async function init() {
+            const userStr = localStorage.getItem('nova_user');
+            const role = localStorage.getItem('nova_role');
+            
+            if (!userStr || role === 'guest') {
+                document.getElementById('owned-scripts-container').innerHTML = `
+                    <div class="col-span-full py-20 text-center">
+                        <p class="text-gray-400 text-sm mb-4 italic">Silahkan login untuk melihat library script milikmu.</p>
+                        <button onclick="window.location.href='/login'" class="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2 rounded-lg text-xs font-bold transition-all">Login Sekarang</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            document.getElementById('user-display').classList.replace('hidden', 'flex');
+            document.getElementById('btn-login-nav').classList.add('hidden');
+            document.getElementById('btn-logout').classList.remove('hidden');
+            document.getElementById('display-username').innerText = user.username;
+            document.getElementById('display-wallet').innerText = `${user.wallet || 0} BGL`;
+
+            try {
+                // 1. Ambil ID yang dibeli
+                const resOwned = await fetch(`/.netlify/functions/get-purchases?username=${user.username}`);
+                const dataOwned = await resOwned.json();
+                
+                if (dataOwned.success) {
+                    ownedIds = dataOwned.owned_scripts.map(String);
+                    
+                    // 2. Ambil semua data script
+                    const resAll = await fetch('/.netlify/functions/get-scripts');
+                    const dataAll = await resAll.json();
+                    
+                    if (dataAll.success) {
+                        // Filter hanya yang dimiliki
+                        myScripts = dataAll.scripts.filter(s => ownedIds.includes(String(s.id)));
+                        render(myScripts);
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('owned-scripts-container').innerHTML = '<p class="col-span-full text-center text-red-500 text-xs">Gagal memuat data dari database.</p>';
+            }
+        }
+
+        function render(scripts) {
+            const container = document.getElementById('owned-scripts-container');
+            container.innerHTML = '';
+
+            if (scripts.length === 0) {
+                container.innerHTML = '<p class="col-span-full text-center py-20 text-gray-600 text-sm italic">Kamu belum memiliki script premium.</p>';
+                return;
+            }
+
+            scripts.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'card-item p-5 rounded-2xl flex flex-col h-full';
+                card.onclick = () => openModal(s);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="font-bold text-white text-lg leading-tight">${s.title}</h3>
+                        <span class="text-[9px] font-black bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/20">OWNED</span>
+                    </div>
+                    <p class="text-xs text-gray-500 line-clamp-2 mb-6 leading-relaxed">${s.description || 'Tidak ada deskripsi.'}</p>
+                    <div class="mt-auto pt-4 border-t border-zinc-800/50 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-zinc-600">VER ${s.version || '1.0'}</span>
+                        <button class="text-blue-500 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Buka Loader</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function searchOwned() {
+            const query = document.getElementById('script-search').value.toLowerCase();
+            const filtered = myScripts.filter(s => 
+                s.title.toLowerCase().includes(query) || 
+                (s.tags && s.tags.toLowerCase().includes(query))
+            );
+            render(filtered);
+        }
+
+        function openModal(script) {
+            document.getElementById('modal-title').innerText = script.title;
+            document.getElementById('modal-guide').innerText = script.how_to_use || 'Gunakan executor dan jalankan script di bawah ini.';
+            document.getElementById('modal-code').innerText = script.loader_script || '-- No script available';
+            document.getElementById('code-modal').classList.add('active');
+        }
+
+        function closeCodeModal() {
+            document.getElementById('code-modal').classList.remove('active');
+        }
+
+        function copyCode(btn) {
+            const code = document.getElementById('modal-code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const ori = btn.innerText;
+                btn.innerText = 'Copied!';
+                btn.classList.add('bg-blue-600', 'border-blue-500');
+                setTimeout(() => {
+                    btn.innerText = ori;
+                    btn.classList.remove('bg-blue-600', 'border-blue-500');
+                }, 2000);
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.reload();
+        }
+
+        init();
+    </script>
 </body>
 </html>
