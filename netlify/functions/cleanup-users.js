@@ -1,67 +1,91 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Inisialisasi Supabase menggunakan Service Role Key agar memiliki izin penghapusan
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY 
 );
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+  // Hanya izinkan metode POST
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
 
   try {
     const { action } = JSON.parse(event.body);
     
-    // Filter dasar untuk mengambil data yang berpotensi melanggar
-    const filterParts = [
-      'username.ilike.%_%',           // Semua yang punya underscore
-      'wallet_balance.eq.999',        // Saldo ilegal
-      'username.ilike.%mampus%',      // Kata kunci toksik/breach
-      'username.ilike.%tembus%',
-      'username.ilike.%makantuhh%'
-    ];
+    // 1. Ambil semua data user untuk dianalisis (Deep Scan)
+    // Kita mengambil kolom username, balance, dan IP
+    const { data: allUsers, error: fetchError } = await supabase
+      .from('users')
+      .select('username, wallet_balance, last_ip');
 
-    // Regex untuk mendeteksi teks yang diakhiri _ dan angka (Contoh: makantuhh_905)
-    const botRegex = /.*_\d+$/;
+    if (fetchError) throw fetchError;
 
+    // 2. Definisi Pola Bot dan Pelanggaran
+    // Pola: Karakter apapun + Underscore + Angka di akhir (e.g., mantapgasihbang_51)
+    const botPattern = /.*_\d+$/;
+    const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh', 'mantapgasih'];
+
+    // 3. Proses Penyaringan (Logic Filter)
+    const suspiciousUsers = allUsers.filter(user => {
+      const name = (user.username || "").toLowerCase();
+      const balance = parseInt(user.wallet_balance || 0);
+
+      const isBotName = botPattern.test(name);
+      const hasBadWord = suspiciousKeywords.some(word => name.includes(word));
+      const isBadBalance = balance === 999;
+
+      return isBotName || hasBadWord || isBadBalance;
+    });
+
+    // --- ACTION: PREVIEW ---
     if (action === 'preview') {
-      const { data, error } = await supabase
-        .from('users')
-        .select('username, wallet_balance, last_ip')
-        .or(filterParts.join(','));
-
-      if (error) throw error;
-
-      // Filter ketat: Hanya tampilkan yang benar-benar bot atau melanggar
-      const suspiciousUsers = data.filter(u => {
-        const name = u.username.toLowerCase();
-        return botRegex.test(name) || u.wallet_balance == 999 || name.includes('makantuhh');
-      });
-
-      return { statusCode: 200, body: JSON.stringify({ success: true, users: suspiciousUsers }) };
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ 
+          success: true, 
+          users: suspiciousUsers 
+        })
+      };
     } 
     
+    // --- ACTION: DELETE ALL ---
     if (action === 'delete_all') {
-      const { data: allData } = await supabase
-        .from('users')
-        .select('username')
-        .or(filterParts.join(','));
+      if (suspiciousUsers.length === 0) {
+        return { 
+          statusCode: 200, 
+          body: JSON.stringify({ success: true, count: 0 }) 
+        };
+      }
 
-      // Tentukan daftar username yang akan dihapus secara spesifik
-      const targets = allData
-        .filter(u => botRegex.test(u.username.toLowerCase()) || u.username.toLowerCase().includes('makantuhh'))
-        .map(u => u.username);
+      // Ambil hanya daftar username yang akan dihapus
+      const targetUsernames = suspiciousUsers.map(u => u.username);
 
-      if (targets.length === 0) return { statusCode: 200, body: JSON.stringify({ success: true, count: 0 }) };
-
-      const { error, count } = await supabase
+      const { error: deleteError, count } = await supabase
         .from('users')
         .delete({ count: 'exact' })
-        .in('username', targets);
+        .in('username', targetUsernames);
 
-      if (error) throw error;
-      return { statusCode: 200, body: JSON.stringify({ success: true, count: count || 0 }) };
+      if (deleteError) throw deleteError;
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ 
+          success: true, 
+          count: count || 0 
+        })
+      };
     }
+
+    return { statusCode: 400, body: "Invalid Action" };
+
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    console.error("Cleanup Error:", err.message);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ success: false, error: err.message })
+    };
   }
 };
