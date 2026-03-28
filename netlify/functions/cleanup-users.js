@@ -11,12 +11,13 @@ exports.handler = async (event) => {
   try {
     const { action } = JSON.parse(event.body);
     
-    // Kriteria pencarian database yang dipersempit agar tidak 'detect all'
+    // Mengambil user yang memiliki underscore, saldo mencurigakan, atau kata kunci tertentu
     const filterParts = [
-      'username.ilike.member_%',      // Hanya yang diawali 'member_'
-      'wallet_balance.eq.999',        // Saldo suntikan ilegal
-      'username.ilike.%mampus%',      // Kata kunci breach
-      'username.ilike.%tembus%'
+      'username.ilike.%_%', 
+      'wallet_balance.eq.999',
+      'username.ilike.%mampus%',
+      'username.ilike.%tembus%',
+      'username.ilike.%makantuhh%'
     ];
 
     if (action === 'preview') {
@@ -26,22 +27,37 @@ exports.handler = async (event) => {
         .or(filterParts.join(','));
 
       if (error) throw error;
-      
-      // Filter tambahan di server-side untuk memastikan pola member_ANGKA
-      const filteredData = data.filter(u => {
+
+      // Filter ketat di sisi server: mendeteksi pola 'apapun_angka' di akhir nama
+      const suspiciousUsers = data.filter(u => {
         const name = u.username.toLowerCase();
-        return /^member_\d+$/.test(name) || u.wallet_balance == 999 || name.includes('mampus') || name.includes('tembus');
+        const isBotPattern = /.*_\d+$/.test(name); 
+        const isBadWord = name.includes('mampus') || name.includes('tembus') || name.includes('makantuhh');
+        const isBadBalance = u.wallet_balance == 999;
+
+        return isBotPattern || isBadWord || isBadBalance;
       });
 
-      return { statusCode: 200, body: JSON.stringify({ success: true, users: filteredData }) };
+      return { statusCode: 200, body: JSON.stringify({ success: true, users: suspiciousUsers }) };
     } 
     
     if (action === 'delete_all') {
-      // Menghapus data berdasarkan kriteria OR yang sudah ditentukan
+      const { data: allSuspicious } = await supabase
+        .from('users')
+        .select('username')
+        .or(filterParts.join(','));
+
+      // Mencari target yang sesuai dengan pola regex untuk dihapus
+      const targets = allSuspicious
+        .filter(u => /.*_\d+$/.test(u.username) || u.username.includes('makantuhh'))
+        .map(u => u.username);
+
+      if (targets.length === 0) return { statusCode: 200, body: JSON.stringify({ success: true, count: 0 }) };
+
       const { error, count } = await supabase
         .from('users')
         .delete({ count: 'exact' })
-        .or(filterParts.join(','));
+        .in('username', targets);
 
       if (error) throw error;
       return { statusCode: 200, body: JSON.stringify({ success: true, count: count || 0 }) };
