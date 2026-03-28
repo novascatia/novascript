@@ -11,19 +11,18 @@ exports.handler = async (event) => {
   try {
     const { action } = JSON.parse(event.body);
     
-    // 1. Ambil seluruh data user dari database
+    // Tarik semua data untuk pengecekan pola yang lebih akurat
     const { data: allUsers, error: fetchError } = await supabase
       .from('users')
       .select('username, wallet_balance, last_ip');
 
     if (fetchError) throw fetchError;
 
-    // 2. Definisi Pola Bot Otomatis
-    // Mencari teks apa pun yang diakhiri dengan underscore dan angka (e.g., _2043)
+    // REGEX: Mendeteksi karakter apa pun yang diakhiri dengan underscore dan angka (e.g., _2783)
     const botPattern = /.*_\d+$/; 
     const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh', 'mantapgasih'];
 
-    // 3. Filter akun mencurigakan
+    // Proses filtering manual
     const suspiciousUsers = allUsers.filter(user => {
       const name = (user.username || "").toLowerCase();
       const balance = parseInt(user.wallet_balance || 0);
@@ -35,7 +34,6 @@ exports.handler = async (event) => {
       return isBotName || hasBadWord || isBadBalance;
     });
 
-    // ACTION: PREVIEW
     if (action === 'preview') {
       return {
         statusCode: 200,
@@ -43,7 +41,6 @@ exports.handler = async (event) => {
       };
     } 
     
-    // ACTION: DELETE ALL
     if (action === 'delete_all') {
       if (suspiciousUsers.length === 0) {
         return { statusCode: 200, body: JSON.stringify({ success: true, count: 0 }) };
