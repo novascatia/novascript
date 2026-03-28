@@ -16,12 +16,14 @@ exports.handler = async (event) => {
     // 2. Username mengandung kata kunci breach/mampus
     // 3. Wallet balance 999
     const badWords = ['%mampus%', '%tembus%', '%member%', '%pwned%', '%ez%'];
-    const filterParts = badWords.map(p => `username.ilike.${p}`);
-    
-    // Menambahkan deteksi spesifik untuk pola 'member_angka'
-    filterParts.push('username.adj.^member_[0-9]+$'); 
-    filterParts.push('username.adj.*_[0-9]+$'); // Menangkap akhiran _angka secara umum
-    filterParts.push('wallet_balance.eq.999');
+// Ganti bagian filterParts di cleanup-users.js menjadi seperti ini:
+const filterParts = [
+    'username.ilike.%member_%',     // Menangkap semua yang ada 'member_'
+    'username.ilike.%_%',           // Menangkap semua yang ada underscore (cadangan)
+    'wallet_balance.eq.999',         // Saldo ilegal
+    'username.ilike.%mampus%',
+    'username.ilike.%tembus%'
+];
 
     if (action === 'preview') {
       const { data, error } = await supabase
