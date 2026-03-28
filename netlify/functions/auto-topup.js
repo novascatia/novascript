@@ -1,21 +1,15 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
-    const username = event.queryStringParameters.username;
-    const secret_key = event.queryStringParameters.secret_key;
-    const amount_bgl = parseInt(event.queryStringParameters.amount_bgl) || 0;
-    
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
+
+    const { username, amount_bgl, secret_key } = JSON.parse(event.body);
     const VALID_SECRET = process.env.TOPUP_SECRET_KEY;
+
     if (!VALID_SECRET || secret_key !== VALID_SECRET) {
         return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
-    }
-
-    if (!username) {
-        return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Missing username' }) };
-    }
-
-    if (amount_bgl <= 0) {
-        return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid amount' }) };
     }
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -31,11 +25,7 @@ exports.handler = async (event) => {
 
         const MAX_BALANCE = 200;
         const currentBalance = parseInt(user.wallet_balance || 0);
-        if (currentBalance >= MAX_BALANCE) {
-            return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Balance cap reached' }) };
-        }
-
-        const newBalance = Math.min(currentBalance + amount_bgl, MAX_BALANCE);
+        const newBalance = Math.min(currentBalance + parseInt(amount_bgl), MAX_BALANCE);
 
         const { error: updateErr } = await supabase
             .from('users')
@@ -45,7 +35,6 @@ exports.handler = async (event) => {
         if (updateErr) throw updateErr;
 
         return { statusCode: 200, body: JSON.stringify({ success: true, new_balance: newBalance }) };
-
     } catch (err) {
         return { statusCode: 400, body: JSON.stringify({ success: false, message: err.message }) };
     }
