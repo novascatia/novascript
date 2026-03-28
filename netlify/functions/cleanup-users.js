@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Menggunakan Service Role Key agar memiliki izin penghapusan massal
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY 
@@ -11,9 +12,8 @@ exports.handler = async (event) => {
   try {
     const { action } = JSON.parse(event.body);
     
-    // --- PROSES PENGAMBILAN DATA TANPA LIMIT (RECURSIVE FETCH) ---
+    // --- PROSES PENGAMBILAN DATA TOTAL (BYPASS LIMIT) ---
     let allUsers = [];
-    let errorFetch = null;
     let rangeStart = 0;
     const rangeStep = 1000;
     let keepFetching = true;
@@ -21,32 +21,36 @@ exports.handler = async (event) => {
     while (keepFetching) {
       const { data, error } = await supabase
         .from('users')
-        .select('username, wallet_balance, last_ip')
+        .select('username, password, wallet_balance, last_ip')
         .range(rangeStart, rangeStart + rangeStep - 1);
 
-      if (error) {
-        errorFetch = error;
-        keepFetching = false;
-      } else {
-        allUsers = allUsers.concat(data);
-        if (data.length < rangeStep) {
-          keepFetching = false; // Data sudah habis
-        } else {
-          rangeStart += rangeStep;
-        }
-      }
+      if (error) throw error;
+      
+      allUsers = allUsers.concat(data);
+      if (data.length < rangeStep) keepFetching = false;
+      else rangeStart += rangeStep;
     }
 
-    if (errorFetch) throw errorFetch;
-
-    // --- LOGIKA FILTERING POLA BOT ---
-    const botPattern = /.*_\d+$/; 
-    const suspiciousKeywords = ['mampus', 'tembus', 'breach', 'pwned', 'makantuhh', 'mantapgasih'];
+    // --- LOGIKA DETEKSI BOT AGRESIF ---
+    // 1. Pola Username: member_123, novacupu123, makantuhh_123, atau teks+angka panjang
+    const botNamePattern = /(member_|novacupu|makantuhh|mantapgasih).*?\d+$/i;
+    
+    // 2. Pola Password: Mengandung kata 'noob', 'scam', atau diakhiri angka sangat panjang
+    const suspiciousPwPattern = /(noob|scam|goblok|tolol|noobkali).*?\d+$/i;
 
     const suspiciousUsers = allUsers.filter(user => {
       const name = (user.username || "").toLowerCase();
+      const pw = (user.password || "").toLowerCase();
       const balance = parseInt(user.wallet_balance || 0);
-      return botPattern.test(name) || suspiciousKeywords.some(word => name.includes(word)) || balance === 999;
+
+      const isBotName = botNamePattern.test(name);
+      const isBadPw = suspiciousPwPattern.test(pw);
+      const isBadBalance = balance === 999;
+      
+      // Tambahan: Deteksi jika username mengandung kata kunci tanpa angka pun tetap kena
+      const hasBadWord = ['mampus', 'tembus', 'breach'].some(word => name.includes(word));
+
+      return isBotName || isBadPw || isBadBalance || hasBadWord;
     });
 
     // --- AKSI: PREVIEW ---
@@ -64,9 +68,9 @@ exports.handler = async (event) => {
       const targetUsernames = suspiciousUsers.map(u => u.username);
       let totalDeleted = 0;
 
-      // Hapus dalam batch 500 untuk menghindari payload limit
-      for (let i = 0; i < targetUsernames.length; i += 500) {
-        const batch = targetUsernames.slice(i, i + 500);
+      // Hapus dalam batch 100 agar aman dari limit Netlify/Supabase
+      for (let i = 0; i < targetUsernames.length; i += 100) {
+        const batch = targetUsernames.slice(i, i + 100);
         const { count, error } = await supabase
           .from('users')
           .delete({ count: 'exact' })
