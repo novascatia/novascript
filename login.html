@@ -26,10 +26,7 @@
             <h2 class="text-xl font-bold text-white mb-4">PENTING / IMPORTANT</h2>
             <div class="space-y-4 text-sm leading-relaxed text-gray-300">
                 <p class="italic border-b border-zinc-800 pb-4 text-yellow-500/90">
-                    "Yang akan kamu masukan adalah Username dan Password untuk <strong>novascript.site</strong> dan <strong>BUKAN</strong> untuk Private Server manapun, harap membedakan password Ingame dan Website untuk menghindari hal yang tidak di inginkan!"
-                </p>
-                <p class="text-gray-400">
-                    "The credentials you enter are for <strong>novascript.site</strong> and <strong>NOT</strong> for any Private Server. Please use a different password from your in-game account to prevent unwanted issues!"
+                    "Gunakan kredensial khusus untuk <strong>novascript.site</strong>. Jangan gunakan password yang sama dengan akun game Anda."
                 </p>
             </div>
             <button id="close-warning-btn" disabled class="w-full bg-zinc-700 text-gray-400 font-bold py-3 rounded-lg mt-8 transition-all cursor-not-allowed">
@@ -41,41 +38,35 @@
     <div class="card-auth w-full max-w-md rounded-2xl p-8 shadow-xl">
         <div class="text-center mb-8">
             <h1 class="text-2xl font-bold text-white tracking-tight">NovaScript</h1>
-            <p class="text-sm text-gray-400 mt-1">Sign in to your account</p>
+            <p class="text-sm text-gray-500 mt-1">Portal Access</p>
         </div>
 
         <div id="alert-box" class="hidden mb-6 p-3 rounded-lg text-sm text-center font-medium"></div>
-
-        <div class="flex gap-4 mb-6 border-b border-zinc-800">
-            <button onclick="switchTab('login')" id="tab-login" class="pb-2 text-sm font-semibold border-b-2 border-blue-500 text-white transition-colors">Login</button>
-            <button id="tab-register" class="hidden pb-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 transition-colors">Register</button>
-        </div>
 
         <form id="auth-form" onsubmit="handleAuth(event)">
             <input type="hidden" id="auth-action" value="login">
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Username</label>
-                    <input type="text" id="username" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="Enter username">
+                    <input type="text" id="username" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="Username">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Password</label>
                     <input type="password" id="password" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="••••••••">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Verification PIN</label>
-                    <input type="password" id="secret-pin" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="Enter your secret PIN">
-                    <p id="pin-hint" class="text-xs text-gray-500 mt-1 hidden"></p>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Security PIN</label>
+                    <input type="password" id="secret-pin" required class="input-clean w-full px-4 py-2.5 rounded-lg text-white" placeholder="PIN">
                 </div>
             </div>
             <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg mt-8 transition-colors">
-                Continue
+                Authorize
             </button>
         </form>
 
         <div class="mt-6">
             <button onclick="loginAsGuest()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-medium py-2.5 rounded-lg transition-colors">
-                Continue as Guest
+                Guest Mode
             </button>
         </div>
     </div>
@@ -89,11 +80,11 @@
 
             const countdown = setInterval(() => {
                 timeLeft--;
-                timerDisplay.innerText = timeLeft;
+                if(timerDisplay) timerDisplay.innerText = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(countdown);
                     closeBtn.disabled = false;
-                    closeBtn.innerText = "Okay!";
+                    closeBtn.innerText = "Understood";
                     closeBtn.classList.remove('bg-zinc-700', 'text-gray-400', 'cursor-not-allowed');
                     closeBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
                 }
@@ -105,17 +96,6 @@
             });
         });
 
-        function switchTab(tab) {
-            if (tab === 'register') return;
-            document.getElementById('auth-action').value = 'login';
-            document.getElementById('alert-box').classList.add('hidden');
-            const btnLogin = document.getElementById('tab-login');
-            const pinHint = document.getElementById('pin-hint');
-            btnLogin.classList.add('border-blue-500', 'text-white');
-            pinHint.classList.add('hidden');
-            document.getElementById('submit-btn').innerText = 'Continue';
-        }
-
         function showAlert(msg, isSuccess = false) {
             const box = document.getElementById('alert-box');
             box.className = `mb-6 p-3 rounded-lg text-sm text-center font-medium ${isSuccess ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`;
@@ -125,32 +105,32 @@
 
         async function handleAuth(e) {
             e.preventDefault();
-            const action = document.getElementById('auth-action').value;
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const secretPin = document.getElementById('secret-pin').value;
             const btn = document.getElementById('submit-btn');
 
-            btn.disabled = true; btn.innerText = 'Processing...';
+            btn.disabled = true; btn.innerText = 'Verifying...';
 
             try {
-                const res = await fetch('/.netlify/functions/auth', {
-                    method: 'POST', body: JSON.stringify({ action, username, password, secretPin })
+                const res = await fetch('/.netlify/functions/gateaway', {
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'login', username, password, secretPin })
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     localStorage.setItem('nova_user', JSON.stringify(data.user));
                     localStorage.setItem('nova_role', 'member');
-                    showAlert('Success! Redirecting...', true);
+                    showAlert('Access Granted. Redirecting...', true);
                     setTimeout(() => window.location.href = '/', 1000); 
                 } else {
                     showAlert(data.message);
                 }
             } catch (err) {
-                showAlert('Connection error. Please try again.');
+                showAlert('Portal unreachable.');
             } finally {
-                btn.disabled = false; btn.innerText = 'Continue';
+                btn.disabled = false; btn.innerText = 'Authorize';
             }
         }
 
