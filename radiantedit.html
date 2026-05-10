@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radiant Admin | Edit Scripts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #050505; color: #ececec; font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-4xl mx-auto space-y-10">
+        
+        <div class="bg-[#18181b] p-8 rounded-xl border border-amber-500/30">
+            <h2 class="text-xl font-bold text-amber-500 mb-6 uppercase tracking-wider">Add Radiant Script</h2>
+            <form id="add-form" onsubmit="addScript(event)" class="space-y-4">
+                <input type="text" id="title" required placeholder="Script Title" class="w-full bg-[#09090b] border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none focus:border-amber-500">
+                <textarea id="desc" required placeholder="Description" rows="2" class="w-full bg-[#09090b] border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none focus:border-amber-500"></textarea>
+                <textarea id="loader" required placeholder="Loader Script (e.g. loadstring...)" rows="3" class="w-full bg-black font-mono text-green-400 border border-zinc-700 rounded-lg px-4 py-2 outline-none focus:border-amber-500"></textarea>
+                <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-2 rounded-lg">Publish to Radiant</button>
+            </form>
+        </div>
+
+        <div class="bg-[#18181b] p-8 rounded-xl border border-zinc-800">
+            <h2 class="text-xl font-bold text-white mb-6">Manage Existing Scripts</h2>
+            <div id="list" class="space-y-3">
+                <p class="text-gray-500">Memuat data...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function loadAdminScripts() {
+            // ?admin=true agar script yang hidden juga muncul di admin panel
+            const res = await fetch('/.netlify/functions/manage-radiant?admin=true');
+            const data = await res.json();
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+
+            data.scripts.forEach(s => {
+                const isChecked = s.is_active ? 'checked' : '';
+                const statusColor = s.is_active ? 'text-green-500' : 'text-red-500';
+                const statusText = s.is_active ? 'SHOWN' : 'HIDDEN';
+
+                list.innerHTML += `
+                    <div class="flex justify-between items-center bg-[#09090b] border border-zinc-800 p-4 rounded-lg">
+                        <div>
+                            <h3 class="font-bold text-white">${s.title}</h3>
+                            <p class="text-[10px] ${statusColor} font-black uppercase tracking-widest">${statusText}</p>
+                        </div>
+                        <button onclick="toggleVisibility(${s.id}, ${!s.is_active})" class="bg-zinc-800 hover:bg-zinc-700 text-xs text-white px-4 py-2 rounded border border-zinc-700">
+                            ${s.is_active ? 'Sembunyikan' : 'Tampilkan'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        async function addScript(e) {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('desc').value,
+                loader_script: document.getElementById('loader').value
+            };
+
+            await fetch('/.netlify/functions/manage-radiant', {
+                method: 'POST', body: JSON.stringify(payload)
+            });
+            
+            document.getElementById('add-form').reset();
+            loadAdminScripts();
+        }
+
+        async function toggleVisibility(id, newStatus) {
+            await fetch('/.netlify/functions/manage-radiant', {
+                method: 'PATCH', body: JSON.stringify({ id: id, is_active: newStatus })
+            });
+            loadAdminScripts();
+        }
+
+        loadAdminScripts();
+    </script>
+</body>
+</html>
