@@ -7,32 +7,33 @@ exports.handler = async (event) => {
     try {
         if (method === 'GET') {
             const isAdmin = event.queryStringParameters.admin === 'true';
-            
             let query = supabase.from('radiant_scripts').select('*').order('created_at', { ascending: false });
             
-            // Jika bukan admin, hanya ambil script yang is_active = true
-            if (!isAdmin) {
-                query = query.eq('is_active', true);
-            }
+            if (!isAdmin) { query = query.eq('is_active', true); }
 
             const { data, error } = await query;
             if (error) throw error;
-
             return { statusCode: 200, body: JSON.stringify({ success: true, scripts: data }) };
         } 
         
         else if (method === 'POST') {
-            // Tambah script baru (Dari /radiantedit)
             const { title, description, loader_script } = JSON.parse(event.body);
-            const { data, error } = await supabase.from('radiant_scripts').insert([{ title, description, loader_script, is_active: true }]);
+            const { error } = await supabase.from('radiant_scripts').insert([{ title, description, loader_script, is_active: true }]);
             if (error) throw error;
             return { statusCode: 200, body: JSON.stringify({ success: true }) };
         }
         
         else if (method === 'PATCH') {
-            // Toggle Show/Hide script (Dari /radiantedit)
             const { id, is_active } = JSON.parse(event.body);
             const { error } = await supabase.from('radiant_scripts').update({ is_active }).eq('id', id);
+            if (error) throw error;
+            return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+
+        // TAMBAHAN: Metode DELETE untuk menghapus script
+        else if (method === 'DELETE') {
+            const { id } = JSON.parse(event.body);
+            const { error } = await supabase.from('radiant_scripts').delete().eq('id', id);
             if (error) throw error;
             return { statusCode: 200, body: JSON.stringify({ success: true }) };
         }
