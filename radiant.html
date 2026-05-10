@@ -15,22 +15,42 @@
         .radiant-text { color: #93c5fd; }
         .input-clean { background-color: #050505; border: 1px solid #27272a; transition: all 0.2s; }
         .input-clean:focus { border-color: #93c5fd; outline: none; }
+        
+        pre::-webkit-scrollbar { height: 4px; width: 4px; }
+        pre::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <div id="radiant-login-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div id="radiant-login-modal" class="fixed inset-0 z-[70] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-[#0f0f11] border border-zinc-800 w-full max-w-sm rounded-2xl p-8 shadow-2xl text-center">
             <h2 class="text-xl font-bold text-white tracking-tight mb-2 uppercase">Radiant Access</h2>
-            <p class="text-xs text-zinc-500 mb-6">Masukkan kredensial khusus member Radiant.</p>
+            <p class="text-xs text-zinc-500 mb-6">Masukan Username dan Password Radiants.</p>
             
             <form id="radiant-form" onsubmit="loginRadiant(event)" class="space-y-4">
                 <input type="text" id="rad-user" required placeholder="Username" class="input-clean w-full px-4 py-2.5 rounded-lg text-sm text-white">
                 <input type="password" id="rad-pass" required placeholder="Password" class="input-clean w-full px-4 py-2.5 rounded-lg text-sm text-white">
                 <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg transition-all text-xs uppercase tracking-wider">
-                    Unlock Library
+                    Login to Script Center
                 </button>
             </form>
+        </div>
+    </div>
+
+    <div id="code-modal" class="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 flex items-center justify-center p-4">
+        <div class="bg-[#0f0f11] border border-zinc-800 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="modal-box">
+            <div class="p-5 border-b border-zinc-800 flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-white tracking-tight">Scripts</h3>
+                <button onclick="closeModal()" class="text-zinc-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div class="relative">
+                    <pre class="bg-black p-5 rounded-xl border border-zinc-800 overflow-x-auto"><code id="modal-code" class="text-xs font-mono text-blue-300 leading-relaxed"></code></pre>
+                    <button onclick="copyCode(this)" class="absolute top-3 right-3 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] px-3 py-1.5 rounded-lg font-bold uppercase transition-all">Copy</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -47,7 +67,8 @@
     <main id="main-content" class="max-w-5xl mx-auto pt-32 pb-20 px-6 hidden">
         <header class="mb-12">
             <h1 class="text-3xl font-black text-white mb-2 tracking-tight uppercase">Radiant <span class="radiant-text">Collection</span></h1>
-            <p class="text-zinc-500 text-sm">Daftar script premium khusus untuk member Radiant.</p>
+            <p class="text-zinc-500 text-sm">Script created by Dexterity. Owned by Radiant Member</p>
+            <p class="text-zinc-500 text-sm">Sharing Username, Password or Script contain will result in blacklist.</p>
         </header>
 
         <div id="scripts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -55,7 +76,8 @@
     </main>
 
     <script>
-        // Script logic tetap sama seperti sebelumnya
+        let radiantScripts = []; // Menyimpan data script secara global
+
         if(sessionStorage.getItem('isRadiant') === 'true') {
             document.getElementById('radiant-login-modal').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
@@ -88,21 +110,61 @@
                 const res = await fetch('/.netlify/functions/manage-radiant');
                 const data = await res.json();
                 container.innerHTML = '';
+                
                 if(data.scripts.length === 0) {
                     container.innerHTML = '<p class="text-zinc-600 col-span-full py-10 italic">Belum ada script tersedia.</p>';
                     return;
                 }
-                data.scripts.forEach(s => {
+                
+                radiantScripts = data.scripts; // Simpan ke array global
+
+                radiantScripts.forEach((s, index) => {
                     container.innerHTML += `
                         <div class="card-item p-6 rounded-2xl flex flex-col">
                             <h3 class="font-bold text-white text-lg mb-2">${s.title}</h3>
                             <p class="text-xs text-zinc-500 mb-6 flex-1 leading-relaxed">${s.description}</p>
                             <div class="pt-4 border-t border-zinc-800/50">
-                                <button class="text-blue-400 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Get Script ➔</button>
+                                <button onclick="openModal(${index})" class="text-blue-400 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Get Script ➔</button>
                             </div>
                         </div>`;
                 });
             } catch (e) { container.innerHTML = '<p class="text-red-500 text-xs">Error loading scripts.</p>'; }
+        }
+
+        // --- FUNGSI MODAL & COPY ---
+        function openModal(index) {
+            const script = radiantScripts[index];
+            document.getElementById('modal-title').innerText = script.title;
+            document.getElementById('modal-code').innerText = script.loader_script;
+            
+            const modal = document.getElementById('code-modal');
+            const box = document.getElementById('modal-box');
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            box.classList.remove('scale-95');
+            box.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('code-modal');
+            const box = document.getElementById('modal-box');
+            
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+        }
+
+        function copyCode(btn) {
+            const code = document.getElementById('modal-code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const ori = btn.innerText;
+                btn.innerText = 'COPIED!';
+                btn.classList.add('text-blue-400');
+                setTimeout(() => {
+                    btn.innerText = ori;
+                    btn.classList.remove('text-blue-400');
+                }, 1500);
+            });
         }
     </script>
 </body>
