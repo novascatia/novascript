@@ -9,9 +9,9 @@ exports.handler = async (event) => {
         const envPass = process.env.RADIANTPASS;
 
         if (username === envUser && password === envPass) {
-            return { statusCode: 200, body: JSON.stringify({ success: true, message: 'Access Granted' }) };
+            return { statusCode: 200, body: JSON.stringify({ success: true, message: 'Access Granted, Welcome ;D' }) };
         } else {
-            return { statusCode: 401, body: JSON.stringify({ success: false, message: 'Kredensial Radiant tidak valid!' }) };
+            return { statusCode: 401, body: JSON.stringify({ success: false, message: 'Lau sape mpruy?' }) };
         }
     } catch (err) {
         return { statusCode: 500, body: JSON.stringify({ success: false, message: err.message }) };
