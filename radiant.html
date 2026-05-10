@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaScript | Radiant Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ededed; }
+        .card-item { background-color: #0f0f11; border: 1px solid #27272a; transition: all 0.2s ease-in-out; }
+        .card-item:hover { border-color: #f59e0b; box-shadow: 0 10px 30px -10px rgba(245, 158, 11, 0.1); }
+        .radiant-text { background: linear-gradient(to right, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="min-h-screen p-6">
+
+    <div id="radiant-login-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-[#0f0f11] border border-amber-500/30 w-full max-w-sm rounded-2xl p-8 shadow-[0_0_50px_rgba(245,158,11,0.15)] text-center">
+            <h2 class="text-2xl font-black text-white tracking-tight mb-2 uppercase italic radiant-text">Radiant Access</h2>
+            <p class="text-xs text-gray-500 mb-6">Masukkan kredensial khusus member Radiant.</p>
+            
+            <form id="radiant-form" onsubmit="loginRadiant(event)">
+                <input type="text" id="rad-user" required placeholder="Radiant Username" class="w-full bg-[#050505] border border-zinc-800 rounded-lg px-4 py-3 mb-3 text-sm text-white focus:border-amber-500 outline-none">
+                <input type="password" id="rad-pass" required placeholder="Radiant Password" class="w-full bg-[#050505] border border-zinc-800 rounded-lg px-4 py-3 mb-6 text-sm text-white focus:border-amber-500 outline-none">
+                
+                <button type="submit" id="btn-login" class="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold py-3 rounded-lg transition-colors">
+                    Unlock Scripts
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <main id="main-content" class="max-w-5xl mx-auto pt-10 hidden">
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight uppercase italic">The <span class="radiant-text">Radiant</span> Collection</h1>
+            <p class="text-zinc-400 text-sm">Script gratis eksklusif untuk member VIP Radiant.</p>
+        </header>
+
+        <div id="scripts-container" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <p class="text-center text-gray-500 col-span-full py-10">Loading scripts...</p>
+        </div>
+    </main>
+
+    <script>
+        // Cek Session
+        if(sessionStorage.getItem('isRadiant') === 'true') {
+            document.getElementById('radiant-login-modal').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            loadScripts();
+        }
+
+        async function loginRadiant(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            btn.innerText = 'Verifying...';
+            
+            const user = document.getElementById('rad-user').value;
+            const pass = document.getElementById('rad-pass').value;
+
+            try {
+                const res = await fetch('/.netlify/functions/verify-radiant', {
+                    method: 'POST', body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
+
+                if(data.success) {
+                    sessionStorage.setItem('isRadiant', 'true');
+                    document.getElementById('radiant-login-modal').classList.add('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    loadScripts();
+                } else {
+                    alert(data.message);
+                }
+            } catch(err) {
+                alert("Server error.");
+            } finally { btn.innerText = 'Unlock Scripts'; }
+        }
+
+        async function loadScripts() {
+            const container = document.getElementById('scripts-container');
+            const res = await fetch('/.netlify/functions/manage-radiant');
+            const data = await res.json();
+            
+            container.innerHTML = '';
+            if(data.scripts.length === 0) return container.innerHTML = '<p class="text-gray-500 col-span-full text-center">Belum ada script.</p>';
+
+            data.scripts.forEach(s => {
+                container.innerHTML += `
+                    <div class="card-item p-6 rounded-2xl flex flex-col">
+                        <h3 class="font-bold text-white text-lg mb-2">${s.title}</h3>
+                        <p class="text-xs text-zinc-500 mb-6 flex-1">${s.description}</p>
+                        <textarea readonly class="w-full bg-black border border-zinc-800 text-green-400 text-[10px] font-mono p-3 rounded-lg" rows="2" onclick="this.select(); document.execCommand('copy'); alert('Copied!')">${s.loader_script}</textarea>
+                    </div>`;
+            });
+        }
+    </script>
+</body>
+</html>
