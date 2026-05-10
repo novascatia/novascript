@@ -24,7 +24,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="glass-card p-6 rounded-2xl h-fit">
                 <h2 class="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6">New Script</h2>
-                <form id="add-form" onsubmit="addScript(event)" class="space-y-4">
+                <form id="add-form" class="space-y-4">
                     <input type="text" id="title" required placeholder="Script Title" class="input-clean w-full px-4 py-2 rounded-lg text-sm">
                     <textarea id="desc" required placeholder="Description" rows="2" class="input-clean w-full px-4 py-2 rounded-lg text-sm"></textarea>
                     <textarea id="loader" required placeholder="Loader code..." rows="4" class="input-clean w-full px-4 py-2 rounded-lg text-xs font-mono"></textarea>
@@ -44,37 +44,54 @@
     </div>
 
     <script>
-        async function loadAdminScripts() {
-            const res = await fetch('/.netlify/functions/manage-radiant?admin=true');
-            const data = await res.json();
-            const list = document.getElementById('list');
-            list.innerHTML = '';
-
-            if (data.scripts.length === 0) {
-                list.innerHTML = '<p class="text-zinc-600 text-xs py-4">No scripts available.</p>';
-                return;
-            }
-
-            data.scripts.forEach(s => {
-                list.innerHTML += `
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-[#050505] border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all gap-4">
-                        <div class="flex flex-col">
-                            <span class="font-bold text-white leading-tight">${s.title}</span>
-                            <span class="text-[9px] font-black uppercase mt-1 ${s.is_active ? 'text-blue-400' : 'text-zinc-600'}">${s.is_active ? 'Visible' : 'Hidden'}</span>
-                        </div>
-                        <div class="flex gap-2 w-full sm:w-auto">
-                            <button onclick="toggleVisibility(${s.id}, ${!s.is_active})" class="flex-1 sm:flex-none text-[10px] font-bold uppercase bg-zinc-800 px-3 py-1.5 rounded-lg hover:bg-zinc-700 transition-colors">
-                                ${s.is_active ? 'Hide' : 'Show'}
-                            </button>
-                            <button onclick="deleteScript(${s.id})" class="flex-1 sm:flex-none text-[10px] font-bold uppercase bg-red-950/30 text-red-500 border border-red-900/30 px-3 py-1.5 rounded-lg hover:bg-red-900/50 hover:text-red-400 transition-colors">
-                                Delete
-                            </button>
-                        </div>
-                    </div>`;
-            });
+        const token = sessionStorage.getItem('radiant_token');
+        
+        // Cek jika tidak ada token, paksa login dulu di /radiant
+        if (!token) {
+            alert('Akses Ditolak! Anda harus login di halaman /radiant terlebih dahulu.');
+            window.location.href = '/radiant';
         }
 
-        async function addScript(e) {
+        async function loadAdminScripts() {
+            try {
+                const res = await fetch('/.netlify/functions/manage-radiant?admin=true', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if(!res.ok) throw new Error("Akses Ditolak");
+                
+                const data = await res.json();
+                const list = document.getElementById('list');
+                list.innerHTML = '';
+
+                if (data.scripts.length === 0) {
+                    list.innerHTML = '<p class="text-zinc-600 text-xs py-4">No scripts available.</p>';
+                    return;
+                }
+
+                data.scripts.forEach(s => {
+                    list.innerHTML += `
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-[#050505] border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all gap-4">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-white leading-tight">${s.title}</span>
+                                <span class="text-[9px] font-black uppercase mt-1 ${s.is_active ? 'text-blue-400' : 'text-zinc-600'}">${s.is_active ? 'Visible' : 'Hidden'}</span>
+                            </div>
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <button onclick="toggleVisibility(${s.id}, ${!s.is_active})" class="flex-1 sm:flex-none text-[10px] font-bold uppercase bg-zinc-800 px-3 py-1.5 rounded-lg hover:bg-zinc-700 transition-colors">
+                                    ${s.is_active ? 'Hide' : 'Show'}
+                                </button>
+                                <button onclick="deleteScript(${s.id})" class="flex-1 sm:flex-none text-[10px] font-bold uppercase bg-red-950/30 text-red-500 border border-red-900/30 px-3 py-1.5 rounded-lg hover:bg-red-900/50 hover:text-red-400 transition-colors">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>`;
+                });
+            } catch(e) {
+                document.getElementById('list').innerHTML = '<p class="text-red-500 font-bold text-xs py-4">Sesi kadaluarsa, silahkan relogin di /radiant.</p>';
+            }
+        }
+
+        // Form Submit
+        document.getElementById('add-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-add');
             btn.disabled = true; btn.innerText = 'PUBLISHING...';
@@ -86,17 +103,27 @@
             };
 
             await fetch('/.netlify/functions/manage-radiant', {
-                method: 'POST', body: JSON.stringify(payload)
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token 
+                },
+                body: JSON.stringify(payload)
             });
             
-            document.getElementById('add-form').reset();
+            this.reset();
             btn.disabled = false; btn.innerText = 'PUBLISH SCRIPT';
             loadAdminScripts();
-        }
+        });
 
         async function toggleVisibility(id, newStatus) {
             await fetch('/.netlify/functions/manage-radiant', {
-                method: 'PATCH', body: JSON.stringify({ id: id, is_active: newStatus })
+                method: 'PATCH', 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token 
+                },
+                body: JSON.stringify({ id: id, is_active: newStatus })
             });
             loadAdminScripts();
         }
@@ -105,9 +132,13 @@
             if (!confirm("Yakin ingin menghapus script ini secara permanen?")) return;
             
             await fetch('/.netlify/functions/manage-radiant', {
-                method: 'DELETE', body: JSON.stringify({ id: id })
+                method: 'DELETE', 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token 
+                },
+                body: JSON.stringify({ id: id })
             });
-            
             loadAdminScripts();
         }
 
